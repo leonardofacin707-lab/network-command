@@ -34,7 +34,7 @@ export function criarSessao(ctx, aoTerminar) {
         <div class="barra">
           <button class="btn-sec" data-acao="mapa">← Mapa</button>
           <div><b>Nível ${run.nivel.id} · ${esc(run.nivel.nome)}</b>
-            <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${run.i}"><i style="width:${run.i / total * 100}%"></i></div></div>
+            <div class="prog" role="progressbar" aria-label="Progresso no nível" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${run.i}"><i style="width:${run.i / total * 100}%"></i></div></div>
           <span class="pts">${run.pts} pts</span>
         </div>
         <article class="painel card">

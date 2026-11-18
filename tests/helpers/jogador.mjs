@@ -12,8 +12,9 @@ const exato = texto => new RegExp('^\\s*' + texto.replace(/[.*+?^${}()|[\]\\]/g,
 async function resolver(pagina, d, falha) {
   switch (d.tipo) {
     case 'quiz': {
-      const alvo = falha === 'errar' ? d.opcoes.find((_, i) => i !== d.certa) : d.opcoes[d.certa];
-      await pagina.locator('.op').filter({ hasText: exato(alvo) }).click();
+      // "errar" clica em qualquer alternativa que não seja a certa (os distratores foram reescritos na 1.5)
+      const certa = pagina.locator('.op').filter({ hasText: exato(d.opcoes[d.certa]) });
+      await (falha === 'errar' ? pagina.locator('.op').filter({ hasNotText: exato(d.opcoes[d.certa]) }).first() : certa).click();
       break;
     }
     case 'ligar':
@@ -29,7 +30,8 @@ async function resolver(pagina, d, falha) {
     case 'classificar':
       for (const [texto, grupo] of d.itens) {
         await pagina.locator('#pool .chip').filter({ hasText: exato(texto) }).click();
-        await pagina.locator(`.grupo[data-grupo="${grupo}"] b`).first().click();
+        await pagina.locator(process.env.ALVO === 'legacy'
+          ? `.grupo[data-grupo="${grupo}"] b` : `.grupo-cab[data-grupo="${grupo}"]`).first().click();
       }
       break;
     case 'ordenar':

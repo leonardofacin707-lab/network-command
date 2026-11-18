@@ -9,7 +9,7 @@ export default {
     const ordem = embaralhar(q.itens.map((_, i) => i));
     $('#area').innerHTML = `<p class="dica">Toque em um item e depois no grupo certo.</p>
       <div class="chips" id="pool">${ordem.map(i => `<button class="chip" data-item="${i}">${esc(q.itens[i].texto)}</button>`).join('')}</div>
-      <div class="grupos">${q.grupos.map((g, gi) => `<div class="grupo" role="button" tabindex="0" data-grupo="${gi}"><b>${esc(g)}</b></div>`).join('')}</div>`;
+      <div class="grupos">${q.grupos.map((g, gi) => `<div class="grupo"><button class="grupo-cab" data-grupo="${gi}"><b>${esc(g)}</b></button><div class="grupo-itens"></div></div>`).join('')}</div>`;
   },
   clique(alvo, q, sessao, api) {
     if (alvo.dataset.item !== undefined && !alvo.classList.contains('ok')) {
@@ -22,7 +22,7 @@ export default {
         sessao.est.sel.classList.remove('sel');
         sessao.est.sel.classList.add('ok');
         sessao.est.sel.disabled = true;
-        alvo.appendChild(sessao.est.sel);
+        alvo.closest('.grupo').querySelector('.grupo-itens').appendChild(sessao.est.sel);
         sessao.est.sel = null;
         sessao.est.feitos++;
         if (sessao.est.feitos === q.itens.length) {

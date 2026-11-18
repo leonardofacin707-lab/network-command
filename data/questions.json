@@ -10,9 +10,9 @@
     "enunciado": "Quem é o dono da Internet?",
     "alternativas": [
       "Ninguém: ela é um conjunto de redes interligadas que seguem padrões comuns",
-      "O governo dos Estados Unidos",
-      "As grandes operadoras de telefonia",
-      "A empresa que fabrica os roteadores"
+      "O governo dos Estados Unidos, que controla todos os servidores principais",
+      "As grandes operadoras de telefonia, que administram todas as conexões",
+      "A empresa que fabrica os roteadores usados nos grandes provedores"
     ],
     "correta": 0,
     "explicacao": "A Internet é uma \"rede de redes\". Milhares de redes independentes cooperam porque seguem os mesmos padrões, e nenhuma pessoa ou empresa controla tudo."
@@ -77,9 +77,9 @@
     "enunciado": "Seu plano de internet é de 300 Mbps, mas o teste de velocidade mostra 210 Mbps. Esses 210 Mbps são a…",
     "alternativas": [
       "Taxa de transferência (throughput)",
-      "Largura de banda",
-      "Latência",
-      "Frequência do sinal"
+      "Largura de banda (a capacidade contratada)",
+      "Latência (o atraso da resposta)",
+      "Frequência do sinal (2,4 ou 5 GHz)"
     ],
     "correta": 0,
     "explicacao": "Largura de banda é a capacidade teórica do meio. A taxa de transferência é o que realmente passa, e cai por causa do volume de dados, do tipo de tráfego e da latência no caminho."
@@ -184,9 +184,9 @@
     "enunciado": "Você quer conectar o celular a uma rede Wi-Fi que não aparece na lista. Qual é o motivo mais provável?",
     "alternativas": [
       "O broadcast do SSID está desativado, então é preciso adicionar a rede manualmente",
-      "O celular está sem dados móveis",
-      "O Bluetooth está ligado",
-      "A rede só aceita cabo"
+      "O celular está sem dados móveis, então não consegue listar redes Wi-Fi",
+      "O Bluetooth está ligado e bloqueia a busca por redes sem fio no celular",
+      "A rede só aceita dispositivos conectados por cabo de rede ao roteador"
     ],
     "correta": 0,
     "explicacao": "Com o SSID oculto, a rede não aparece na lista. Você adiciona manualmente digitando o SSID, o tipo de segurança e a senha exatamente como estão no roteador."
@@ -202,9 +202,9 @@
     "enunciado": "No Wi-Fi público de uma lanchonete, qual atitude é a mais segura?",
     "alternativas": [
       "Usar uma VPN e nunca enviar senhas sem criptografia",
-      "Desligar o Bluetooth e pronto",
-      "Usar o modo avião com o Wi-Fi ligado",
-      "Escolher a rede com o sinal mais forte"
+      "Desligar apenas o Bluetooth, pois o Wi-Fi já é seguro por padrão",
+      "Usar o modo avião com o Wi-Fi ligado para que ninguém veja o aparelho",
+      "Escolher a rede com o sinal mais forte, pois ela é a mais confiável"
     ],
     "correta": 0,
     "explicacao": "Em redes que você não controla, alguém pode capturar o tráfego. A VPN cria um túnel criptografado, e login ou senha nunca devem trafegar em texto puro."
@@ -288,9 +288,9 @@
     "enunciado": "Qual é uma DESVANTAGEM da rede ponto a ponto (P2P)?",
     "alternativas": [
       "Não tem administração centralizada e é menos segura",
-      "É cara de montar",
-      "Exige um servidor dedicado",
-      "É difícil de configurar"
+      "É cara de montar porque exige muitos equipamentos especiais",
+      "Exige um servidor dedicado para cada computador conectado",
+      "É difícil de configurar mesmo em redes com poucos computadores"
     ],
     "correta": 0,
     "explicacao": "A P2P é barata e simples, mas não escala bem, não tem gestão central, é menos segura e o desempenho cai quando todos são cliente e servidor ao mesmo tempo."
@@ -332,8 +332,8 @@
     "alternativas": [
       "Na mesma rede local; só a porta Internet fica em outra rede",
       "Em redes separadas, uma com fio e outra sem fio",
-      "Cada um em uma rede diferente",
-      "Na rede do provedor"
+      "Em redes diferentes, e só se comunicam passando pela Internet",
+      "Na rede do provedor, que enxerga cada aparelho separadamente"
     ],
     "correta": 0,
     "explicacao": "Por padrão, o roteador doméstico junta portas LAN e Wi-Fi na mesma LAN. A porta Internet é a única que fica em outra rede."
@@ -375,7 +375,7 @@
     "alternativas": [
       "5 GHz, porque o Bluetooth usa 2,4 GHz",
       "2,4 GHz, porque é mais rápida",
-      "900 MHz",
+      "900 MHz, porque é a faixa que o Wi-Fi usa em casa",
       "Tanto faz, o Bluetooth não usa rádio"
     ],
     "correta": 0,
@@ -443,9 +443,9 @@
     "enunciado": "Em redes, um protocolo é…",
     "alternativas": [
       "Um conjunto de regras que emissor e receptor seguem para se entender",
-      "Um tipo de cabo",
-      "Um programa antivírus",
-      "O endereço de um site"
+      "Um tipo de cabo usado para ligar o computador ao roteador",
+      "Um programa antivírus que protege os dados enviados pela rede",
+      "O endereço digitado no navegador para abrir um site"
     ],
     "correta": 0,
     "explicacao": "Assim como uma conversa precisa de idioma, ritmo e confirmação, os computadores precisam de regras comuns: formato, tamanho, temporização, codificação e forma de entrega."
@@ -607,9 +607,9 @@
     "enunciado": "Onde fica registrada a evolução de um padrão da Internet?",
     "alternativas": [
       "Em documentos numerados chamados RFC (Request for Comments)",
-      "No manual de cada roteador",
-      "Em um arquivo dentro do navegador",
-      "Na tabela de roteamento"
+      "No manual de cada roteador, atualizado pelo fabricante",
+      "Em um arquivo escondido dentro de cada navegador instalado",
+      "Na tabela de roteamento de cada roteador da Internet"
     ],
     "correta": 0,
     "explicacao": "Cada proposta de padrão passa por discussão e testes, e tudo fica registrado em RFCs numeradas, mantidas por organizações como a IETF."
@@ -625,9 +625,9 @@
     "enunciado": "Qual é uma vantagem de usar um modelo em camadas?",
     "alternativas": [
       "Mudar uma camada não obriga a mudar as outras",
-      "Elimina a necessidade de cabos",
-      "Deixa a rede imune a vírus",
-      "Dispensa endereços IP"
+      "Elimina a necessidade de cabos entre os dispositivos",
+      "Deixa a rede totalmente imune a vírus e invasões",
+      "Dispensa o uso de endereços IP nos dispositivos"
     ],
     "correta": 0,
     "explicacao": "As camadas separam responsabilidades. Isso facilita projetar protocolos, permite que produtos de fabricantes diferentes funcionem juntos e cria uma linguagem comum para descrever a rede."
@@ -643,9 +643,9 @@
     "enunciado": "Por que um celular de uma marca consegue abrir um site hospedado no servidor de outra marca?",
     "alternativas": [
       "Porque ambos seguem os mesmos padrões abertos de protocolo",
-      "Porque as marcas fizeram um acordo particular",
-      "Porque o site foi feito para aquele celular",
-      "Porque a operadora converte tudo"
+      "Porque as marcas fizeram um acordo particular entre si",
+      "Porque o site foi feito para funcionar só naquele celular",
+      "Porque a operadora converte tudo para o formato de cada marca"
     ],
     "correta": 0,
     "explicacao": "Padrões abertos garantem que qualquer dispositivo que implemente as mesmas regras consiga se comunicar, não importa o fabricante."

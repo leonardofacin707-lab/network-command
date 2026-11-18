@@ -9,7 +9,7 @@ export function criarQuiz(ctx) {
   const jogar = id => sessao.iniciar(ctx.catalogo.niveis.find(n => n.id === id));
 
   document.addEventListener('click', e => {
-    const alvo = e.target.closest('button, [data-grupo]');
+    const alvo = e.target.closest('button');
     if (!alvo) return;
     if (alvo.classList.contains('no')) {
       if (!alvo.hasAttribute('aria-disabled')) jogar(Number(alvo.dataset.nivel));
@@ -20,12 +20,6 @@ export function criarQuiz(ctx) {
     if (acao === 'jogar') return jogar(Number(alvo.dataset.nivel));
     if (acao === 'proximo') return sessao.proximo();
     sessao.clique(alvo);
-  });
-
-  // Grupos de classificação também respondem ao teclado (Enter ou Espaço)
-  document.addEventListener('keydown', e => {
-    const g = e.target.closest && e.target.closest('[data-grupo]');
-    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sessao.clique(g); }
   });
 
   document.addEventListener('submit', e => {

@@ -1,6 +1,7 @@
 import { esc } from '../core/ui.js';
 import { xpTotal, cargoDe } from '../core/progression.js';
 import { maximoDoNivel, estrelasPorPontos, registrarResultado } from './scoring.js';
+import { statusDoNivel } from './unlock.js';
 import { desenharHud } from './hud.js';
 
 /** Grava o resultado da partida no estado e mostra a tela de resultado. */
@@ -16,7 +17,8 @@ export function telaResultado({ app, catalogo, store }, run) {
   const cargoDepois = cargoDe(xpTotal(melhor));
   desenharHud(melhor, catalogo);
   const prox = catalogo.niveis[catalogo.niveis.indexOf(n) + 1];
-  const liberou = estrelas > 0 && prox && prox.desafios;
+  // O botão depende do estado do próximo nível (não só desta partida): quem já liberou antes continua vendo o atalho.
+  const liberou = prox && ['aberto', 'feito'].includes(statusDoNivel(prox, catalogo.niveis, melhor));
 
   app.innerHTML = `<section class="band"><div class="jogo">
     <article class="painel resultado">

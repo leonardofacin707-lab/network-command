@@ -88,7 +88,9 @@ test('preservação: todo o conteúdo da v0.1 está nos dados novos', () => {
         case 'quiz':
           assert.equal(q.tipo, 'pergunta');
           assert.equal(q.alternativas[q.correta], d.opcoes[d.certa]);
-          assert.deepEqual([...q.alternativas].sort(), [...d.opcoes].sort());
+          // Os distratores foram reescritos na 1.5 (achado 4 da auditoria: a certa era a mais longa em 11 de 14).
+          // Enunciado, resposta certa e explicação seguem idênticos; a quantidade de alternativas também.
+          assert.equal(q.alternativas.length, d.opcoes.length);
           break;
         case 'ligar': assert.deepEqual(q.pares.map(p => [p.esquerda, p.direita]), d.pares); break;
         case 'classificar':
@@ -105,4 +107,13 @@ test('preservação: todo o conteúdo da v0.1 está nos dados novos', () => {
     });
   }
   assert.equal(total, 27);
+});
+
+test('a resposta certa não se destaca pelo tamanho (achado 4 da auditoria)', () => {
+  const quizzes = perguntas.filter(q => q.tipo === 'pergunta');
+  const maisLonga = quizzes.filter(q => {
+    const t = q.alternativas.map(a => a.length);
+    return t[q.correta] === Math.max(...t);
+  }).length;
+  assert.ok(maisLonga / quizzes.length <= 0.5, `a certa é a mais longa em ${maisLonga} de ${quizzes.length}`);
 });

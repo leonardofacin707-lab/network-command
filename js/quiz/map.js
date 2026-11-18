@@ -69,6 +69,17 @@ function fimHTML() {
   </div>`;
 }
 
+/**
+ * Cabo entre dois níveis. Na mudança de linha, o cabo sairia reto por cima do nome do nível;
+ * por isso ele contorna o ícone pela lateral, voltando ao centro dele só no final.
+ */
+function caminho(a, b, largura) {
+  if (a.x !== b.x) return `M${a.x} ${a.y} L${b.x} ${b.y}`;
+  const lado = a.x > largura / 2 ? 1 : -1; // curva para fora do mapa
+  const sai = a.x + lado * 34, folga = lado * 64; // largura do rótulo é ~136px: a curva precisa passar além dele
+  return `M${sai} ${a.y} C${sai + folga} ${a.y} ${sai + folga} ${b.y} ${sai} ${b.y} L${b.x} ${b.y}`;
+}
+
 /** Distribui os níveis em zigue-zague e desenha os cabos entre eles. */
 function posicionarMapa(niveis, status) {
   const trilha = $('#trilha');
@@ -91,17 +102,15 @@ function posicionarMapa(niveis, status) {
 
   let svg = '';
   for (let i = 1; i < pontos.length; i++) {
-    const a = pontos[i - 1], b = pontos[i];
     const anteriorFeito = status(niveis[i - 1]) === 'feito';
     const classe = !anteriorFeito ? 'off' : status(niveis[i]) === 'feito' ? 'ok' : 'ativo';
-    svg += `<path class="cabo ${classe}" d="M${a.x} ${a.y} L${b.x} ${b.y}"/>`;
+    svg += `<path class="cabo ${classe}" d="${caminho(pontos[i - 1], pontos[i], W)}"/>`;
   }
   // O pacote viaja pelo cabo que leva ao próximo nível aberto
   const iProx = niveis.findIndex(n => status(n) === 'aberto');
   if (iProx > 0 && !reduzMovimento()) {
-    const a = pontos[iProx - 1], b = pontos[iProx];
     svg += `<g class="pacote"><rect x="-10" y="-7" width="20" height="14" rx="2"/><path d="M-10 -7 L0 1 L10 -7"/>
-      <animateMotion dur="2.4s" repeatCount="indefinite" path="M${a.x} ${a.y} L${b.x} ${b.y}"/></g>`;
+      <animateMotion dur="2.4s" repeatCount="indefinite" path="${caminho(pontos[iProx - 1], pontos[iProx], W)}"/></g>`;
   }
   $('#cabos').innerHTML = svg;
 }
