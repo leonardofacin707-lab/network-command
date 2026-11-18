@@ -15,21 +15,24 @@ import habilidades from './hub/habilidades.js';
 import laboratorio from './lab/index.js';
 import missoesModulo from './missoes/index.js';
 import { carregarMissoes } from './missoes/catalogo.js';
+import empresaModulo from './empresa/index.js';
+import { carregarEmpresa } from './empresa/catalogo.js';
 import { emDesenvolvimento } from './hub/emdesenvolvimento.js';
 
 async function iniciar() {
   const app = $('#app');
   const shell = montarShell();
-  let catalogo, missoes;
+  let catalogo, missoes, empresa;
   try {
     catalogo = await carregarCatalogo();
     missoes = await carregarMissoes();
+    empresa = await carregarEmpresa();
     catalogo = { ...catalogo, missoes };
   } catch (erro) {
     app.innerHTML = `<section class="band"><div class="painel"><h2>Não foi possível carregar os dados</h2><p>${String(erro.message)}</p></div></section>`;
     throw erro;
   }
-  const referencia = criarReferencia(catalogo, IDS_CONQUISTAS, missoes.map(m => m.id));
+  const referencia = criarReferencia(catalogo, IDS_CONQUISTAS, missoes.map(m => m.id), empresa.projetos.map(p => p.id));
 
   // No ambiente de pré-visualização do Claude, o estado vem do gancho "hot"; no navegador comum, do localStorage.
   const hot = window.claude?.hot;
@@ -55,12 +58,12 @@ async function iniciar() {
 
   const rotas = {
     dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
-    laboratorio, empresa: emDesenvolvimento('empresa'),
+    laboratorio, empresa: empresaModulo,
     datacenter: emDesenvolvimento('datacenter'), campus: emDesenvolvimento('campus'), missoes: missoesModulo
   };
   criarRoteador({
     raiz: app, rotas, padrao: 'dashboard',
-    ctx: { catalogo, referencia, store, missoes },
+    ctx: { catalogo, referencia, store, missoes, empresa },
     aoTrocar: id => shell.marcarAtual(id)
   }).iniciar();
 }

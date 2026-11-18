@@ -27,11 +27,12 @@ export function montarCatalogo({ perguntas, niveis, categorias, habilidades }) {
 }
 
 /** Referência para validar o estado salvo: o que existe de níveis, perguntas e conquistas. */
-export function criarReferencia(catalogo, idsConquistas, idsMissoes = []) {
+export function criarReferencia(catalogo, idsConquistas, idsMissoes = [], idsEmpresa = []) {
   return {
     limites: catalogo.limites,
     perguntas: new Set(catalogo.perguntas.map(p => p.id)),
     conquistas: new Set(idsConquistas),
-    missoes: new Set(idsMissoes)
+    missoes: new Set(idsMissoes),
+    empresa: new Set(idsEmpresa)
   };
 }

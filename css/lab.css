@@ -51,3 +51,14 @@
 .dicas{margin:12px 0 0;padding-left:22px;display:grid;gap:6px}
 .m-msg{min-height:1.5em;margin:10px 0 0}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Empresa */
+.empresa-grade{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;margin-bottom:16px;align-items:start}
+.tabela{width:100%;border-collapse:collapse}
+.tabela th,.tabela td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--linha);vertical-align:middle}
+.tabela thead th{font-size:13px;color:var(--suave);font-weight:600}
+.tabela tbody th{font-weight:600}
+.tabela .campo{width:100%;min-width:90px}
+.tabela .qtd{max-width:90px}
+.tabela .faixa{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--destaque);word-break:break-word}
+@media(max-width:1000px){.empresa-grade{grid-template-columns:minmax(0,1fr)}.painel{overflow-x:auto}}

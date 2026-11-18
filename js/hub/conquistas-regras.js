@@ -30,6 +30,8 @@ export const CONQUISTAS = [
     teste: ({ estado }) => Object.values(estado.missoes).some(m => m.concluida) },
   { id: 'todas-as-missoes', nome: 'Rede sem defeitos', descricao: 'Concluir todas as missões disponíveis.',
     teste: ({ estado, catalogo }) => (catalogo.missoes ?? []).length > 0 && catalogo.missoes.every(m => estado.missoes[m.id]?.concluida) },
+  { id: 'planejador', nome: 'Planejador de rede', descricao: 'Ter um projeto de rede da Empresa aprovado.',
+    teste: ({ estado }) => Object.values(estado.empresa ?? {}).some(p => p.concluida) },
   { id: 'identificado', nome: 'Identificado', descricao: 'Escolher o seu nome de exibição no perfil.',
     teste: ({ estado }) => estado.perfil.nome.length > 0 }
 ];

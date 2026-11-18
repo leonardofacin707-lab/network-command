@@ -13,8 +13,10 @@ export const xpTotal = melhor => Object.values(melhor).reduce((soma, m) => soma 
 export const estrelasTotal = melhor => Object.values(melhor).reduce((soma, m) => soma + m.estrelas, 0);
 /** XP ganho em missões concluídas (cada missão concluída soma o XP gravado nela uma única vez). */
 export const xpMissoes = missoes => Object.values(missoes ?? {}).reduce((soma, m) => soma + (m.concluida ? m.xp : 0), 0);
-/** XP total do jogador: quiz + missões. É o que alimenta cargo, nível e HUD. */
-export const xpDoEstado = estado => xpTotal(estado.quiz.melhor) + xpMissoes(estado.missoes);
+/** XP ganho em projetos da Empresa aprovados (paga uma vez por projeto). */
+export const xpEmpresa = empresa => Object.values(empresa ?? {}).reduce((soma, p) => soma + (p.concluida ? p.xp : 0), 0);
+/** XP total do jogador: quiz + missões + projetos. É o que alimenta cargo, nível e HUD. */
+export const xpDoEstado = estado => xpTotal(estado.quiz.melhor) + xpMissoes(estado.missoes) + xpEmpresa(estado.empresa);
 export const cargoDe = xp => CARGOS.filter(c => xp >= c[0]).pop()[1];
 
 export const XP_POR_NIVEL = 300;

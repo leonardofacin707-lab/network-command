@@ -86,7 +86,7 @@ test('o estado salvo não contém senhas nem campos desconhecidos', () => {
   const e = normalizar({ versao: 2, senha: '123', token: 'abc', perfil: { nome: 'A', email: 'a@b.c' }, quiz: { melhor: {} } }, ref);
   assert.equal(JSON.stringify(e).includes('123'), false);
   assert.equal('email' in e.perfil, false);
-  assert.deepEqual(Object.keys(e).sort(), ['conquistas', 'lab', 'missoes', 'perfil', 'quiz', 'versao']);
+  assert.deepEqual(Object.keys(e).sort(), ['conquistas', 'empresa', 'lab', 'missoes', 'perfil', 'quiz', 'versao']);
 });
 
 test('formato v2 (sem histórico nem conquistas) é migrado para o v3', () => {
@@ -148,6 +148,6 @@ test('missões: só ids conhecidos; conclusão exige data e XP válidos', () => 
   assert.deepEqual(Object.keys(m), ['m1']);
   assert.equal(m.m1.xp, 150);
   const ruim = limparMissoes({ m1: { concluida: true, em: 'ontem', xp: 99999, dicas: -3 } }, ref.missoes);
-  assert.deepEqual(ruim.m1, { topologia: { dispositivos: [], cabos: [] }, concluida: true, em: null, xp: 0, dicas: 0 });
+  assert.deepEqual(ruim.m1, { topologia: { dispositivos: [], cabos: [] }, concluida: false, em: null, xp: 0, dicas: 0 });
   assert.equal(limparMissoes({ m1: { concluida: 'sim', xp: 50 } }, ref.missoes).m1.concluida, false);
 });

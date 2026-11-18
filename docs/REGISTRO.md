@@ -56,7 +56,18 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - 🧪 Marcado como protótipo: só 5 missões, todas de camada 1–3 com topologias pequenas; não há missões cronometradas nem cenários com múltiplos defeitos.
 - Correção de UI descoberta pelos testes: a aba "Revisão de erros" ficava destacada depois de voltar ao mapa.
 
+## Fase 6 — Infraestrutura (parcial)
+
+### Empresa 🧪
+- ✅ 3 projetos de planejamento (escritório, clínica, filial com bloco apertado). O jogador escolhe o prefixo de cada setor e a quantidade de equipamentos (switch 8/24 portas, roteador).
+- ✅ Regras reais em `js/empresa/planejamento.js`: endereços necessários = hosts + crescimento + 1 de gateway; alocação VLSM alinhada dentro do bloco (usa a aritmética IPv4 do motor); portas úteis = portas − 1 enlace por switch; roteador obrigatório; orçamento. Desperdício vira aviso, não reprovação.
+- ✅ Cada projeto tem solução dentro do orçamento (teste por busca exaustiva) e cada regra reprova sozinha (teste). XP pago uma vez; nova conquista *Planejador de rede*.
+- 🧪 É planejamento, não simulação: o tráfego não passa pelo motor, não há falhas nem crescimento ao longo do tempo, e a moeda do jogo (créditos) ainda não existe (o orçamento é um número do cenário, em R$ fictícios).
+- Endurecimento: conclusão de missão/projeto sem XP ou data válidos no arquivo salvo deixa de valer (antes ficava "concluída" com 0 XP).
+
+### Data Center e Campus de Redes ⏳
+- Continuam **não iniciados** (aparecem como "em desenvolvimento" no menu).
+
 ## Próximos passos
-- Fase 6: Empresa / Data Center / Campus (orçamento, créditos, infraestrutura) — ainda **não iniciada** (⏳).
 - Fases 7 e 8: expansão de conteúdo e recursos avançados (VLAN, rotas estáticas, DHCP, NAT) — ⏳.
 - Mais perguntas para as 14 categorias vazias e desafios cronometrados.

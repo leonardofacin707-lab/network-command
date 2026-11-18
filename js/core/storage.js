@@ -14,7 +14,8 @@ export const estadoInicial = () => ({
   quiz: { melhor: {}, historico: [] },
   conquistas: {},
   lab: { topologia: topologiaVazia() },   // laboratório livre
-  missoes: {}                             // { [id]: { topologia, concluida, em, xp, dicas } }
+  missoes: {},                            // { [id]: { topologia, concluida, em, xp, dicas } }
+  empresa: {}                             // { [projetoId]: { prefixos: {setor: n}, equip: {item: qtd}, concluida, em, xp } }
 });
 
 const inteiro = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
@@ -61,7 +62,7 @@ export function limparMissoes(bruto, conhecidas) {
   if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) return limpo;
   for (const [id, m] of Object.entries(bruto)) {
     if (!conhecidas.has(id) || !m || typeof m !== 'object') continue;
-    const concluida = m.concluida === true;
+    const concluida = m.concluida === true && inteiro(m.xp, 1, 1000) && dataValida(m.em); // conclusão sem XP ou data válidos não vale
     limpo[id] = {
       topologia: normalizarTopologia(m.topologia),
       concluida,
@@ -69,6 +70,25 @@ export function limparMissoes(bruto, conhecidas) {
       xp: concluida && inteiro(m.xp, 0, 1000) ? m.xp : 0,
       dicas: inteiro(m.dicas, 0, 9) ? m.dicas : 0
     };
+  }
+  return limpo;
+}
+
+const CHAVE_ID = /^[a-z0-9-]{1,40}$/;
+/** Projetos da Empresa: só ids conhecidos; prefixos e quantidades são números inteiros em faixas válidas. */
+export function limparEmpresa(bruto, conhecidos) {
+  const limpo = {};
+  if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) return limpo;
+  const mapa = (o, a, b) => {
+    const saida = {};
+    if (o && typeof o === 'object' && !Array.isArray(o)) for (const [k, v] of Object.entries(o)) if (CHAVE_ID.test(k) && inteiro(v, a, b) && Object.keys(saida).length < 30) saida[k] = v;
+    return saida;
+  };
+  for (const [id, p] of Object.entries(bruto)) {
+    if (!conhecidos.has(id) || !p || typeof p !== 'object') continue;
+    const concluida = p.concluida === true && inteiro(p.xp, 1, 1000) && dataValida(p.em);
+    limpo[id] = { prefixos: mapa(p.prefixos, 8, 30), equip: mapa(p.equip, 0, 50), concluida,
+      em: concluida && dataValida(p.em) ? p.em : null, xp: concluida && inteiro(p.xp, 0, 1000) ? p.xp : 0 };
   }
   return limpo;
 }
@@ -88,6 +108,7 @@ export function normalizar(bruto, ref) {
     base.conquistas = limparConquistas(bruto.conquistas, ref.conquistas);
     base.lab = { topologia: normalizarTopologia(bruto.lab?.topologia) };
     base.missoes = limparMissoes(bruto.missoes, ref.missoes ?? new Set());
+    base.empresa = limparEmpresa(bruto.empresa, ref.empresa ?? new Set());
   }
   return base;
 }
