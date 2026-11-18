@@ -137,3 +137,14 @@ test('campus: o campus inteiro tem dois defeitos e cada correção sozinha não 
   const r = verificarMissao(x, vlan(trunk(x.topologia)));
   assert.equal(r.todosOk, true, JSON.stringify(r.objetivos));
 });
+
+test('as habilidades marcadas em missões e projetos existem na árvore (trilha e nível)', () => {
+  const skills = JSON.parse(readFileSync(new URL('../../data/skills.json', import.meta.url), 'utf8'));
+  const emp = JSON.parse(readFileSync(new URL('../../data/empresa.json', import.meta.url), 'utf8'));
+  const trilhas = new Set(skills.trilhas.map(t => t.id)), niveis = new Set(skills.niveis.map(n => n.id));
+  for (const item of [...missoes, ...emp.projetos]) {
+    assert.ok(item.habilidades?.length >= 1, `${item.id}: sem habilidade`);
+    for (const h of item.habilidades) { const [t, n] = h.split('.'); assert.ok(trilhas.has(t) && niveis.has(n) && n !== 'teoria', `${item.id}: ${h}`); }
+  }
+  assert.deepEqual(validarMissao({ ...bruto[0], habilidades: ['ip.diagnostico', 'lixo', 5, 'x.y'] }).habilidades, ['ip.diagnostico']);
+});

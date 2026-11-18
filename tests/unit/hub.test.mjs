@@ -154,3 +154,34 @@ test('XP de missões entra no XP total, uma vez por missão concluída', async (
   assert.equal(xpDoEstado(e), 650);
   assert.equal(xpDoEstado({ quiz: { melhor: {} } }), 0, 'estado sem missões');
 });
+
+test('progressoPratico: conta só o que foi concluído, por habilidade', async () => {
+  const { progressoPratico } = await import('../../js/hub/dominio.js');
+  const missoes = [{ id: 'a', titulo: 'A', habilidades: ['ip.diagnostico'] }, { id: 'b', titulo: 'B', habilidades: ['ip.diagnostico', 'roteamento.diagnostico'] }, { id: 'c', titulo: 'C' }];
+  const projetos = [{ id: 'p', titulo: 'P', habilidades: ['subnetting.pratica'] }];
+  const e = estadoInicial();
+  e.missoes = { a: { concluida: true }, b: { concluida: false } };
+  e.empresa = { p: { concluida: true } };
+  const r = progressoPratico(e, missoes, projetos);
+  assert.deepEqual(Object.keys(r).sort(), ['ip.diagnostico', 'roteamento.diagnostico', 'subnetting.pratica']);
+  assert.deepEqual([r['ip.diagnostico'].total, r['ip.diagnostico'].feitos], [2, 1]);
+  assert.deepEqual([r['roteamento.diagnostico'].total, r['roteamento.diagnostico'].feitos], [1, 0]);
+  assert.deepEqual([r['subnetting.pratica'].total, r['subnetting.pratica'].feitos], [1, 1]);
+  assert.deepEqual(progressoPratico(estadoInicial(), [], []), {});
+  assert.deepEqual(progressoPratico({}, undefined, undefined), {});
+});
+
+test('resumoPratica: conta por módulo e indica o próximo item não concluído', async () => {
+  const { resumoPratica } = await import('../../js/hub/dominio.js');
+  const ctx = {
+    missoes: [{ id: 'm1', modulo: 'missoes', titulo: 'M1' }, { id: 'm2', modulo: 'missoes', titulo: 'M2' }, { id: 'c1', modulo: 'campus', titulo: 'C1' }],
+    empresa: { projetos: [{ id: 'p1', titulo: 'P1' }] },
+    datacenter: { desafios: [] }
+  };
+  const e = estadoInicial();
+  e.missoes = { m1: { concluida: true }, c1: { concluida: false } };
+  e.empresa = { p1: { concluida: true } };
+  const r = resumoPratica(e, ctx);
+  assert.deepEqual(r.map(x => [x.modulo, x.feitos, x.total, x.proximo?.id ?? null]), [['missoes', 1, 2, 'm2'], ['campus', 0, 1, 'c1'], ['empresa', 1, 1, null]], 'módulo sem itens some');
+  assert.deepEqual(resumoPratica(estadoInicial(), {}), []);
+});

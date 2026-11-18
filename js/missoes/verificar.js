@@ -50,6 +50,9 @@ export function verificarMissao(missao, topologia) {
   return { objetivos, todosOk: objetivos.every(o => o.ok) };
 }
 
+/** Habilidades "trilha.nivel" que a conclusão treina (ver data/skills.json). Descarta o que não tiver o formato certo. */
+export const habilidadesValidas = lista => (Array.isArray(lista) ? lista : []).filter(h => typeof h === 'string' && /^[a-z-]{1,30}\.(teoria|pratica|diagnostico)$/.test(h)).slice(0, 4);
+
 /** Valida os dados de uma missão lida do JSON. Devolve a missão normalizada ou null. */
 export function validarMissao(m) {
   if (!m || typeof m !== 'object' || typeof m.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(m.id)) return null;
@@ -63,6 +66,7 @@ export function validarMissao(m) {
   return {
     id: m.id, modulo: m.modulo === 'campus' ? 'campus' : 'missoes', titulo: m.titulo, cenario: m.cenario, topologia, objetivos, xp,
     dificuldade: [1, 2, 3].includes(m.dificuldade) ? m.dificuldade : 1,
+    habilidades: habilidadesValidas(m.habilidades),
     dicas: (Array.isArray(m.dicas) ? m.dicas : []).filter(d => typeof d === 'string').slice(0, 9)
   };
 }

@@ -158,12 +158,16 @@ test('conquistas: 13 cartões; as ganhas mostram data, as outras dizem como ganh
   await contexto.close();
 });
 
-test('árvore de habilidades: 8 trilhas, só Teoria de Fundamentos tem medição; o resto avisa', async () => {
+test('árvore de habilidades: Teoria pelo quiz, Prática e Diagnóstico pelas missões/projetos; o resto avisa', async () => {
   const { pagina, contexto } = await abrirComEstado('habilidades', ESTADO);
   assert.equal(await pagina.locator('.trilha-hab').count(), 8);
   assert.match(await pagina.locator('[data-trilha="fundamentos"]').innerText(), /1 de 27 desafios dominados/);
   assert.match(await pagina.locator('[data-trilha="ip"]').innerText(), /Conteúdo em desenvolvimento/);
-  assert.equal(await pagina.locator('.degraus li', { hasText: 'Disponível com o laboratório' }).count(), 16);
+  assert.equal(await pagina.locator('.degraus li', { hasText: 'Sem conteúdo ainda' }).count(), 10, '16 níveis de Prática/Diagnóstico menos 6 medidos');
+  assert.match(await pagina.locator('[data-trilha="subnetting"] .degraus li', { hasText: 'Prática' }).innerText(), /0 de 3 concluídos/);
+  assert.match(await pagina.locator('[data-trilha="subnetting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 1 concluído/);
+  assert.match(await pagina.locator('[data-trilha="roteamento"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 3 concluídos/);
+  assert.match(await pagina.locator('[data-trilha="troubleshooting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 2 concluídos/);
   await contexto.close();
 });
 
@@ -296,4 +300,32 @@ test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async (
       await contexto.close();
     }
   }
+});
+
+test('dashboard: card Prática lista os 4 módulos e acompanha a conclusão; a árvore reflete o progresso', async () => {
+  const { pagina, erros, salvo, contexto } = await abrir('dashboard');
+  const card = pagina.locator('[data-teste="pratica"]');
+  const texto = await card.innerText();
+  assert.match(texto, /Missões · 0 de 5 concluídos · próximo: O cabo esquecido/);
+  assert.match(texto, /Campus de Redes · 0 de 4/);
+  assert.match(texto, /Empresa · 0 de 3/);
+  assert.match(texto, /Data Center · 0 de 3/);
+  // concluir a primeira missão pela interface
+  await card.locator('a', { hasText: 'O cabo esquecido' }).click();
+  await pagina.locator('#lab-svg').waitFor();
+  await pagina.locator('[data-modo="conectar"]').click();
+  await pagina.locator('.disp[data-id="pc3"]').click();
+  await pagina.locator('.disp[data-id="sw1"]').click();
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída/);
+  await pagina.locator('.menu a[data-rota="dashboard"]').click();
+  await pagina.locator('.menu a[data-rota="dashboard"][aria-current=page]').waitFor();
+  assert.match(await pagina.locator('[data-teste="pratica"]').innerText(), /Missões · 1 de 5 concluídos · próximo: Dois computadores, um endereço/);
+  await pagina.locator('.menu a[data-rota="habilidades"]').click();
+  await pagina.locator('.menu a[data-rota="habilidades"][aria-current=page]').waitFor();
+  assert.match(await pagina.locator('[data-trilha="troubleshooting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /1 de 2 concluído/);
+  assert.match(await pagina.locator('[data-trilha="troubleshooting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /✓ O cabo esquecido/);
+  assert.equal((await salvo()).missoes['cabo-esquecido'].concluida, true);
+  assert.deepEqual(erros, []);
+  await contexto.close();
 });

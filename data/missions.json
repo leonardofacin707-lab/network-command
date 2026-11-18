@@ -101,7 +101,10 @@
           }
         }
       ]
-    }
+    },
+    "habilidades": [
+      "troubleshooting.diagnostico"
+    ]
   },
   {
     "id": "ip-duplicado",
@@ -216,7 +219,10 @@
           }
         }
       ]
-    }
+    },
+    "habilidades": [
+      "ip.diagnostico"
+    ]
   },
   {
     "id": "mascara-errada",
@@ -305,7 +311,10 @@
           }
         }
       ]
-    }
+    },
+    "habilidades": [
+      "subnetting.diagnostico"
+    ]
   },
   {
     "id": "gateway-errado",
@@ -443,7 +452,10 @@
           }
         }
       ]
-    }
+    },
+    "habilidades": [
+      "roteamento.diagnostico"
+    ]
   },
   {
     "id": "interface-sem-ip",
@@ -581,7 +593,10 @@
           }
         }
       ]
-    }
+    },
+    "habilidades": [
+      "roteamento.diagnostico"
+    ]
   },
   {
     "id": "porta-na-vlan-errada",
@@ -711,7 +726,10 @@
         }
       ]
     },
-    "modulo": "campus"
+    "modulo": "campus",
+    "habilidades": [
+      "ethernet-comutacao.diagnostico"
+    ]
   },
   {
     "id": "trunk-esquecido",
@@ -893,7 +911,10 @@
         }
       ]
     },
-    "modulo": "campus"
+    "modulo": "campus",
+    "habilidades": [
+      "ethernet-comutacao.diagnostico"
+    ]
   },
   {
     "id": "vlans-sem-gateway",
@@ -1038,7 +1059,11 @@
         }
       ]
     },
-    "modulo": "campus"
+    "modulo": "campus",
+    "habilidades": [
+      "ethernet-comutacao.diagnostico",
+      "roteamento.diagnostico"
+    ]
   },
   {
     "id": "campus-completo",
@@ -1274,6 +1299,9 @@
         }
       ]
     },
-    "modulo": "campus"
+    "modulo": "campus",
+    "habilidades": [
+      "troubleshooting.diagnostico"
+    ]
   }
 ]

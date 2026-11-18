@@ -1,40 +1,124 @@
 {
   "equipamentos": [
-    { "id": "switch8", "nome": "Switch 8 portas", "portas": 8, "custo": 250 },
-    { "id": "switch24", "nome": "Switch 24 portas", "portas": 24, "custo": 800 },
-    { "id": "roteador", "nome": "Roteador", "portas": 0, "custo": 900, "roteador": true }
+    {
+      "id": "switch8",
+      "nome": "Switch 8 portas",
+      "portas": 8,
+      "custo": 250
+    },
+    {
+      "id": "switch24",
+      "nome": "Switch 24 portas",
+      "portas": 24,
+      "custo": 800
+    },
+    {
+      "id": "roteador",
+      "nome": "Roteador",
+      "portas": 0,
+      "custo": 900,
+      "roteador": true
+    }
   ],
   "projetos": [
     {
-      "id": "escritorio-contabil", "titulo": "Escritório de contabilidade", "dificuldade": 1, "xp": 150,
+      "id": "escritorio-contabil",
+      "titulo": "Escritório de contabilidade",
+      "dificuldade": 1,
+      "xp": 150,
       "cenario": "Um escritório de contabilidade vai montar a rede do zero. Cada setor precisa da sua própria sub-rede dentro do bloco recebido do provedor, e o dono quer folga para contratar mais gente nos próximos anos.",
-      "bloco": "192.168.10.0/24", "orcamento": 2450, "crescimento": 20,
+      "bloco": "192.168.10.0/24",
+      "orcamento": 2450,
+      "crescimento": 20,
       "setores": [
-        { "id": "administrativo", "nome": "Administrativo", "hosts": 12 },
-        { "id": "financeiro", "nome": "Financeiro", "hosts": 6 },
-        { "id": "atendimento", "nome": "Atendimento", "hosts": 20 }
+        {
+          "id": "administrativo",
+          "nome": "Administrativo",
+          "hosts": 12
+        },
+        {
+          "id": "financeiro",
+          "nome": "Financeiro",
+          "hosts": 6
+        },
+        {
+          "id": "atendimento",
+          "nome": "Atendimento",
+          "hosts": 20
+        }
+      ],
+      "habilidades": [
+        "subnetting.pratica"
       ]
     },
     {
-      "id": "clinica", "titulo": "Clínica médica em expansão", "dificuldade": 2, "xp": 200,
+      "id": "clinica",
+      "titulo": "Clínica médica em expansão",
+      "dificuldade": 2,
+      "xp": 200,
       "cenario": "Uma clínica vai dobrar de tamanho em dois anos. A rede precisa de sub-redes separadas para recepção, consultórios, administração e servidores, com crescimento de 50% já previsto.",
-      "bloco": "10.20.0.0/24", "orcamento": 2100, "crescimento": 50,
+      "bloco": "10.20.0.0/24",
+      "orcamento": 2100,
+      "crescimento": 50,
       "setores": [
-        { "id": "recepcao", "nome": "Recepção", "hosts": 8 },
-        { "id": "consultorios", "nome": "Consultórios", "hosts": 14 },
-        { "id": "administracao", "nome": "Administração", "hosts": 5 },
-        { "id": "servidores", "nome": "Servidores", "hosts": 3 }
+        {
+          "id": "recepcao",
+          "nome": "Recepção",
+          "hosts": 8
+        },
+        {
+          "id": "consultorios",
+          "nome": "Consultórios",
+          "hosts": 14
+        },
+        {
+          "id": "administracao",
+          "nome": "Administração",
+          "hosts": 5
+        },
+        {
+          "id": "servidores",
+          "nome": "Servidores",
+          "hosts": 3
+        }
+      ],
+      "habilidades": [
+        "subnetting.pratica"
       ]
     },
     {
-      "id": "filial-apertada", "titulo": "Filial com bloco apertado", "dificuldade": 3, "xp": 250,
+      "id": "filial-apertada",
+      "titulo": "Filial com bloco apertado",
+      "dificuldade": 3,
+      "xp": 250,
       "cenario": "A filial recebeu um bloco pequeno (apenas 128 endereços). Dimensione cada sub-rede com cuidado: se uma for grande demais, as outras não cabem.",
-      "bloco": "172.16.5.0/25", "orcamento": 2600, "crescimento": 20,
+      "bloco": "172.16.5.0/25",
+      "orcamento": 2600,
+      "crescimento": 20,
       "setores": [
-        { "id": "vendas", "nome": "Vendas", "hosts": 25 },
-        { "id": "estoque", "nome": "Estoque", "hosts": 10 },
-        { "id": "ti", "nome": "TI", "hosts": 5 },
-        { "id": "caixa", "nome": "Caixa", "hosts": 3 }
+        {
+          "id": "vendas",
+          "nome": "Vendas",
+          "hosts": 25
+        },
+        {
+          "id": "estoque",
+          "nome": "Estoque",
+          "hosts": 10
+        },
+        {
+          "id": "ti",
+          "nome": "TI",
+          "hosts": 5
+        },
+        {
+          "id": "caixa",
+          "nome": "Caixa",
+          "hosts": 3
+        }
+      ],
+      "habilidades": [
+        "subnetting.pratica"
       ]
     }
   ]

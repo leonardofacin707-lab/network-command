@@ -2,12 +2,12 @@ import { esc, dataHora } from '../core/ui.js';
 import { xpDoEstado, cargoDe, nivelDoJogador, estrelasTotal } from '../core/progression.js';
 import { statusDoNivel } from '../quiz/unlock.js';
 import { listaRevisao, estatisticas, foiPerfeita } from '../quiz/historico.js';
-import { dominioPorHabilidade, desempenhoPorAssunto, pontosFracos } from './dominio.js';
+import { dominioPorHabilidade, desempenhoPorAssunto, pontosFracos, resumoPratica } from './dominio.js';
 import { CONQUISTAS } from './conquistas-regras.js';
 
 export default {
   id: 'dashboard',
-  montar(raiz, { catalogo, store }) {
+  montar(raiz, { catalogo, store, missoes, empresa, datacenter }) {
     const estado = store.obter();
     const { melhor, historico } = estado.quiz;
     const xp = xpDoEstado(estado);
@@ -25,6 +25,7 @@ export default {
     const desbloqueadas = CONQUISTAS.filter(c => estado.conquistas[c.id])
       .sort((a, b) => estado.conquistas[b.id].localeCompare(estado.conquistas[a.id]));
     const nome = estado.perfil.nome;
+    const pratica = resumoPratica(estado, { missoes, empresa, datacenter });
 
     raiz.innerHTML = `<section class="band"><div class="wrap">
       <h2 class="titulo-pagina">${nome ? `Olá, ${esc(nome)}` : 'Bem-vindo ao Network Command'}</h2>
@@ -44,6 +45,13 @@ export default {
                <div class="acoes"><a class="btn" data-teste="continuar" href="#/conhecimento/nivel/${proximo.id}">Jogar nível ${proximo.id}</a></div>`
             : `<p>Você completou todos os níveis disponíveis do quiz. Rejogue para chegar a 3 estrelas em todos.</p>
                <div class="acoes"><a class="btn-sec" href="#/conhecimento">Abrir o mapa</a></div>`}
+        </article>
+
+        <article class="painel" data-teste="pratica">
+          <h3>Prática</h3>
+          <ul class="resumo-pratica">${pratica.map(r => `<li><a href="#/${r.modulo}"><b>${esc(r.rotulo)}</b></a> · ${r.feitos} de ${r.total} concluídos${r.proximo
+            ? ` · próximo: <a href="#/${r.modulo}/${r.proximo.id}">${esc(r.proximo.titulo)}</a>` : ' · <span class="ok-txt">tudo concluído</span>'}</li>`).join('')}</ul>
+          <div class="acoes"><a class="btn-sec" href="#/laboratorio">Abrir o laboratório livre</a></div>
         </article>
 
         <article class="painel">

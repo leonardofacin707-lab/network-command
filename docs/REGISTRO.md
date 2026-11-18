@@ -78,6 +78,11 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - 🧪 **Não simulado**: subinterfaces (router-on-a-stick), STP/loops, VTP/DTP, VLAN nativa configurável, ACLs, roteamento dinâmico. Um quadro marcado que chega a uma porta access é tratado como da VLAN dela (um switch real o descartaria).
 - Todas as 10 entradas do menu agora têm uma página funcional (a de "em desenvolvimento" foi removida por não ter mais uso).
 
+### Integração com a progressão compartilhada
+- ✅ Árvore de habilidades: os degraus **Prática** e **Diagnóstico** deixam de ser "sem conteúdo" quando há itens mapeados (campo `habilidades` em cada missão/projeto, ex.: `ethernet-comutacao.diagnostico`). Mostra "X de Y concluídos" com a lista de itens; o que não tem conteúdo continua "Sem conteúdo ainda". Função `progressoPratico` em `js/hub/dominio.js`.
+- ✅ Dashboard: novo card **Prática** com concluídos por módulo (Missões, Campus, Empresa, Data Center) e link para o próximo item pendente (`resumoPratica`). Sem dados inventados: tudo vem do estado salvo e dos catálogos.
+- ✅ Testes: unitários de `progressoPratico` e `resumoPratica`; e2e que conclui uma missão pela interface e confere dashboard, árvore e estado salvo.
+
 ### Problemas conhecidos (testes)
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 

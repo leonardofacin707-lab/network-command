@@ -108,7 +108,8 @@ export function validarProjeto(p) {
   const inteiro = (v, a, b, d) => (Number.isInteger(v) && v >= a && v <= b ? v : d);
   return { id: p.id, titulo: p.titulo, cenario: p.cenario, bloco: p.bloco, setores,
     orcamento: inteiro(p.orcamento, 1, 1e6, 1000), crescimento: inteiro(p.crescimento, 0, 300, 20),
-    xp: inteiro(p.xp, 1, 1000, 100), dificuldade: [1, 2, 3].includes(p.dificuldade) ? p.dificuldade : 1 };
+    xp: inteiro(p.xp, 1, 1000, 100), dificuldade: [1, 2, 3].includes(p.dificuldade) ? p.dificuldade : 1,
+    habilidades: (Array.isArray(p.habilidades) ? p.habilidades : []).filter(h => typeof h === 'string' && /^[a-z-]{1,30}\.(teoria|pratica|diagnostico)$/.test(h)).slice(0, 4) };
 }
 
 export function validarEquipamentos(lista) {
