@@ -282,3 +282,11 @@ test('dois cabos entre os mesmos switches são desenhados lado a lado', async ()
   assert.notEqual(ys[0], ys[1], 'não se sobrepõem');
   await contexto.close();
 });
+
+test('o texto do laboratório não nega o que o motor simula (VLANs)', async () => {
+  const s = await abrirLab();
+  const texto = await s.pagina.locator('.sub').first().innerText();
+  assert.match(texto, /VLANs e trunk/);
+  assert.doesNotMatch(texto, /não\s+simula[^.]*VLANs/);
+  await s.contexto.close();
+});

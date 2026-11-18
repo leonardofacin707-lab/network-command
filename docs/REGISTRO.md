@@ -97,6 +97,11 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Testes: unitários (cada missão começa quebrada, as soluções passam e variações erradas não) e e2e pela interface (IPs, roteador, VLAN, trunk).
 - 🧪 Continua sendo protótipo: a verificação é por ping (ida e volta); não avalia boas práticas (por exemplo, desperdício de endereços ou VLAN nativa).
 
+### Revisão visual (capturas desktop e celular)
+- 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
+- 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
+- 🔧 Lista "Prática" do dashboard tinha recuo extra.
+
 ### Problemas conhecidos (testes)
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 
