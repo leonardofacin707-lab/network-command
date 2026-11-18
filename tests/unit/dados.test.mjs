@@ -235,3 +235,17 @@ test('nível 10 (TCP, UDP e portas): handshake, portas e quantidade de portas', 
   assert.deepEqual(porId.get('transporte-004').pares.map(p => [p.esquerda, p.direita]), [['HTTP', '80'], ['HTTPS', '443'], ['DNS', '53'], ['SSH', '22']]);
   assert.ok(categorias.some(c => c.id === 'transporte' && c.trilha === 'servicos'));
 });
+
+test('nível 11 (Serviços): ordem da consulta DNS, registros e porta do FTP', () => {
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  assert.equal(niveis.find(n => n.id === 11).desafios.length, 9);
+  assert.equal(porId.get('dns-002').itens.length, 5);
+  assert.match(porId.get('dns-002').itens[0], /digita/);
+  assert.match(porId.get('dns-002').itens[4], /conecta/);
+  assert.deepEqual(porId.get('dns-003').pares.map(p => p.esquerda), ['A', 'AAAA', 'MX', 'NS']);
+  assert.equal(porId.get('aplicacao-002').resposta, 21);
+  assert.ok(categorias.some(c => c.id === 'aplicacao' && c.trilha === 'servicos'));
+  // todo nível jogável usa categorias que existem e pertencem a uma trilha existente
+  const cats = new Map(categorias.map(c => [c.id, c]));
+  for (const q of perguntas) assert.ok(cats.has(q.categoria), `${q.id}: categoria ${q.categoria}`);
+});

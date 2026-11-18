@@ -233,7 +233,24 @@
     "id": 11,
     "nome": "Serviços",
     "icone": "globo",
-    "modulos": "Módulo 16"
+    "modulos": "Módulo 16",
+    "categoria": "dns",
+    "resumo": [
+      "DNS: tradução de nomes, consulta, cache e registros",
+      "Web, e-mail e transferência de arquivos",
+      "HTTP x HTTPS, SSH x Telnet e diagnóstico de nomes"
+    ],
+    "desafios": [
+      "dns-001",
+      "dns-002",
+      "dns-003",
+      "aplicacao-001",
+      "aplicacao-002",
+      "aplicacao-003",
+      "dns-004",
+      "dns-005",
+      "aplicacao-004"
+    ]
   },
   {
     "id": 12,
