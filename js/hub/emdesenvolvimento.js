@@ -2,7 +2,6 @@ import { esc } from '../core/ui.js';
 
 /** Páginas dos módulos ainda não construídos: dizem com clareza que não existem e o que está planejado. */
 const PLANOS = {
-  laboratorio: { titulo: 'Laboratório', fase: 'Fases 3 e 4', texto: 'Editor visual de redes com computadores, switches e roteadores, configuração de IPv4 e um terminal simulado com ipconfig, ping, tracert, arp e hostname, apoiado por um motor de simulação separado da interface.' },
   empresa: { titulo: 'Empresa', fase: 'Fase 6', texto: 'Gerenciamento da infraestrutura de uma empresa: orçamento, equipamentos, falhas e crescimento da rede.' },
   datacenter: { titulo: 'Data Center', fase: 'Fase 6', texto: 'Cenário de redes de data center: redundância, disponibilidade e capacidade.' },
   campus: { titulo: 'Campus de Redes', fase: 'Fase 6', texto: 'Cenário de rede de campus com vários prédios, VLANs e roteamento.' },

@@ -1,8 +1,10 @@
+import { normalizarTopologia, topologiaVazia } from '../sim/topologia.js';
+
 // Persistência no localStorage, com formato versionado e validação.
 // Nunca guarda senhas nem dados pessoais além do nome de exibição escolhido pelo jogador.
 export const CHAVE = 'network-command';
 export const CHAVE_V1 = 'jornada-do-pacote-v1'; // formato da v0.1: { melhor: { [nivel]: { pts, estrelas } } }
-export const VERSAO = 3;
+export const VERSAO = 4;
 export const MAX_HISTORICO = 300;
 export const MAX_NOME = 40;
 
@@ -10,7 +12,9 @@ export const estadoInicial = () => ({
   versao: VERSAO,
   perfil: { nome: '', criadoEm: new Date().toISOString() },
   quiz: { melhor: {}, historico: [] },
-  conquistas: {}
+  conquistas: {},
+  lab: { topologia: topologiaVazia() },   // laboratório livre
+  missoes: {}                             // { [id]: { topologia, concluida, em, xp, dicas } }
 });
 
 const inteiro = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
@@ -21,6 +25,7 @@ const dataValida = s => typeof s === 'string' && !Number.isNaN(Date.parse(s));
  *   limites   { [idDoNivel]: pontosMaximos }
  *   perguntas Set com os ids de perguntas que existem
  *   conquistas Set com os ids de conquistas que existem
+ *   missoes   Set com os ids de missões que existem
  */
 export function limparMelhor(bruto, limites) {
   const limpo = {};
@@ -51,12 +56,29 @@ export function limparConquistas(bruto, conhecidas) {
   return limpo;
 }
 
+export function limparMissoes(bruto, conhecidas) {
+  const limpo = {};
+  if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) return limpo;
+  for (const [id, m] of Object.entries(bruto)) {
+    if (!conhecidas.has(id) || !m || typeof m !== 'object') continue;
+    const concluida = m.concluida === true;
+    limpo[id] = {
+      topologia: normalizarTopologia(m.topologia),
+      concluida,
+      em: concluida && dataValida(m.em) ? m.em : null,
+      xp: concluida && inteiro(m.xp, 0, 1000) ? m.xp : 0,
+      dicas: inteiro(m.dicas, 0, 9) ? m.dicas : 0
+    };
+  }
+  return limpo;
+}
+
 /** Converte qualquer coisa lida do disco (v1, v2, v3 ou lixo) em um estado v3 válido. */
 export function normalizar(bruto, ref) {
   const base = estadoInicial();
   if (!bruto || typeof bruto !== 'object') return base;
   const versao = bruto.versao;
-  const ehNovo = versao === 2 || versao === VERSAO; // v2 é igual à v3 sem histórico e conquistas
+  const ehNovo = versao === 2 || versao === 3 || versao === VERSAO; // v2 e v3 são versões anteriores do mesmo formato
   const melhorBruto = ehNovo ? bruto.quiz?.melhor : bruto.melhor; // sem "versao" = formato v1
   base.quiz.melhor = limparMelhor(melhorBruto, ref.limites);
   if (ehNovo) {
@@ -64,6 +86,8 @@ export function normalizar(bruto, ref) {
     if (dataValida(bruto.perfil?.criadoEm)) base.perfil.criadoEm = bruto.perfil.criadoEm;
     base.quiz.historico = limparHistorico(bruto.quiz?.historico, ref.perguntas);
     base.conquistas = limparConquistas(bruto.conquistas, ref.conquistas);
+    base.lab = { topologia: normalizarTopologia(bruto.lab?.topologia) };
+    base.missoes = limparMissoes(bruto.missoes, ref.missoes ?? new Set());
   }
   return base;
 }

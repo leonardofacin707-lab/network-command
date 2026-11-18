@@ -12,6 +12,7 @@ import dashboard from './hub/dashboard.js';
 import perfil from './hub/perfil.js';
 import conquistas from './hub/conquistas.js';
 import habilidades from './hub/habilidades.js';
+import laboratorio from './lab/index.js';
 import { emDesenvolvimento } from './hub/emdesenvolvimento.js';
 
 async function iniciar() {
@@ -50,7 +51,7 @@ async function iniciar() {
 
   const rotas = {
     dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
-    laboratorio: emDesenvolvimento('laboratorio'), empresa: emDesenvolvimento('empresa'),
+    laboratorio, empresa: emDesenvolvimento('empresa'),
     datacenter: emDesenvolvimento('datacenter'), campus: emDesenvolvimento('campus'), missoes: emDesenvolvimento('missoes')
   };
   criarRoteador({

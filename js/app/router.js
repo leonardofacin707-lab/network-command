@@ -24,4 +24,4 @@ export function criarRoteador({ raiz, rotas, padrao, ctx, aoTrocar }) {
 /** Leva para uma rota sem recarregar (ex.: ir('conhecimento/revisao')). */
 export const ir = destino => { location.hash = '#/' + destino; };
 /** Troca o hash sem disparar a navegação (usado depois de abrir um atalho). */
-export const limparHash = destino => history.replaceState(null, '', '#/' + destino);
+export const limparHash = destino => { try { history.replaceState(null, '', '#/' + destino); } catch { /* ambientes isolados (iframe sandbox) */ } };

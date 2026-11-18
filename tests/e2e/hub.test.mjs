@@ -48,7 +48,7 @@ test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando ou avi
     await irPara(pagina, rota);
     assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), rota, rota);
     const texto = await pagina.locator('#app').innerText();
-    if (['laboratorio', 'empresa', 'datacenter', 'campus', 'missoes'].includes(rota)) {
+    if (['empresa', 'datacenter', 'campus', 'missoes'].includes(rota)) {
       assert.match(texto, /ainda não existe/i, `${rota} deve avisar que não existe`);
       assert.match(await pagina.locator(`.menu a[data-rota="${rota}"]`).innerText(), /em dev/i);
     } else {
@@ -95,7 +95,7 @@ test('jogar grava histórico, concede conquistas e avisa', async () => {
   const falhas = { 0: 'errar' };
   await jogarNivel(pagina, 1, { falhas });
   const e = await salvo();
-  assert.equal(e.versao, 3);
+  assert.equal(e.versao, 4);
   assert.equal(e.quiz.historico.length, 9);
   assert.equal(e.quiz.historico[0].ok, false);
   assert.equal(e.quiz.historico[0].erros, 1);
@@ -289,7 +289,7 @@ test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async (
           const el = n.parentElement; if (vistos.has(el)) continue; vistos.add(el);
           const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
           if (cs.visibility === 'hidden' || cs.display === 'none' || !r.width || !r.height) continue;
-          const bg = fundo(el); const fg = misturar(rgba(cs.color), bg);
+          const bg = fundo(el); const fg = misturar(rgba(el instanceof SVGElement ? cs.fill : cs.color), bg);
           const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x); const cr = (a + .05) / (b + .05);
           const tam = parseFloat(cs.fontSize), neg = parseInt(cs.fontWeight) >= 700;
           if (cr < ((tam >= 24 || (tam >= 18.66 && neg)) ? 3 : 4.5)) out.push(`${el.tagName}.${el.className} "${n.textContent.trim().slice(0, 25)}" ${cr.toFixed(2)}`);

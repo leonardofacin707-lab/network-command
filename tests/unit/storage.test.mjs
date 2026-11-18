@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { carregar, salvar, normalizar, limparMelhor, limparHistorico, limparConquistas, apagar, CHAVE, CHAVE_V1, VERSAO, MAX_HISTORICO } from '../../js/core/storage.js';
+import { carregar, salvar, normalizar, limparMelhor, limparHistorico, limparConquistas, limparMissoes, apagar, CHAVE, CHAVE_V1, VERSAO, MAX_HISTORICO } from '../../js/core/storage.js';
 
 const limites = { 1: 900, 2: 900, 3: 900 };
-const ref = { limites, perguntas: new Set(['p1', 'p2', 'p3']), conquistas: new Set(['c1', 'c2']) };
+const ref = { limites, perguntas: new Set(['p1', 'p2', 'p3']), conquistas: new Set(['c1', 'c2']), missoes: new Set(['m1']) };
 const falso = (dados = {}) => ({
   getItem: k => (k in dados ? dados[k] : null),
   setItem: (k, v) => { dados[k] = v; },
@@ -19,7 +19,7 @@ test('sem nada salvo, começa vazio', () => {
 
 test('salvar e carregar devolvem o mesmo progresso', () => {
   const arm = falso();
-  const e = normalizar({ versao: 3, perfil: { nome: 'Leo', criadoEm: '2026-01-01T00:00:00.000Z' }, quiz: { melhor: { 1: { pts: 900, estrelas: 3 } }, historico: [{ q: 'p1', ok: true, erros: 0, pts: 100, em: '2026-01-02T10:00:00.000Z' }] }, conquistas: { c1: '2026-01-02T10:00:00.000Z' } }, ref);
+  const e = normalizar({ versao: 4, perfil: { nome: 'Leo', criadoEm: '2026-01-01T00:00:00.000Z' }, quiz: { melhor: { 1: { pts: 900, estrelas: 3 } }, historico: [{ q: 'p1', ok: true, erros: 0, pts: 100, em: '2026-01-02T10:00:00.000Z' }] }, conquistas: { c1: '2026-01-02T10:00:00.000Z' }, lab: { topologia: { dispositivos: [], cabos: [] } }, missoes: {} }, ref);
   assert.equal(salvar(e, arm), true);
   assert.deepEqual(carregar(ref, arm), e);
 });
@@ -86,7 +86,7 @@ test('o estado salvo não contém senhas nem campos desconhecidos', () => {
   const e = normalizar({ versao: 2, senha: '123', token: 'abc', perfil: { nome: 'A', email: 'a@b.c' }, quiz: { melhor: {} } }, ref);
   assert.equal(JSON.stringify(e).includes('123'), false);
   assert.equal('email' in e.perfil, false);
-  assert.deepEqual(Object.keys(e).sort(), ['conquistas', 'perfil', 'quiz', 'versao']);
+  assert.deepEqual(Object.keys(e).sort(), ['conquistas', 'lab', 'missoes', 'perfil', 'quiz', 'versao']);
 });
 
 test('formato v2 (sem histórico nem conquistas) é migrado para o v3', () => {
@@ -123,4 +123,31 @@ test('apagar remove as duas chaves', () => {
   const arm = { ...falso(dados), removeItem: k => { delete dados[k]; } };
   assert.equal(apagar(arm), true);
   assert.deepEqual(dados, {});
+});
+
+test('formato v3 (sem laboratório nem missões) é migrado para o v4', () => {
+  const e = normalizar({ versao: 3, perfil: { nome: 'Ana' }, quiz: { melhor: {}, historico: [] }, conquistas: {} }, ref);
+  assert.equal(e.versao, VERSAO);
+  assert.deepEqual(e.lab.topologia, { dispositivos: [], cabos: [] });
+  assert.deepEqual(e.missoes, {});
+});
+
+test('laboratório salvo é validado (dispositivos e cabos inválidos somem)', () => {
+  const lixo = { versao: 4, lab: { topologia: { dispositivos: [{ id: 'pc1', tipo: 'pc', nome: 'A' }, { id: 'x', tipo: 'bomba' }], cabos: [{ id: 'c1', a: { d: 'pc1', p: 'eth0' }, b: { d: 'zzz', p: 'eth0' } }] } } };
+  const e = normalizar(lixo, ref);
+  assert.deepEqual(e.lab.topologia.dispositivos.map(d => d.id), ['pc1']);
+  assert.deepEqual(e.lab.topologia.cabos, []);
+});
+
+test('missões: só ids conhecidos; conclusão exige data e XP válidos', () => {
+  const m = limparMissoes({
+    m1: { concluida: true, em: '2026-01-02T10:00:00.000Z', xp: 150, dicas: 2, topologia: { dispositivos: [], cabos: [] } },
+    m9: { concluida: true, em: '2026-01-02T10:00:00.000Z', xp: 150 },
+    m1x: null
+  }, ref.missoes);
+  assert.deepEqual(Object.keys(m), ['m1']);
+  assert.equal(m.m1.xp, 150);
+  const ruim = limparMissoes({ m1: { concluida: true, em: 'ontem', xp: 99999, dicas: -3 } }, ref.missoes);
+  assert.deepEqual(ruim.m1, { topologia: { dispositivos: [], cabos: [] }, concluida: true, em: null, xp: 0, dicas: 0 });
+  assert.equal(limparMissoes({ m1: { concluida: 'sim', xp: 50 } }, ref.missoes).m1.concluida, false);
 });
