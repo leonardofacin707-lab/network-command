@@ -121,7 +121,7 @@ test('a resposta certa não se destaca pelo tamanho (achado 4 da auditoria)', ()
 
 test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem buracos', () => {
   const jogaveis = niveis.filter(n => n.desafios);
-  assert.deepEqual(jogaveis.map(n => n.id), [1, 2, 3, 4, 5]);
+  assert.deepEqual(jogaveis.map(n => n.id), [1, 2, 3, 4, 5, 6]);
   const ids = niveis.map(n => n.id);
   // um nível "em breve" nunca fica antes de um jogável (senão o jogável nunca abriria)
   const primeiroEmBreve = niveis.findIndex(n => !n.desafios);
@@ -132,9 +132,9 @@ test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem
   }
 });
 
-test('níveis 4 e 5: tipos variados e respostas numéricas conferidas', () => {
+test('níveis 4 a 6: tipos variados e respostas numéricas conferidas', () => {
   const porId = new Map(perguntas.map(q => [q.id, q]));
-  for (const nivel of [4, 5]) {
+  for (const nivel of [4, 5, 6]) {
     const tipos = new Set(perguntas.filter(q => q.nivel === nivel).map(q => q.tipo));
     assert.equal(tipos.size, 5, `nível ${nivel} usa os 5 tipos`);
   }
@@ -145,4 +145,37 @@ test('níveis 4 e 5: tipos variados e respostas numéricas conferidas', () => {
   assert.deepEqual(porId.get('ethernet-003').itens, ['Preâmbulo', 'MAC de destino', 'MAC de origem', 'Tipo', 'Dados', 'FCS']);
   assert.deepEqual(porId.get('ipv4-007').itens, ['/30', '/27', '/24', '/16']);
   assert.ok(porId.get('ipv4-007').itens.map(i => 2 ** (32 - Number(i.slice(1)))).every((v, i, a) => i === 0 || v > a[i - 1]));
+});
+
+// As respostas do quiz de endereçamento são conferidas com a aritmética IPv4 do motor (outra implementação).
+test('níveis 5 e 6: as contas do quiz batem com o motor IPv4', async () => {
+  const ip = await import('../../js/sim/ipv4.js');
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  const m = p => ip.mascaraDePrefixo(p);
+  const quad = n => ip.formatarIPv4(n);
+  assert.equal(porId.get('subnetting-001').resposta, 32 - 27);
+  assert.equal(porId.get('subnetting-002').resposta, ip.hostsUteis(m(26)));
+  assert.equal(quad(m(26)), '255.255.255.192');
+  const s3 = porId.get('subnetting-003');
+  assert.equal(s3.alternativas[s3.correta], quad(m(26)));
+  for (const p of porId.get('subnetting-004').pares) {
+    assert.equal(ip.hostsUteis(m(Number(p.esquerda.slice(1)))), Number(p.direita.split(' ')[0]), p.esquerda);
+  }
+  // cada host cai na rede /26 indicada
+  const s5 = porId.get('subnetting-005');
+  for (const it of s5.itens) {
+    const rede = quad(ip.enderecoDeRede(ip.lerIPv4(it.texto), m(26)));
+    assert.equal(`${rede}/26`, s5.grupos[it.grupo], it.texto);
+  }
+  assert.equal(ip.hostsUteis(m(26)) >= 50 && ip.hostsUteis(m(27)) < 50, true);
+  assert.equal(porId.get('subnetting-007').resposta, 2 ** (27 - 24));
+  const s9 = porId.get('subnetting-009');
+  assert.equal(s9.alternativas[s9.correta], quad(ip.enderecoDeRede(ip.lerIPv4('172.16.45.200'), m(20))));
+  // nível 5
+  const i8 = porId.get('ipv4-008');
+  assert.equal(i8.alternativas[i8.correta], quad(ip.enderecoDeBroadcast(ip.lerIPv4('192.168.10.0'), m(24))));
+  const i9 = porId.get('ipv4-009');
+  assert.ok(ip.mesmaRede(ip.lerIPv4('192.168.1.10'), ip.lerIPv4(i9.alternativas[i9.correta]), m(24)));
+  i9.alternativas.forEach((a, i) => { if (i !== i9.correta) assert.ok(!ip.mesmaRede(ip.lerIPv4('192.168.1.10'), ip.lerIPv4(a), m(24)), a); });
+  for (const [p, m2] of [[8, '255.0.0.0'], [16, '255.255.0.0'], [24, '255.255.255.0'], [25, '255.255.255.128']]) assert.equal(quad(m(p)), m2);
 });

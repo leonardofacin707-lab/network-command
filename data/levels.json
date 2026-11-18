@@ -118,7 +118,24 @@
     "id": 6,
     "nome": "Sub-redes",
     "icone": "subrede",
-    "modulos": "Módulo 9"
+    "modulos": "Módulo 9",
+    "categoria": "subnetting",
+    "resumo": [
+      "Bits de rede e de host, hosts úteis",
+      "Máscara, prefixo e endereço de rede",
+      "Escolher o prefixo e planejar com VLSM"
+    ],
+    "desafios": [
+      "subnetting-001",
+      "subnetting-002",
+      "subnetting-003",
+      "subnetting-004",
+      "subnetting-005",
+      "subnetting-006",
+      "subnetting-007",
+      "subnetting-008",
+      "subnetting-009"
+    ]
   },
   {
     "id": 7,

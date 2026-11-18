@@ -1,4 +1,4 @@
-// Níveis 4 (Dentro do switch) e 5 (Endereço IPv4) do quiz: liberação em sequência e jogada completa pela interface.
+// Níveis 4 (Dentro do switch), 5 (Endereço IPv4) e 6 (Sub-redes) do quiz: liberação em sequência e jogada completa pela interface.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -66,30 +66,34 @@ async function jogar(pagina, nivel) {
   return lerResultado(pagina);
 }
 
-test('nível 5 só abre depois do 4; o nível 6 segue "em breve"', async () => {
+test('os níveis abrem em sequência (5 só depois do 4, 6 só depois do 5); o nível 7 segue "em breve"', async () => {
   const { pagina, contexto } = await abrirMapa();
   assert.equal(await pagina.locator('.no[data-nivel="4"]').getAttribute('aria-disabled'), null, 'nível 4 liberado pelo 3');
   assert.equal(await pagina.locator('.no[data-nivel="5"]').getAttribute('aria-disabled'), 'true', 'nível 5 bloqueado');
-  assert.equal(await pagina.locator('.no[data-nivel="6"].st-embreve').count(), 1);
-  await pagina.locator('.no[data-nivel="5"]').click({ force: true, timeout: 2000 });
-  assert.equal(await pagina.locator('.card').count(), 0);
+  assert.equal(await pagina.locator('.no[data-nivel="6"]').getAttribute('aria-disabled'), 'true', 'nível 6 bloqueado');
+  assert.equal(await pagina.locator('.no[data-nivel="7"].st-embreve').count(), 1);
+  for (const n of [5, 6]) {
+    await pagina.locator(`.no[data-nivel="${n}"]`).click({ force: true, timeout: 2000 });
+    assert.equal(await pagina.locator('.card').count(), 0, `nível ${n} não deve abrir`);
+  }
   await contexto.close();
 });
 
-test('jogada perfeita nos níveis 4 e 5: 900 pontos, 3 estrelas, progresso salvo e nível 6 ainda fechado', async () => {
+test('jogada perfeita nos níveis 4, 5 e 6: 900 pontos, 3 estrelas, progresso salvo e nível 7 ainda fechado', async () => {
   const { pagina, erros, salvo, contexto } = await abrirMapa();
-  for (const nivel of [4, 5]) {
+  for (const nivel of [4, 5, 6]) {
     const r = await jogar(pagina, nivel);
     assert.deepEqual(r, { pontos: '900 / 900', acertos: '9 de 9', melhor: '900', estrelas: '3 de 3 estrelas' }, `nível ${nivel}`);
   }
   await pagina.locator('[data-acao="mapa"]').first().click();
   await pagina.locator('.no').first().waitFor();
-  assert.equal((await lerHud(pagina)).estrelas, '15 / 15');
+  assert.equal((await lerHud(pagina)).estrelas, '18 / 18');
   const e = await salvo();
   assert.equal(e.quiz.melhor[4].pts, 900);
   assert.equal(e.quiz.melhor[5].pts, 900);
-  assert.equal(e.quiz.historico.filter(h => h.q.startsWith('ethernet-') || h.q.startsWith('ipv4-')).length, 18);
-  assert.equal(await pagina.locator('.no[data-nivel="6"].st-embreve').count(), 1);
+  assert.equal(e.quiz.melhor[6].pts, 900);
+  assert.equal(e.quiz.historico.filter(h => h.q.startsWith('ethernet-') || h.q.startsWith('ipv4-') || h.q.startsWith('subnetting-')).length, 27);
+  assert.equal(await pagina.locator('.no[data-nivel="7"].st-embreve').count(), 1);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

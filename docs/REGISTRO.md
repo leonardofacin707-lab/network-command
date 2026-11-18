@@ -83,10 +83,10 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Dashboard: novo card **Prática** com concluídos por módulo (Missões, Campus, Empresa, Data Center) e link para o próximo item pendente (`resumoPratica`). Sem dados inventados: tudo vem do estado salvo e dos catálogos.
 - ✅ Testes: unitários de `progressoPratico` e `resumoPratica`; e2e que conclui uma missão pela interface e confere dashboard, árvore e estado salvo.
 
-### Quiz: níveis 4 e 5
-- ✅ Nível 4 *Dentro do switch* (MAC, quadro Ethernet, aprendizado e inundação do switch, unicast/multicast/broadcast, full-duplex) e nível 5 *Endereço IPv4* (binário/decimal, máscara e prefixo, rede/host/broadcast, privado/público/loopback/link-local). 9 desafios cada, usando os 5 tipos de pergunta, em `data/questions.json` (gerados por `tools/gerar-niveis-4-5.mjs`, que não sobrescreve).
-- ✅ O quiz passa a ter 45 desafios jogáveis (5 níveis). Os níveis 6 a 12 continuam "em breve". O nível 5 só abre depois de ao menos 1 estrela no 4.
-- ✅ Testes: unitários (9 desafios por nível, sequência sem buracos, respostas numéricas conferidas) e e2e (`niveis45`: bloqueio em sequência, jogada perfeita pela interface, erro mostra explicação). A regressão contra a v0.1 continua passando (ALVO=legacy); a contagem de estrelas e de níveis "em breve" depende do alvo.
+### Quiz: níveis 4, 5 e 6
+- ✅ Nível 4 *Dentro do switch* (MAC, quadro Ethernet, aprendizado e inundação do switch, unicast/multicast/broadcast, full-duplex) e nível 5 *Endereço IPv4* (binário/decimal, máscara e prefixo, rede/host/broadcast, privado/público/loopback/link-local) e nível 6 *Sub-redes* (bits de host, hosts úteis, máscara de um prefixo, em que sub-rede o host está, escolha do prefixo, quantidade de sub-redes, passos do VLSM, endereço de rede). 9 desafios cada, usando os 5 tipos de pergunta, em `data/questions.json` (gerados por `tools/gerar-niveis-4-5.mjs` e `tools/gerar-nivel-6.mjs`, que não sobrescrevem).
+- ✅ O quiz passa a ter 54 desafios jogáveis (6 níveis). Os níveis 7 a 12 continuam "em breve". Cada nível só abre depois de ao menos 1 estrela no anterior.
+- ✅ Testes: unitários (9 desafios por nível, sequência sem buracos, respostas numéricas conferidas; as contas dos níveis 5 e 6 são recalculadas com o motor IPv4) e e2e (`niveis4a6`: bloqueio em sequência, jogada perfeita pela interface, erro mostra explicação). A regressão contra a v0.1 continua passando (ALVO=legacy); a contagem de estrelas e de níveis "em breve" depende do alvo.
 - ⚠️ Conteúdo escrito por mim a partir do conteúdo do curso; **vale revisar** os enunciados contra o material do NetAcad antes de usar como material de estudo.
 
 ### Problemas conhecidos (testes)

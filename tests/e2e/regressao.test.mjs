@@ -7,8 +7,8 @@ import { abrirNavegador, novaPagina } from '../helpers/navegador.mjs';
 import { abrirJogo, jogarNivel, lerHud, voltarAoMapa, larguraExcedente, nosSobrepostos } from '../helpers/jogador.mjs';
 
 const ehLegado = process.env.ALVO === 'legacy';
-// Na v0.1 só os níveis 1 a 3 são jogáveis (9 estrelas); a versão atual também tem os níveis 4 e 5 (15 estrelas).
-const ESTRELAS = ehLegado ? 9 : 15;
+// Na v0.1 só os níveis 1 a 3 são jogáveis (9 estrelas); a versão atual também tem os níveis 4 a 6 (18 estrelas).
+const ESTRELAS = ehLegado ? 9 : 18;
 const ALVO = ehLegado ? '/legacy/index-v0.1.html' : '/index.html';
 let servidor, navegador;
 
@@ -31,7 +31,7 @@ test('jogada perfeita nos 3 níveis: pontos, estrelas, XP e cargo', async () => 
   }
   await voltarAoMapa(pagina);
   assert.deepEqual(await lerHud(pagina), { cargo: 'Técnico de redes', xp: '2.700', estrelas: `9 / ${ESTRELAS}` });
-  assert.equal(await pagina.locator('.no.st-embreve').count(), ehLegado ? 9 : 7, 'os demais níveis seguem como "em breve"');
+  assert.equal(await pagina.locator('.no.st-embreve').count(), ehLegado ? 9 : 6, 'os demais níveis seguem como "em breve"');
   assert.deepEqual(erros, []);
   await contexto.close();
 });
