@@ -1,5 +1,5 @@
 /* Módulo Conhecimento (quiz): mapa de níveis, desafios e resultado. */
-.mapa{background:var(--mapa);color:#fff;padding:12px max(5vw,16px) 36px}
+.mapa{background:var(--mapa);color:#fff;padding:12px max(3vw,14px) 36px}
 .trilha{position:relative;max-width:1100px;margin:0 auto}
 .trilha>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .cabo{fill:none;stroke-width:5;stroke-linecap:round}
@@ -29,13 +29,13 @@
 .barra{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;margin-bottom:16px}
 .barra b{font-family:"Chakra Petch",sans-serif;font-size:17px}
 .prog{height:8px;border-radius:9px;background:var(--linha);margin-top:6px;overflow:hidden}
-.prog i{display:block;height:100%;background:var(--mapa);transition:width .3s}
+.prog i{display:block;height:100%;background:var(--ciano);transition:width .3s}
 .pts{font:700 18px "Chakra Petch",sans-serif;white-space:nowrap}
 .card h2{font-size:clamp(22px,3.4vw,30px);margin:4px 0 18px}
 .tipo{margin:0;font-size:14px;font-weight:600;color:var(--suave)}
 .ops{display:grid;gap:10px}
 .op{display:block;width:100%;text-align:left;background:var(--painel);border:2px solid var(--linha);border-radius:12px;padding:13px 16px;min-height:48px}
-.op:hover:not(:disabled){border-color:var(--mapa)}
+.op:hover:not(:disabled){border-color:var(--ciano)}
 .op.certa{border-color:var(--ok);background:var(--okbg)}
 .op.errada{border-color:var(--erro);background:var(--errobg)}
 .op:disabled{cursor:default}
@@ -44,14 +44,14 @@
 .colunas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
 .chip{background:var(--painel);border:2px solid var(--linha);border-radius:10px;padding:10px 14px;min-height:44px;text-align:left}
-.chip:hover:not(:disabled){border-color:var(--mapa)}
-.chip.sel{border-color:var(--mapa);background:light-dark(#e6edff,#1a2547)}
+.chip:hover:not(:disabled){border-color:var(--ciano)}
+.chip.sel{border-color:var(--ciano);background:#14243f}
 .chip.ok{border-color:var(--ok);background:var(--okbg);cursor:default}
 .chip.ok.sem{opacity:.55}
 .chip.ok::before{content:"✓ "}
 .colunas .chip{width:100%}
 .grupos{display:grid;grid-template-columns:repeat(auto-fit,minmax(10em,1fr));gap:10px;margin-top:14px}
-.grupo{background:light-dark(#f2f5fc,#121827);border:2px dashed var(--linha);border-radius:12px;padding:10px;min-height:96px;text-align:left;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.grupo{background:var(--painel2);border:2px dashed var(--linha);border-radius:12px;padding:10px;min-height:96px;text-align:left;display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .grupo-cab{background:none;border:0;padding:0;width:100%;min-height:28px;text-align:left;font-family:"Chakra Petch",sans-serif;font-size:16px}
 .grupo-itens{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .grupo .chip{font-size:14px;padding:6px 10px;min-height:0}
@@ -59,7 +59,7 @@
 .dica{font-size:14px;color:var(--suave);margin:0 0 10px}
 .fila{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:6px;counter-reset:f}
 .fila li{counter-increment:f;display:flex;gap:10px;align-items:center;border:2px solid var(--linha);border-radius:10px;padding:8px 12px;min-height:44px}
-.fila li::before{content:counter(f);font:700 15px "Chakra Petch",sans-serif;color:var(--mapa);min-width:1.4em}
+.fila li::before{content:counter(f);font:700 15px "Chakra Petch",sans-serif;color:var(--destaque);min-width:1.4em}
 .fila li.ok{border-color:var(--ok);background:var(--okbg)}
 .fila li.ok::after{content:"✓";margin-left:auto;color:var(--ok);font-weight:700}
 .fila li.vazio{border-style:dashed;color:var(--suave)}
@@ -75,8 +75,8 @@
 .treme{animation:treme .35s}
 @keyframes treme{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .resultado{text-align:center}
-.resultado .grandes{font-size:clamp(44px,9vw,72px);color:light-dark(#8a6a00,var(--sinal));letter-spacing:6px;line-height:1;margin:10px 0;text-shadow:0 2px 0 light-dark(#d9bb59,#b38f00)}
-.resultado .grandes .apagada{color:light-dark(#7c849b,#8b93a8);text-shadow:none}
+.resultado .grandes{font-size:clamp(44px,9vw,72px);color:var(--sinal);letter-spacing:6px;line-height:1;margin:10px 0;text-shadow:0 2px 0 #b38f00}
+.resultado .grandes .apagada{color:#8b93a8;text-shadow:none}
 .resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(9em,1fr));gap:10px;margin:16px 0}
 .resumo div{border:1px solid var(--linha);border-radius:10px;padding:10px}
 .resumo small{display:block;color:var(--suave);font-size:13px}

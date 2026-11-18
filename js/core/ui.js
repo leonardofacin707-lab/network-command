@@ -24,3 +24,17 @@ export function tremer(el) {
   void el.offsetWidth; // reinicia a animação
   el.classList.add('treme');
 }
+
+/** Aviso curto e discreto (leitores de tela anunciam; some sozinho). */
+export function avisar(texto, ms = 4500) {
+  const area = document.getElementById('avisos');
+  if (!area) return;
+  const el = document.createElement('div');
+  el.className = 'aviso';
+  el.textContent = texto;
+  area.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+/** Data e hora no formato brasileiro. */
+export const dataHora = iso => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });

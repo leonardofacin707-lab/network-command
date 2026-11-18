@@ -47,7 +47,7 @@ async function resolver(pagina, d, falha) {
 }
 
 export async function abrirJogo(pagina, base, alvo) {
-  await pagina.goto(base + alvo);
+  await pagina.goto(base + alvo + (alvo.includes('legacy') ? '' : '#/conhecimento'));
   await pagina.locator('.no').first().waitFor();
 }
 

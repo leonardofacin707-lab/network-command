@@ -1,7 +1,6 @@
 import { $, esc, reduzMovimento } from '../core/ui.js';
 import { ICONES } from './icones.js';
 import { statusDoNivel } from './unlock.js';
-import { desenharHud } from './hud.js';
 
 const estrelasTexto = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 let observador = null;
@@ -12,7 +11,6 @@ export function desenharMapa({ app, catalogo, store }) {
   const melhor = store.obter().quiz.melhor;
   const { niveis } = catalogo;
   const status = n => statusDoNivel(n, niveis, melhor);
-  desenharHud(melhor, catalogo);
   const prox = niveis.find(n => status(n) === 'aberto');
   app.innerHTML = `
     <section class="mapa" aria-label="Mapa de níveis">

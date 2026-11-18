@@ -21,7 +21,7 @@ async function sessao(opcoes) {
 
 test('jogada perfeita nos 3 níveis: pontos, estrelas, XP e cargo', async () => {
   const { pagina, erros, contexto } = await sessao();
-  await pagina.goto(servidor.url + ALVO);
+  await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
   await pagina.locator('.no').first().waitFor();
   for (const id of [1, 2, 3]) {
     const r = await jogarNivel(pagina, id);
@@ -36,7 +36,7 @@ test('jogada perfeita nos 3 níveis: pontos, estrelas, XP e cargo', async () => 
 
 test('erros reduzem a pontuação (pergunta errada = 0; par errado = 60)', async () => {
   const { pagina, erros, contexto } = await sessao();
-  await pagina.goto(servidor.url + ALVO);
+  await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
   await pagina.locator('.no').first().waitFor();
   const n1 = await jogarNivel(pagina, 1, { falhas: { 0: 'errar' } });
   assert.deepEqual(n1, { pontos: '800 / 900', acertos: '8 de 9', melhor: '800', estrelas: '2 de 3 estrelas' });
@@ -50,7 +50,7 @@ test('erros reduzem a pontuação (pergunta errada = 0; par errado = 60)', async
 
 test('o progresso sobrevive ao recarregar a página', async () => {
   const { pagina, contexto } = await sessao();
-  await pagina.goto(servidor.url + ALVO);
+  await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
   await pagina.locator('.no').first().waitFor();
   await jogarNivel(pagina, 1);
   await pagina.reload();
@@ -62,7 +62,7 @@ test('o progresso sobrevive ao recarregar a página', async () => {
 
 test('níveis bloqueados e "em breve" não abrem', async () => {
   const { pagina, contexto } = await sessao();
-  await pagina.goto(servidor.url + ALVO);
+  await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
   await pagina.locator('.no').first().waitFor();
   for (const id of [2, 3, 4]) {
     assert.equal(await pagina.locator(`.no[data-nivel="${id}"]`).getAttribute('aria-disabled'), 'true');
@@ -76,7 +76,7 @@ test('progresso salvo pela v0.1 (formato v1) continua valendo', async () => {
   const { pagina, erros, contexto } = await sessao({
     antes: () => localStorage.setItem('jornada-do-pacote-v1', JSON.stringify({ melhor: { 1: { pts: 900, estrelas: 3 } } }))
   });
-  await pagina.goto(servidor.url + ALVO);
+  await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
   await pagina.locator('.no').first().waitFor();
   assert.deepEqual(await lerHud(pagina), { cargo: 'Técnico de suporte', xp: '900', estrelas: '3 / 9' });
   assert.equal(await pagina.locator('.no[data-nivel="2"]').getAttribute('aria-disabled'), null);
@@ -87,7 +87,7 @@ test('progresso salvo pela v0.1 (formato v1) continua valendo', async () => {
 test('layout sem rolagem horizontal e sem nós sobrepostos em 360, 390, 768 e 1280 px', async () => {
   for (const largura of [360, 390, 768, 1280]) {
     const { pagina, erros, contexto } = await sessao({ largura, altura: 800 });
-    await pagina.goto(servidor.url + ALVO);
+    await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
     await pagina.locator('.no').first().waitFor();
     assert.ok((await larguraExcedente(pagina)) <= 0, `mapa em ${largura}px tem rolagem horizontal`);
     assert.equal(await nosSobrepostos(pagina), 0, `nós sobrepostos em ${largura}px`);
@@ -106,7 +106,7 @@ test('v0.1 quebra com progresso salvo inválido (documenta o defeito)', { skip: 
   const { pagina, erros, contexto } = await sessao({
     antes: () => localStorage.setItem('jornada-do-pacote-v1', JSON.stringify({ melhor: { 1: null } }))
   });
-  await pagina.goto(servidor.url + ALVO);
+  await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
   await pagina.waitForTimeout(500);
   assert.ok(erros.length > 0, 'esperava erro de execução na versão original');
   await contexto.close();
@@ -121,7 +121,7 @@ test('progresso salvo inválido não derruba o jogo', { skip: ehLegado && 'defei
   ];
   for (const [i, antes] of casos.entries()) {
     const { pagina, erros, contexto } = await sessao({ antes });
-    await pagina.goto(servidor.url + ALVO);
+    await pagina.goto(servidor.url + ALVO + (ehLegado ? '' : '#/conhecimento'));
     await pagina.locator('.no').first().waitFor();
     assert.deepEqual(await lerHud(pagina), { cargo: 'Estagiário de TI', xp: '0', estrelas: '0 / 9' }, `caso ${i + 1}`);
     assert.deepEqual(erros, [], `caso ${i + 1}`);

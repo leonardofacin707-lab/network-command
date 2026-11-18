@@ -9,7 +9,7 @@ import numero from './types/numero.js';
 
 const TIPOS = { pergunta, ligar, classificar, ordenar, numero };
 
-export function criarSessao(ctx, aoTerminar) {
+export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
   const { app } = ctx;
   let run = null; // { nivel, i, pts, acertos, erros, fim, est }
 
@@ -19,7 +19,7 @@ export function criarSessao(ctx, aoTerminar) {
   function iniciar(nivel) {
     if (!nivel || !nivel.desafios) return;
     pararMapa();
-    run = { nivel, i: 0, pts: 0, acertos: 0 };
+    run = { nivel, i: 0, pts: 0, acertos: 0, perfeitas: 0 };
     telaDesafio();
   }
 
@@ -53,6 +53,9 @@ export function criarSessao(ctx, aoTerminar) {
     run.fim = true;
     run.pts += pts;
     if (pts > 0) run.acertos++;
+    if (acertou && run.erros === 0) run.perfeitas++;
+    // resposta errada sempre conta como pelo menos 1 erro (desafios de uma tentativa só não incrementam run.erros)
+    aoResponder({ q: q.id, ok: acertou, erros: acertou ? run.erros : Math.max(run.erros, 1), pts });
     const ultimo = run.i === run.nivel.desafios.length - 1;
     const titulo = !acertou ? 'Não foi dessa vez' : run.erros === 0 ? 'Perfeito!' : run.erros === 1 ? 'Certo, com um tropeço' : 'Concluído';
     $('.pts').textContent = run.pts + ' pts';

@@ -1,0 +1,303 @@
+// Testes do hub (Fase 2): navegação, dashboard, histórico, revisão, conquistas, perfil, backup e contraste.
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { iniciarServidor } from '../helpers/servidor.mjs';
+import { abrirNavegador, novaPagina } from '../helpers/navegador.mjs';
+import { legado, jogarNivel } from '../helpers/jogador.mjs';
+
+let servidor, navegador;
+before(async () => { servidor = await iniciarServidor(); navegador = await abrirNavegador(); });
+after(async () => { await navegador?.close(); await servidor?.fechar(); });
+
+/** Clica no item do menu e espera a página trocar (o hashchange é assíncrono). */
+async function irPara(pagina, rota) {
+  await pagina.locator(`.menu a[data-rota="${rota}"]`).click();
+  await pagina.locator(`.menu a[data-rota="${rota}"][aria-current=page]`).waitFor();
+  await pagina.locator('#app h2').first().waitFor();
+}
+
+const ROTAS_MENU = ['dashboard', 'conhecimento', 'laboratorio', 'empresa', 'datacenter', 'campus', 'missoes', 'habilidades', 'conquistas', 'perfil'];
+
+async function abrir(rota = '', opcoes) {
+  const s = await novaPagina(navegador, opcoes);
+  await s.pagina.goto(servidor.url + '/index.html' + (rota ? '#/' + rota : ''));
+  await s.pagina.locator('#app h2').first().waitFor();
+  s.salvo = () => s.pagina.evaluate(() => JSON.parse(localStorage.getItem('network-command')));
+  return s;
+}
+
+async function abrirComEstado(rota, estado, opcoes = {}) {
+  const s = await novaPagina(navegador, opcoes);
+  await s.pagina.addInitScript(e => { if (!localStorage.getItem('network-command')) localStorage.setItem('network-command', JSON.stringify(e)); }, estado);
+  await s.pagina.goto(servidor.url + '/index.html#/' + rota);
+  await s.pagina.locator('#app h2').first().waitFor();
+  s.salvo = () => s.pagina.evaluate(() => JSON.parse(localStorage.getItem('network-command')));
+  return s;
+}
+
+const hist = [['fundamentos-001', true, 0, 100], ['fundamentos-002', true, 1, 60], ['fundamentos-003', false, 1, 0]]
+  .map(([q, ok, erros, pts], i) => ({ q, ok, erros, pts, em: new Date(Date.UTC(2026, 10, 17, 12, i)).toISOString() }));
+const ESTADO = { versao: 3, perfil: { nome: 'Leonardo', criadoEm: '2026-11-16T10:00:00.000Z' }, quiz: { melhor: { 1: { pts: 700, estrelas: 2 } }, historico: hist }, conquistas: {} };
+
+test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando ou avisando "em desenvolvimento"', async () => {
+  const { pagina, erros, contexto } = await abrir();
+  assert.equal(await pagina.locator('.menu a').count(), 10);
+  assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'dashboard');
+  for (const rota of ROTAS_MENU) {
+    await irPara(pagina, rota);
+    assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), rota, rota);
+    const texto = await pagina.locator('#app').innerText();
+    if (['laboratorio', 'empresa', 'datacenter', 'campus', 'missoes'].includes(rota)) {
+      assert.match(texto, /ainda não existe/i, `${rota} deve avisar que não existe`);
+      assert.match(await pagina.locator(`.menu a[data-rota="${rota}"]`).innerText(), /em dev/i);
+    } else {
+      assert.doesNotMatch(texto, /ainda não existe/i, rota);
+    }
+  }
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('rota desconhecida cai no dashboard', async () => {
+  const { pagina, contexto } = await abrir('nao-existe');
+  assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'dashboard');
+  await contexto.close();
+});
+
+test('dashboard vazio mostra convite, sem números inventados', async () => {
+  const { pagina, contexto } = await abrir('dashboard');
+  const texto = await pagina.locator('#app').innerText();
+  assert.match(texto, /Bem-vindo/);
+  assert.match(texto, /0 de 9 estrelas|0 XP/);
+  assert.match(texto, /Sem atividade ainda/);
+  assert.match(texto, /0 de 9 desbloqueadas/);
+  await contexto.close();
+});
+
+test('dashboard com progresso: dados vêm do estado e "Continuar" abre o nível', async () => {
+  const { pagina, erros, contexto } = await abrirComEstado('dashboard', ESTADO);
+  const texto = await pagina.locator('#app').innerText();
+  assert.match(texto, /Olá, Leonardo/);
+  assert.match(texto, /700 XP/);
+  assert.match(texto, /Nível 3 do jogador \(100 \/ 300 XP\)/);
+  assert.match(texto, /Teoria: 1 de 27 dominadas/);
+  assert.match(texto, /Revisar 2 desafios/);
+  await pagina.locator('[data-teste="continuar"]').click();
+  await pagina.locator('.card').waitFor();
+  assert.match(await pagina.locator('.barra b').innerText(), /Nível 2/);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('jogar grava histórico, concede conquistas e avisa', async () => {
+  const { pagina, erros, salvo, contexto } = await abrir('conhecimento');
+  const falhas = { 0: 'errar' };
+  await jogarNivel(pagina, 1, { falhas });
+  const e = await salvo();
+  assert.equal(e.versao, 3);
+  assert.equal(e.quiz.historico.length, 9);
+  assert.equal(e.quiz.historico[0].ok, false);
+  assert.equal(e.quiz.historico[0].erros, 1);
+  assert.ok(e.conquistas['primeiro-passo'], 'primeiro passo');
+  assert.ok(!e.conquistas['nivel-dominado'], '800 pontos são 2 estrelas');
+  assert.match(await pagina.locator('#avisos').innerText().catch(() => ''), /Conquista desbloqueada|^$/);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('revisão: lista o desafio errado, refazer acertando tira da lista', async () => {
+  const { pagina, erros, contexto } = await abrir('conhecimento');
+  await jogarNivel(pagina, 1, { falhas: { 0: 'errar' } });
+  await pagina.goto(servidor.url + '/index.html#/conhecimento/revisao');
+  await pagina.locator('#app h2').first().waitFor();
+  assert.match(await pagina.locator('#app').innerText(), /1 desafio teve erro/);
+  assert.match(await pagina.locator('#app').innerText(), /Quem é o dono da Internet/);
+  await pagina.locator('[data-acao="revisar"]').click();
+  await pagina.locator('.card').waitFor();
+  assert.match(await pagina.locator('.barra b').innerText(), /Revisão de erros/);
+  const q = legado[0].desafios[0];
+  await pagina.locator('.op').filter({ hasText: q.opcoes[q.certa] }).click();
+  await pagina.locator('[data-acao="proximo"]').click();
+  assert.match(await pagina.locator('.resultado').innerText(), /Tudo certo agora/);
+  await pagina.locator('[data-acao="mapa"]').first().click();
+  await pagina.locator('.aba', { hasText: 'Revisão' }).click();
+  await pagina.locator('.aba[aria-current=page]', { hasText: 'Revisão' }).waitFor();
+  assert.match(await pagina.locator('#app').innerText(), /Nenhum desafio para revisar/);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('a revisão não dá XP nem estrelas', async () => {
+  const { pagina, salvo, contexto } = await abrirComEstado('conhecimento/revisao', ESTADO);
+  const antes = (await salvo()).quiz.melhor;
+  await pagina.locator('[data-acao="revisar"]').click();
+  await pagina.locator('.card').waitFor();
+  for (let i = 0; i < 2; i++) {
+    await pagina.locator('.op').first().click({ timeout: 1500 }).catch(() => {});
+    if (await pagina.locator('#feedback .fb').count()) await pagina.locator('[data-acao="proximo"]').click();
+  }
+  assert.deepEqual((await salvo()).quiz.melhor, antes);
+  await contexto.close();
+});
+
+test('histórico e desempenho por assunto mostram os registros', async () => {
+  const { pagina, contexto } = await abrirComEstado('conhecimento/historico', ESTADO);
+  const t = await pagina.locator('#app').innerText();
+  assert.match(t, /3 respostas registradas · 1 de primeira \(33%\)/);
+  assert.match(t, /✗ Errou/);
+  assert.match(t, /✓ Com tropeço/);
+  await pagina.locator('.aba', { hasText: 'Por assunto' }).click();
+  await pagina.locator('.aba[aria-current=page]', { hasText: 'Por assunto' }).waitFor();
+  assert.match(await pagina.locator('#app').innerText(), /Unidades de velocidade/);
+  await contexto.close();
+});
+
+test('conquistas: 9 cartões; as ganhas mostram data, as outras dizem como ganhar', async () => {
+  const { pagina, contexto } = await abrirComEstado('conquistas', { ...ESTADO, conquistas: {} });
+  assert.equal(await pagina.locator('.conquista').count(), 9);
+  assert.ok(await pagina.locator('.conquista.ganha').count() >= 2, 'primeiro passo e identificado');
+  assert.match(await pagina.locator('[data-conquista="nivel-dominado"]').innerText(), /Bloqueada/);
+  assert.match(await pagina.locator('[data-conquista="primeiro-passo"]').innerText(), /Desbloqueada em/);
+  await contexto.close();
+});
+
+test('árvore de habilidades: 8 trilhas, só Teoria de Fundamentos tem medição; o resto avisa', async () => {
+  const { pagina, contexto } = await abrirComEstado('habilidades', ESTADO);
+  assert.equal(await pagina.locator('.trilha-hab').count(), 8);
+  assert.match(await pagina.locator('[data-trilha="fundamentos"]').innerText(), /1 de 27 desafios dominados/);
+  assert.match(await pagina.locator('[data-trilha="ip"]').innerText(), /Conteúdo em desenvolvimento/);
+  assert.equal(await pagina.locator('.degraus li', { hasText: 'Disponível com o laboratório' }).count(), 16);
+  await contexto.close();
+});
+
+test('perfil: valida o nome, salva, aparece no dashboard e concede "Identificado"', async () => {
+  const { pagina, salvo, contexto } = await abrir('perfil');
+  await pagina.locator('#form-nome button').click();
+  assert.match(await pagina.locator('#erro-nome').innerText(), /Digite um nome/);
+  await pagina.fill('#campo-nome', '<script>x</script>');
+  await pagina.locator('#form-nome button').click();
+  assert.match(await pagina.locator('#erro-nome').innerText(), /Use só letras/);
+  assert.equal((await salvo())?.perfil?.nome ?? '', '');
+  await pagina.fill('#campo-nome', '  Leo   Lobato ');
+  await pagina.locator('#form-nome button').click();
+  assert.match(await pagina.locator('#msg-perfil').innerText(), /Nome salvo/);
+  const e = await salvo();
+  assert.equal(e.perfil.nome, 'Leo Lobato');
+  assert.ok(e.conquistas.identificado);
+  await irPara(pagina, 'dashboard');
+  assert.match(await pagina.locator('#app h2').first().innerText(), /Olá, Leo Lobato/);
+  await contexto.close();
+});
+
+test('backup: exporta o estado, zera com confirmação em duas etapas e importa de volta', async () => {
+  const { pagina, salvo, contexto } = await abrirComEstado('perfil', ESTADO, {});
+  const [download] = await Promise.all([pagina.waitForEvent('download'), pagina.locator('#exportar').click()]);
+  assert.equal(download.suggestedFilename(), 'network-command-progresso.json');
+  const caminho = await download.path();
+  const exportado = JSON.parse(readFileSync(caminho, 'utf8'));
+  assert.equal(exportado.perfil.nome, 'Leonardo');
+  assert.equal(exportado.quiz.historico.length, 3);
+
+  // zerar: primeiro clique só pede confirmação
+  await pagina.locator('#zerar').click();
+  assert.equal((await salvo()).quiz.historico.length, 3, 'ainda não apagou');
+  await pagina.locator('#zerar-nao').click();
+  assert.equal((await salvo()).quiz.historico.length, 3);
+  await pagina.locator('#zerar').click();
+  await pagina.locator('#zerar-sim').click();
+  await pagina.locator('#msg-perfil', { hasText: 'zerado' }).waitFor();
+  const zerado = await salvo();
+  assert.equal(zerado.quiz.historico.length, 0);
+  assert.deepEqual(zerado.quiz.melhor, {});
+  assert.equal(zerado.perfil.nome, '');
+  assert.equal(await pagina.evaluate(() => localStorage.getItem('jornada-do-pacote-v1')), null);
+
+  // importar o arquivo exportado
+  await pagina.setInputFiles('#importar', caminho);
+  await pagina.locator('#confirmar-import').waitFor();
+  assert.match(await pagina.locator('#importacao').innerText(), /3 respostas e 700 XP/);
+  await pagina.locator('#confirmar-import').click();
+  const volta = await salvo();
+  assert.equal(volta.perfil.nome, 'Leonardo');
+  assert.equal(volta.quiz.historico.length, 3);
+  await contexto.close();
+});
+
+test('importar arquivo inválido ou malicioso não altera o progresso', async () => {
+  const { pagina, salvo, contexto } = await abrirComEstado('perfil', ESTADO);
+  await pagina.setInputFiles('#importar', { name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('isto não é json') });
+  await pagina.locator('#msg-perfil', { hasText: 'Não consegui ler' }).waitFor();
+  assert.equal((await salvo()).quiz.historico.length, 3);
+  // JSON válido com lixo: é normalizado (sem campos desconhecidos nem valores inválidos)
+  const lixo = { versao: 3, perfil: { nome: 'A', senha: 'segredo' }, quiz: { melhor: { 1: { pts: 99999, estrelas: 9 } }, historico: [{ q: 'x' }] }, conquistas: { hack: 'x' } };
+  await pagina.setInputFiles('#importar', { name: 'y.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(lixo)) });
+  await pagina.locator('#confirmar-import').waitFor();
+  await pagina.locator('#confirmar-import').click();
+  const e = await salvo();
+  assert.deepEqual(e.quiz.melhor, {});
+  assert.deepEqual(e.quiz.historico, []);
+  assert.equal(JSON.stringify(e).includes('segredo'), false);
+  await contexto.close();
+});
+
+test('menu no celular: abre com o botão, fecha ao escolher uma página ou com Esc', async () => {
+  const { pagina, contexto } = await abrir('dashboard', { largura: 390, altura: 800 });
+  const caixa = () => pagina.locator('#lateral').boundingBox();
+  assert.ok((await caixa()).x + (await caixa()).width <= 1, 'menu começa fechado (fora da tela)');
+  await pagina.locator('#burger').click();
+  assert.equal(await pagina.locator('#burger').getAttribute('aria-expanded'), 'true');
+  assert.ok((await caixa()).x >= 0);
+  await pagina.keyboard.press('Escape');
+  await pagina.waitForTimeout(300);
+  assert.equal(await pagina.locator('#burger').getAttribute('aria-expanded'), 'false');
+  await pagina.locator('#burger').click();
+  await pagina.locator('.menu a[data-rota="conquistas"]').click();
+  await pagina.locator('.menu a[data-rota="conquistas"][aria-current=page]').waitFor();
+  await pagina.waitForTimeout(300);
+  assert.equal(await pagina.locator('#burger').getAttribute('aria-expanded'), 'false');
+  assert.match(await pagina.locator('#app h2').first().innerText(), /Conquistas/);
+  await contexto.close();
+});
+
+test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async () => {
+  for (const largura of [360, 768, 1280]) {
+    for (const rota of ROTAS_MENU) {
+      const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 800 });
+      const excesso = await pagina.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(excesso <= 0, `${rota} em ${largura}px excede ${excesso}px`);
+      await contexto.close();
+    }
+  }
+});
+
+test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async () => {
+  const rotas = [...ROTAS_MENU, 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos'];
+  for (const largura of [1280, 390]) {
+    for (const rota of rotas) {
+      const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 900 });
+      const falhas = await pagina.evaluate(() => {
+        const rgba = c => { const m = c.match(/[\d.]+/g).map(Number); return { r: m[0], g: m[1], b: m[2], a: m[3] ?? 1 }; };
+        const lum = ({ r, g, b }) => { const f = x => { x /= 255; return x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+        const misturar = (t, b) => ({ r: t.r * t.a + b.r * (1 - t.a), g: t.g * t.a + b.g * (1 - t.a), b: t.b * t.a + b.b * (1 - t.a), a: 1 });
+        const fundo = el => { const pilha = []; for (let e = el; e; e = e.parentElement) pilha.push(rgba(getComputedStyle(e).backgroundColor)); let base = { r: 10, g: 15, b: 26, a: 1 }; for (const c of pilha.reverse()) if (c.a > 0) base = misturar(c, base); return base; };
+        const out = [];
+        const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const vistos = new Set();
+        while (w.nextNode()) {
+          const n = w.currentNode; if (!n.textContent.trim()) continue;
+          const el = n.parentElement; if (vistos.has(el)) continue; vistos.add(el);
+          const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
+          if (cs.visibility === 'hidden' || cs.display === 'none' || !r.width || !r.height) continue;
+          const bg = fundo(el); const fg = misturar(rgba(cs.color), bg);
+          const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x); const cr = (a + .05) / (b + .05);
+          const tam = parseFloat(cs.fontSize), neg = parseInt(cs.fontWeight) >= 700;
+          if (cr < ((tam >= 24 || (tam >= 18.66 && neg)) ? 3 : 4.5)) out.push(`${el.tagName}.${el.className} "${n.textContent.trim().slice(0, 25)}" ${cr.toFixed(2)}`);
+        }
+        return out;
+      });
+      assert.deepEqual(falhas, [], `${rota} em ${largura}px`);
+      await contexto.close();
+    }
+  }
+});

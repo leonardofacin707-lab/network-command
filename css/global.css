@@ -1,40 +1,81 @@
-/* Base do site: tema, tipografia, faixas, painéis, botões e rodapé. */
-/* VOICE  jogo educativo, animado mas limpo: o jogador é um pacote atravessando a rede
-   IDEA   a topologia de rede do Packet Tracer: cada nível é um dispositivo ligado por cabo
-   PICTURE o mapa de níveis desenhado como topologia, com um pacote viajando até o próximo destino
-   COLOUR azul de cabo de rede (campo dominante), branco, amarelo do pacote como destaque, verde de link ativo
-   TYPE   Chakra Petch (títulos, cara de painel de equipamento) + Inter (texto)
-   LAYOUT faixa azul com título, placar e mapa; abaixo, o próximo destino. No celular o mapa vira 2 colunas */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0d1117);--ink:light-dark(#0f1424,#eef1f8);--suave:light-dark(#545c72,#a3abc2);--painel:light-dark(#ffffff,#161c2c);--linha:light-dark(#d5dbe8,#2b3452);--mapa:light-dark(#1546c9,#103599);--mapa2:light-dark(#0f3aa8,#0b2a7a);--sinal:#ffcc00;--ok:#13995a;--erro:#d93d42;--okbg:light-dark(#e3f6ec,#0f2a1e);--errobg:light-dark(#fdeaea,#2e1517)}
-:root[data-theme=light]{color-scheme:light}
-:root[data-theme=dark]{color-scheme:dark}
+/* Base do site: tema escuro estilo centro de operações de rede (NOC), casca com menu lateral, painéis e botões.
+   Azul/ciano = informação e ação; verde = sucesso; vermelho = falha; amarelo = atenção. */
+:root{color-scheme:dark;--bg:#0a0f1a;--ink:#e8eefa;--suave:#a6b3cc;--painel:#111a2c;--painel2:#0d1524;--linha:#243350;
+  --mapa:#103599;--mapa2:#0b2a7a;--destaque:#7dd3fc;--ciano:#22d3ee;--sinal:#ffcc00;--ok:#2fbf80;--erro:#ff6b70;
+  --okbg:#0f2a1e;--errobg:#2e1517;--aviso:#fbbf24;--lateral:#0c1322}
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
-h1,h2,h3{font-family:"Chakra Petch",Inter,sans-serif;line-height:1.08;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1,h2,h3{font-family:"Chakra Petch",Inter,sans-serif;line-height:1.1;letter-spacing:-.01em;margin:0;text-wrap:balance}
 button{font:inherit;color:inherit;cursor:pointer}
-.band{padding-block:clamp(20px,3vw,40px);padding-inline:max(5vw,16px)}
-.topo{background:var(--mapa);color:#fff;padding-bottom:0}
-.topo .linha1{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
-.topo h1{font-size:clamp(32px,5vw,48px)}
-.topo p{margin:4px 0 0;color:#dbe5ff;max-width:60ch}
+a{color:var(--destaque)}
+code{background:var(--painel2);border:1px solid var(--linha);border-radius:5px;padding:1px 6px;font-size:.92em}
+
+/* Casca: menu lateral + coluna principal */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.lateral{background:var(--lateral);border-right:1px solid var(--linha);padding:18px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.marca{font:700 20px "Chakra Petch",sans-serif;letter-spacing:.02em;padding:4px 10px}
+.marca span{color:var(--ciano)}
+.menu{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.menu a{display:flex;align-items:center;gap:10px;padding:10px 12px;min-height:44px;border-radius:10px;color:var(--ink);text-decoration:none;border:1px solid transparent}
+.menu a:hover{background:var(--painel)}
+.menu a[aria-current=page]{background:var(--painel);border-color:var(--ciano);color:#fff}
+.menu a:focus-visible,.btn:focus-visible,.btn-sec:focus-visible,.grupo-cab:focus-visible,.op:focus-visible,.chip:focus-visible,.aba:focus-visible,.burger:focus-visible{outline:3px solid var(--sinal);outline-offset:2px}
+.menu svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.menu .rot{flex:1}
+.selo{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:2px 6px;white-space:nowrap;border:1px solid}
+.selo.emdev{color:var(--aviso);border-color:#6b5316}
+.selo.proto{color:var(--destaque);border-color:#1f4a66}
+.principal{display:flex;flex-direction:column;min-width:0}
+.topo{background:var(--lateral);border-bottom:1px solid var(--linha);padding:10px max(3vw,14px);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.topo .titulo{display:flex;align-items:center;gap:10px}
+.topo h1{font-size:20px}
+.burger{display:none;background:var(--painel);border:1px solid var(--linha);border-radius:10px;width:44px;height:44px;font-size:20px;line-height:1}
 .hud{display:flex;flex-wrap:wrap;gap:8px}
-.hud div{background:var(--mapa2);border-radius:10px;padding:8px 14px;min-width:6.5em}
-.hud small{display:block;color:#b9c9f5;font-size:13px}
-.hud b{font-family:"Chakra Petch",sans-serif;font-size:20px;white-space:nowrap}
+.hud div{background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:6px 12px;min-width:6.5em}
+.hud small{display:block;color:var(--suave);font-size:12px}
+.hud b{font-family:"Chakra Petch",sans-serif;font-size:17px;white-space:nowrap}
+main{flex:1}
+.band{padding-block:clamp(18px,3vw,36px);padding-inline:max(3vw,14px)}
 .wrap{max-width:1100px;margin:0 auto}
-.painel{background:var(--painel);border:1px solid var(--linha);border-radius:14px;padding:clamp(18px,3vw,28px)}
-.painel h2{font-size:clamp(24px,3vw,32px);margin-bottom:6px}
+footer{padding:20px max(3vw,14px) 28px;color:var(--suave);font-size:14px;text-align:center;border-top:1px solid var(--linha);margin-top:20px}
+
+/* Painéis, botões, selos */
+.painel{background:var(--painel);border:1px solid var(--linha);border-radius:14px;padding:clamp(16px,2.6vw,26px)}
+.painel h2{font-size:clamp(22px,2.8vw,28px);margin-bottom:6px}
+.painel h3{font-size:18px;margin-bottom:8px}
 .painel p{margin:6px 0;color:var(--suave)}
 .painel ul{margin:8px 0 0;padding-left:20px}
 .painel li{margin:4px 0}
-.mods{display:inline-block;font-size:14px;font-weight:600;color:var(--mapa);background:light-dark(#e6edff,#1a2547);border-radius:6px;padding:2px 8px;margin-bottom:8px}
-.btn{background:var(--mapa);color:#fff;border:0;border-radius:10px;padding:12px 22px;min-height:44px;font-weight:600}
-.btn:hover{background:var(--mapa2)}
+.mods{display:inline-block;font-size:14px;font-weight:600;color:var(--destaque);background:#14243f;border-radius:6px;padding:2px 8px;margin-bottom:8px}
+.btn{background:var(--mapa);color:#fff;border:1px solid #2a58d6;border-radius:10px;padding:12px 22px;min-height:44px;font-weight:600}
+.btn:hover{background:#1646c4}
 .btn-sec{background:none;border:1px solid var(--linha);border-radius:10px;padding:10px 16px;min-height:44px;font-weight:600}
-.btn-sec:hover{border-color:var(--mapa)}
-.btn:focus-visible,.btn-sec:focus-visible{outline:3px solid var(--sinal);outline-offset:2px}
+.btn-sec:hover{border-color:var(--ciano)}
+.btn-perigo{background:#5a1c20;border-color:#a33a40}
+.btn-perigo:hover{background:#7a2328}
 .acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-footer{padding:20px max(5vw,16px) 28px;color:var(--suave);font-size:14px;text-align:center;border-top:1px solid var(--linha);margin-top:20px}
-@media(max-width:480px){.topo p{display:none}.hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.hud div{min-width:0;padding:6px 10px}.hud b{font-size:16px;white-space:normal;line-height:1.15}.hud small{font-size:12px}}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.titulo-pagina{margin:0 0 4px;font-size:clamp(26px,4vw,36px)}
+.sub{color:var(--suave);margin:0 0 20px;max-width:70ch}
+.barra-prog{height:10px;border-radius:9px;background:#1a2640;overflow:hidden;margin:6px 0}
+.barra-prog i{display:block;height:100%;background:linear-gradient(90deg,#1d6fe8,var(--ciano))}
+.vazio-msg{color:var(--suave);border:1px dashed var(--linha);border-radius:12px;padding:16px}
+.tabela{width:100%;border-collapse:collapse;font-size:15px}
+.tabela th,.tabela td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--linha);vertical-align:top}
+.tabela th{color:var(--suave);font-weight:600;font-size:13px}
+.ok-txt{color:var(--ok);font-weight:600}
+.ruim-txt{color:var(--erro);font-weight:600}
+.aviso-txt{color:var(--aviso);font-weight:600}
+@media(max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .lateral{position:fixed;inset:0 auto 0 0;width:min(84vw,290px);z-index:20;transform:translateX(-102%);transition:transform .2s;box-shadow:0 0 40px #000}
+  .lateral.aberta{transform:none}
+  .burger{display:block}
+  .fundo-menu{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10}
+}
+@media(max-width:480px){.topo{padding:8px 12px}.hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.hud div{min-width:0;padding:5px 8px}.hud div:nth-child(4){display:none}.hud b{font-size:15px;white-space:normal;line-height:1.15}.hud small{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a.btn,a.btn-sec{display:inline-flex;align-items:center;text-decoration:none}
+a.btn{color:#fff}
+a.btn-sec{color:var(--ink)}

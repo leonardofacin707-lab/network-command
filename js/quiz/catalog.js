@@ -25,3 +25,12 @@ export function montarCatalogo({ perguntas, niveis, categorias, habilidades }) {
     limites: Object.fromEntries(niveisMontados.filter(n => n.desafios).map(n => [n.id, n.desafios.length * 100]))
   };
 }
+
+/** Referência para validar o estado salvo: o que existe de níveis, perguntas e conquistas. */
+export function criarReferencia(catalogo, idsConquistas) {
+  return {
+    limites: catalogo.limites,
+    perguntas: new Set(catalogo.perguntas.map(p => p.id)),
+    conquistas: new Set(idsConquistas)
+  };
+}

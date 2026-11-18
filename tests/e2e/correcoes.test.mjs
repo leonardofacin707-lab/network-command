@@ -11,7 +11,7 @@ after(async () => { await navegador?.close(); await servidor?.fechar(); });
 
 const abrir = async (opcoes) => {
   const s = await novaPagina(navegador, opcoes);
-  await s.pagina.goto(servidor.url + '/index.html');
+  await s.pagina.goto(servidor.url + '/index.html#/conhecimento');
   await s.pagina.locator('.no').first().waitFor();
   return s;
 };

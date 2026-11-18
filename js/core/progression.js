@@ -12,3 +12,9 @@ export const CARGOS = [
 export const xpTotal = melhor => Object.values(melhor).reduce((soma, m) => soma + m.pts, 0);
 export const estrelasTotal = melhor => Object.values(melhor).reduce((soma, m) => soma + m.estrelas, 0);
 export const cargoDe = xp => CARGOS.filter(c => xp >= c[0]).pop()[1];
+
+export const XP_POR_NIVEL = 300;
+/** Nível do jogador (1, 2, 3...) e o quanto falta para o próximo. Independe do cargo. */
+export function nivelDoJogador(xp) {
+  return { nivel: Math.floor(xp / XP_POR_NIVEL) + 1, xpNoNivel: xp % XP_POR_NIVEL, xpParaProximo: XP_POR_NIVEL };
+}

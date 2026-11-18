@@ -1,20 +1,30 @@
-// Ponto de entrada: carrega dados e estado salvo, liga a persistência e abre o módulo inicial.
-import { $ } from './core/ui.js';
+// Ponto de entrada: carrega dados e estado salvo, liga a persistência e abre o roteador.
+import { $, avisar } from './core/ui.js';
 import { store } from './core/store.js';
 import { carregar, salvar, normalizar } from './core/storage.js';
-import { carregarCatalogo } from './quiz/catalog.js';
-import { criarQuiz } from './quiz/index.js';
+import { carregarCatalogo, criarReferencia } from './quiz/catalog.js';
+import { iniciarHud } from './quiz/hud.js';
+import { criarRoteador } from './app/router.js';
+import { montarShell } from './app/shell.js';
+import { IDS_CONQUISTAS, CONQUISTAS, concederNovas } from './hub/conquistas-regras.js';
+import quiz from './quiz/index.js';
+import dashboard from './hub/dashboard.js';
+import perfil from './hub/perfil.js';
+import conquistas from './hub/conquistas.js';
+import habilidades from './hub/habilidades.js';
+import { emDesenvolvimento } from './hub/emdesenvolvimento.js';
 
 async function iniciar() {
   const app = $('#app');
+  const shell = montarShell();
   let catalogo;
   try {
     catalogo = await carregarCatalogo();
   } catch (erro) {
-    app.innerHTML = `<section class="band"><div class="painel"><h2>Não foi possível carregar os dados</h2>
-      <p>${String(erro.message)}</p></div></section>`;
+    app.innerHTML = `<section class="band"><div class="painel"><h2>Não foi possível carregar os dados</h2><p>${String(erro.message)}</p></div></section>`;
     throw erro;
   }
+  const referencia = criarReferencia(catalogo, IDS_CONQUISTAS);
 
   // No ambiente de pré-visualização do Claude, o estado vem do gancho "hot"; no navegador comum, do localStorage.
   const hot = window.claude?.hot;
@@ -22,12 +32,32 @@ async function iniciar() {
     if (hot?.ready) hot.ready(dados => resolver(dados?.estado ?? null));
     else resolver(hot?.data?.estado ?? null);
   });
-  store.substituir(recebido ? normalizar(recebido, catalogo.limites) : carregar(catalogo.limites));
+  const inicial = recebido ? normalizar(recebido, referencia) : carregar(referencia);
 
+  // Conquistas são concedidas por regra, em todo estado novo, e avisadas uma vez.
+  store.definirPos(estado => concederNovas(estado, catalogo));
+  store.substituir(inicial);
+  let conhecidas = new Set(Object.keys(store.obter().conquistas));
+  store.ouvir(estado => {
+    for (const id of Object.keys(estado.conquistas)) {
+      if (!conhecidas.has(id)) avisar(`Conquista desbloqueada: ${CONQUISTAS.find(c => c.id === id).nome}`);
+    }
+    conhecidas = new Set(Object.keys(estado.conquistas));
+  });
   store.ouvir(salvar);
   hot?.snapshot?.(() => ({ estado: store.obter() }));
+  iniciarHud(store, catalogo);
 
-  criarQuiz({ app, catalogo, store }).abrirMapa();
+  const rotas = {
+    dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
+    laboratorio: emDesenvolvimento('laboratorio'), empresa: emDesenvolvimento('empresa'),
+    datacenter: emDesenvolvimento('datacenter'), campus: emDesenvolvimento('campus'), missoes: emDesenvolvimento('missoes')
+  };
+  criarRoteador({
+    raiz: app, rotas, padrao: 'dashboard',
+    ctx: { catalogo, referencia, store },
+    aoTrocar: id => shell.marcarAtual(id)
+  }).iniciar();
 }
 
 iniciar();

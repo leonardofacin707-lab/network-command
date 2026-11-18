@@ -2,10 +2,10 @@ import { esc } from '../core/ui.js';
 import { xpTotal, cargoDe } from '../core/progression.js';
 import { maximoDoNivel, estrelasPorPontos, registrarResultado } from './scoring.js';
 import { statusDoNivel } from './unlock.js';
-import { desenharHud } from './hud.js';
 
 /** Grava o resultado da partida no estado e mostra a tela de resultado. */
 export function telaResultado({ app, catalogo, store }, run) {
+  if (run.nivel.revisao) return telaResultadoRevisao(app, run);
   const n = run.nivel;
   const maximo = maximoDoNivel(n.desafios.length);
   const estrelas = estrelasPorPontos(run.pts, maximo);
@@ -15,7 +15,6 @@ export function telaResultado({ app, catalogo, store }, run) {
   if (r.recorde) store.alterar(e => ({ ...e, quiz: { ...e.quiz, melhor: r.melhor } }));
   const melhor = store.obter().quiz.melhor;
   const cargoDepois = cargoDe(xpTotal(melhor));
-  desenharHud(melhor, catalogo);
   const prox = catalogo.niveis[catalogo.niveis.indexOf(n) + 1];
   // O botão depende do estado do próximo nível (não só desta partida): quem já liberou antes continua vendo o atalho.
   const liberou = prox && ['aberto', 'feito'].includes(statusDoNivel(prox, catalogo.niveis, melhor));
@@ -37,6 +36,24 @@ export function telaResultado({ app, catalogo, store }, run) {
         ${liberou ? `<button class="btn" data-acao="jogar" data-nivel="${prox.id}">Próximo nível</button>` : ''}
         <button class="${liberou ? 'btn-sec' : 'btn'}" data-acao="jogar" data-nivel="${n.id}">Jogar de novo</button>
         <button class="btn-sec" data-acao="mapa">Voltar ao mapa</button>
+      </div>
+    </article>
+  </div></section>`;
+  window.scrollTo({ top: 0 });
+}
+
+/** Revisão de erros: não vale pontos nem estrelas, só atualiza o histórico (feito a cada resposta). */
+function telaResultadoRevisao(app, run) {
+  const total = run.nivel.desafios.length;
+  const perfeitas = run.perfeitas;
+  app.innerHTML = `<section class="band"><div class="jogo">
+    <article class="painel resultado">
+      <span class="mods">Revisão de erros</span>
+      <h2>${perfeitas === total ? 'Tudo certo agora!' : 'Revisão concluída'}</h2>
+      <p>Você acertou de primeira ${perfeitas} de ${total} desafios revisados.</p>
+      <p>${perfeitas === total ? 'Nenhum deles volta para a lista de revisão.' : 'Os que ainda tiveram erro continuam na lista de revisão.'}</p>
+      <div class="acoes">
+        <button class="btn" data-acao="mapa">Voltar ao mapa</button>
       </div>
     </article>
   </div></section>`;
