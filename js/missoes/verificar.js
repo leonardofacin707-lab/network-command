@@ -61,7 +61,7 @@ export function validarMissao(m) {
   if (!objetivos.length) return null;
   const xp = Number.isInteger(m.xp) && m.xp > 0 && m.xp <= 1000 ? m.xp : 100;
   return {
-    id: m.id, titulo: m.titulo, cenario: m.cenario, topologia, objetivos, xp,
+    id: m.id, modulo: m.modulo === 'campus' ? 'campus' : 'missoes', titulo: m.titulo, cenario: m.cenario, topologia, objetivos, xp,
     dificuldade: [1, 2, 3].includes(m.dificuldade) ? m.dificuldade : 1,
     dicas: (Array.isArray(m.dicas) ? m.dicas : []).filter(d => typeof d === 'string').slice(0, 9)
   };

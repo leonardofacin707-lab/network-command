@@ -40,7 +40,7 @@ const hist = [['fundamentos-001', true, 0, 100], ['fundamentos-002', true, 1, 60
   .map(([q, ok, erros, pts], i) => ({ q, ok, erros, pts, em: new Date(Date.UTC(2026, 10, 17, 12, i)).toISOString() }));
 const ESTADO = { versao: 3, perfil: { nome: 'Leonardo', criadoEm: '2026-11-16T10:00:00.000Z' }, quiz: { melhor: { 1: { pts: 700, estrelas: 2 } }, historico: hist }, conquistas: {} };
 
-test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando ou avisando "em desenvolvimento"', async () => {
+test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando (protótipos marcados no menu)', async () => {
   const { pagina, erros, contexto } = await abrir();
   assert.equal(await pagina.locator('.menu a').count(), 10);
   assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'dashboard');
@@ -48,12 +48,7 @@ test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando ou avi
     await irPara(pagina, rota);
     assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), rota, rota);
     const texto = await pagina.locator('#app').innerText();
-    if (['campus'].includes(rota)) {
-      assert.match(texto, /ainda não existe/i, `${rota} deve avisar que não existe`);
-      assert.match(await pagina.locator(`.menu a[data-rota="${rota}"]`).innerText(), /em dev/i);
-    } else {
-      assert.doesNotMatch(texto, /ainda não existe/i, rota);
-    }
+    assert.doesNotMatch(texto, /ainda não existe/i, rota);
   }
   assert.deepEqual(erros, []);
   await contexto.close();
@@ -263,7 +258,7 @@ test('menu no celular: abre com o botão, fecha ao escolher uma página ou com E
 
 test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async () => {
   for (const largura of [360, 768, 1280]) {
-    for (const rota of [...ROTAS_MENU, 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario']) {
+    for (const rota of [...ROTAS_MENU, 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo']) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 800 });
       const excesso = await pagina.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(excesso <= 0, `${rota} em ${largura}px excede ${excesso}px`);
@@ -273,7 +268,7 @@ test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async (
 });
 
 test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async () => {
-  const rotas = [...ROTAS_MENU, 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario'];
+  const rotas = [...ROTAS_MENU, 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
   for (const largura of [1280, 390]) {
     for (const rota of rotas) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 900 });

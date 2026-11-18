@@ -13,13 +13,12 @@ import perfil from './hub/perfil.js';
 import conquistas from './hub/conquistas.js';
 import habilidades from './hub/habilidades.js';
 import laboratorio from './lab/index.js';
-import missoesModulo from './missoes/index.js';
+import missoesModulo, { criarModuloMissoes } from './missoes/index.js';
 import { carregarMissoes } from './missoes/catalogo.js';
 import empresaModulo from './empresa/index.js';
 import { carregarEmpresa } from './empresa/catalogo.js';
 import datacenterModulo from './datacenter/index.js';
 import { carregarDatacenter } from './datacenter/catalogo.js';
-import { emDesenvolvimento } from './hub/emdesenvolvimento.js';
 
 async function iniciar() {
   const app = $('#app');
@@ -62,7 +61,7 @@ async function iniciar() {
   const rotas = {
     dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
     laboratorio, empresa: empresaModulo,
-    datacenter: datacenterModulo, campus: emDesenvolvimento('campus'), missoes: missoesModulo
+    datacenter: datacenterModulo, campus: criarModuloMissoes({ id: 'campus', titulo: 'Campus de Redes', intro: 'Cenários de rede de campus com VLANs, trunks e roteamento entre VLANs. Cada um traz defeitos de configuração para você achar e corrigir.' }), missoes: missoesModulo
   };
   criarRoteador({
     raiz: app, rotas, padrao: 'dashboard',

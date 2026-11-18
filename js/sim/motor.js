@@ -1,8 +1,9 @@
 // Motor de simulação de rede (camadas 2 e 3). Puro: não conhece DOM, tela nem localStorage.
-// Modela: domínio de broadcast através de switches, resolução ARP, encaminhamento por roteadores (rotas conectadas),
-// TTL e a resposta de volta. NÃO modela: latência, perda aleatória, VLANs, rotas estáticas, DHCP, NAT, firewall.
+// Modela: domínio de broadcast através de switches (com VLANs: portas access e trunk), resolução ARP, encaminhamento por
+// roteadores (rotas conectadas; uma interface física por VLAN), TTL e a resposta de volta.
+// NÃO modela: latência, perda aleatória, subinterfaces (router-on-a-stick), STP, rotas estáticas, DHCP, NAT, firewall.
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4 } from './ipv4.js';
-import { vizinhos, dispositivo } from './topologia.js';
+import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
 
 export const TTL_INICIAL = { pc: 128, roteador: 255, switch: 255 };
 const MAX_SALTOS = 16;
@@ -30,22 +31,35 @@ export function interfacesConfiguradas(d) {
 }
 
 /**
- * Quem recebe um broadcast enviado por esta porta: segue os cabos através dos switches (que repetem o quadro por
- * todas as portas, menos pela de entrada) e devolve as pontas que não são switch. null se a porta está sem cabo.
+ * Quem recebe um broadcast enviado por esta porta: segue os cabos através dos switches e devolve as pontas que não são
+ * switch. O quadro pertence a uma VLAN: portas access só repetem o quadro na própria VLAN, portas trunk levam qualquer
+ * VLAN (marcada) e entregam sem marca só a VLAN nativa (1). null se a porta está sem cabo.
  */
 export function dominioL2(t, origemId, origemPorta) {
   const inicio = vizinhos(t, origemId).find(v => v.minhaPorta === origemPorta);
   if (!inicio) return null;
-  const pontas = [], visitados = new Set(), fila = [inicio.outro];
+  const pontas = [], visitados = new Set();
+  // item: { d, p, vlan } = o quadro chega em d pela porta p; vlan null = ainda sem marca (veio de um host)
+  const fila = [{ ...inicio.outro, vlan: null }];
   while (fila.length) {
-    const { d, p } = fila.shift();
+    const { d, p, vlan } = fila.shift();
     const dev = dispositivo(t, d);
     if (dev.tipo === 'switch') {
-      if (visitados.has(d)) continue;
-      visitados.add(d);
-      for (const v of vizinhos(t, d)) if (v.minhaPorta !== p) fila.push(v.outro);
+      const entrada = configDaPortaSwitch(dev, p);
+      const v = entrada.modo === 'access' ? entrada.vlan : (vlan ?? 1); // trunk: usa a marca; sem marca é a VLAN nativa
+      const chave = `${d}:${v}`;
+      if (visitados.has(chave)) continue;
+      visitados.add(chave);
+      for (const viz of vizinhos(t, d)) {
+        if (viz.minhaPorta === p) continue;
+        const saida = configDaPortaSwitch(dev, viz.minhaPorta);
+        if (saida.modo === 'access' && saida.vlan !== v) continue;
+        if (saida.modo === 'trunk') fila.push({ ...viz.outro, vlan: v });   // sai marcado com a VLAN v
+        else fila.push({ ...viz.outro, vlan: null });                         // access: sai sem marca
+      }
     } else if (!(d === origemId && p === origemPorta)) {
-      pontas.push({ d, p });
+      // Um host/roteador ligado a um trunk só recebe a VLAN nativa (sem subinterfaces no motor).
+      if (vlan === null || vlan === 1 || vlan === undefined) pontas.push({ d, p });
     }
   }
   return pontas;

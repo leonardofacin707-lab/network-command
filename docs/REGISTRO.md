@@ -44,7 +44,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 
 - ✅ IPv4 (rede, broadcast, hosts úteis, classe), switch (domínio L2 com varredura), ARP com cache, roteador com rotas das redes conectadas, TTL (PC 128, roteador 255), caminho de volta separado do de ida, conflito de IP.
 - ✅ Terminal: `ipconfig [/all]`, `ping [-n N] destino`, `tracert`, `arp -a`, `hostname`, `help`, `cls`; histórico com setas ↑/↓. Saída no estilo do Windows em português.
-- 🧪 **Não simulado**: latência e perda aleatória, VLANs, rotas estáticas/dinâmicas, DHCP, NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
+- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, rotas estáticas/dinâmicas, DHCP, NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
 - ✅ 49 testes unitários do motor (IPv4, topologia, motor, terminal, diagnóstico) e 10 e2e do laboratório.
 
 ## Fase 5 — Missões de troubleshooting 🧪
@@ -71,9 +71,16 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Testes: contas conferidas (4 noves = 52,56 min/ano), busca exaustiva garante solução dentro do orçamento com folga pequena, "tudo no máximo" estoura o orçamento, uma unidade por camada nunca cumpre a meta. Nova conquista *Alta disponibilidade*.
 - 🧪 É cálculo, não simulação: disponibilidades fictícias, falhas independentes (sem falha de causa comum), sem banda/capacidade de links, sem falhas ao vivo.
 
-### Campus de Redes ⏳
-- Continua **não iniciado** ("em desenvolvimento" no menu). Depende de VLANs e roteamento entre VLANs, que o motor ainda não simula.
+### Campus de Redes 🧪 (VLANs)
+- ✅ O motor agora simula **VLANs**: portas `access` (uma VLAN, sem marca) e `trunk` (todas as VLANs marcadas; nativa 1) nos switches; o broadcast só atravessa portas da mesma VLAN; trunk tem de existir nos dois lados; host ligado a trunk só recebe a VLAN nativa. Roteamento entre VLANs com **uma interface física do roteador por VLAN**.
+- ✅ Laboratório: tabela de portas do switch (modo e VLAN, com validação 1–4094), rótulo de VLAN/trunk no desenho do switch e vários cabos entre o mesmo par de dispositivos (desenhados lado a lado).
+- ✅ 4 missões de campus (porta na VLAN errada, trunk esquecido, VLANs que não se falam, campus inteiro com 2 defeitos), todas começam quebradas e cada correção parcial não basta (testado). Usam a mesma verificação por ping das Missões; ficam em `data/missions.json` com `modulo: "campus"` (gerador: `tools/gerar-campus.mjs`).
+- 🧪 **Não simulado**: subinterfaces (router-on-a-stick), STP/loops, VTP/DTP, VLAN nativa configurável, ACLs, roteamento dinâmico. Um quadro marcado que chega a uma porta access é tratado como da VLAN dela (um switch real o descartaria).
+- Todas as 10 entradas do menu agora têm uma página funcional (a de "em desenvolvimento" foi removida por não ter mais uso).
+
+### Problemas conhecidos (testes)
+- O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 
 ## Próximos passos
-- Fases 7 e 8: expansão de conteúdo e recursos avançados (VLAN, rotas estáticas, DHCP, NAT) — ⏳.
+- Fases 7 e 8: expansão de conteúdo e recursos avançados (rotas estáticas, DHCP, NAT, subinterfaces) — ⏳. VLAN já foi feita (ver Campus).
 - Mais perguntas para as 14 categorias vazias e desafios cronometrados.

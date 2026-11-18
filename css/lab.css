@@ -62,3 +62,4 @@
 .tabela .qtd{max-width:90px}
 .tabela .faixa{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--destaque);word-break:break-word}
 @media(max-width:1000px){.empresa-grade{grid-template-columns:minmax(0,1fr)}.painel{overflow-x:auto}}
+.portas-sw .campo{min-width:0}.portas-sw .qtd{max-width:80px}

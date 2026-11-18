@@ -216,3 +216,69 @@ test('dispositivos são operáveis por teclado e têm nome acessível', async ()
   assert.match(await pagina.locator('#lab-cfg h3').innerText(), /PC2/);
   await contexto.close();
 });
+
+test('switch: tabela de portas, VLAN isola e trunk entre switches liga os prédios', async () => {
+  const { pagina, erros, disp, comando, saida, salvo, contexto } = await abrirLab();
+  for (const tipo of ['pc', 'pc', 'switch']) await pagina.locator(`[data-add="${tipo}"]`).click();
+  await pagina.locator('[data-modo="conectar"]').click();
+  for (const pc of ['pc1', 'pc2']) { await disp(pc).click(); await disp('sw1').click(); }
+  await pagina.locator('[data-modo="mover"]').click();
+  for (const [pc, ip] of [['pc1', '192.168.10.1'], ['pc2', '192.168.10.2']]) {
+    await disp(pc).click();
+    await pagina.fill('#cfg-ip-eth0', ip); await pagina.fill('#cfg-m-eth0', '/24');
+    await pagina.locator('#form-cfg button[type=submit]').click();
+  }
+  await disp('sw1').click();
+  assert.equal(await pagina.locator('.portas-sw tbody tr').count(), 8);
+  assert.match(await pagina.locator('.portas-sw tbody tr').first().innerText(), /Fa0\/1[\s\S]*PC1/);
+  // PC1 na VLAN 10 e PC2 na VLAN 20: sem ping
+  await pagina.fill('#cfg-vlan-fa1', '10');
+  await pagina.fill('#cfg-vlan-fa2', '20');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
+  assert.match(await disp('sw1').getAttribute('aria-label'), /VLAN 10,20/);
+  await disp('pc1').click();
+  await comando('ping 192.168.10.2');
+  assert.match(await saida(), /Recebidos = 0, Perdidos = 4/);
+  // mesma VLAN: funciona
+  await disp('sw1').click();
+  await pagina.fill('#cfg-vlan-fa2', '10');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  await disp('pc1').click();
+  await comando('ping 192.168.10.2');
+  assert.match(await saida(), /Recebidos = 4, Perdidos = 0/);
+  const sw = (await salvo()).lab.topologia.dispositivos.find(d => d.id === 'sw1');
+  assert.deepEqual(sw.portas, { fa1: { modo: 'access', vlan: 10 }, fa2: { modo: 'access', vlan: 10 } });
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('VLAN inválida é recusada com mensagem e nada muda; trunk não usa VLAN', async () => {
+  const { pagina, disp, salvo, contexto } = await abrirLab();
+  await pagina.locator('[data-add="switch"]').click();
+  await pagina.fill('#cfg-vlan-fa3', '0');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /VLAN inválida/);
+  assert.deepEqual((await salvo()).lab.topologia.dispositivos[0].portas, {});
+  await pagina.fill('#cfg-vlan-fa3', '4095');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /VLAN inválida/);
+  await pagina.fill('#cfg-vlan-fa3', '30');
+  await pagina.selectOption('#cfg-modo-fa4', 'trunk');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.deepEqual((await salvo()).lab.topologia.dispositivos[0].portas, { fa3: { modo: 'access', vlan: 30 }, fa4: { modo: 'trunk', vlan: 1 } });
+  assert.equal(await pagina.inputValue('#cfg-vlan-fa4'), '');
+  await contexto.close();
+});
+
+test('dois cabos entre os mesmos switches são desenhados lado a lado', async () => {
+  const { pagina, disp, contexto } = await abrirLab();
+  for (let i = 0; i < 2; i++) await pagina.locator('[data-add="switch"]').click();
+  await pagina.locator('[data-modo="conectar"]').click();
+  await disp('sw1').click(); await disp('sw2').click();
+  await disp('sw1').click(); await disp('sw2').click();
+  assert.equal(await pagina.locator('.cabo-lab').count(), 2);
+  const ys = await pagina.locator('.cabo-lab').evaluateAll(ls => ls.map(l => [l.getAttribute('x1'), l.getAttribute('y1')].join(',')));
+  assert.notEqual(ys[0], ys[1], 'não se sobrepõem');
+  await contexto.close();
+});

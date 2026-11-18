@@ -582,5 +582,698 @@
         }
       ]
     }
+  },
+  {
+    "id": "porta-na-vlan-errada",
+    "titulo": "A porta na VLAN errada",
+    "dificuldade": 1,
+    "xp": 120,
+    "cenario": "No laboratório de informática, os PCs 1, 2 e 3 deveriam estar na mesma VLAN (10), com endereços da mesma sub-rede. O PC3 não consegue falar com os outros dois.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc2"
+      }
+    ],
+    "dicas": [
+      "Os endereços IP estão corretos. Confira a VLAN de cada porta do switch ao qual os PCs estão ligados.",
+      "Selecione o SW1 e compare a VLAN da porta do PC3 com a das portas dos outros dois."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 130,
+          "interfaces": [],
+          "portas": {
+            "fa1": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa2": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa3": {
+              "modo": "access",
+              "vlan": 20
+            }
+          }
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 200,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 450,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.2",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 700,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.3",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    },
+    "modulo": "campus"
+  },
+  {
+    "id": "trunk-esquecido",
+    "titulo": "O trunk esquecido",
+    "dificuldade": 2,
+    "xp": 180,
+    "cenario": "O prédio A e o prédio B têm as mesmas duas VLANs (10 e 20), cada uma com um PC por prédio. Dentro de cada prédio tudo funciona, mas nada atravessa o cabo entre os switches.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc4"
+      }
+    ],
+    "dicas": [
+      "As portas dos PCs estão certas. Olhe a configuração das portas nas duas pontas do cabo que liga os switches.",
+      "Esse cabo precisa levar mais de uma VLAN ao mesmo tempo: use o modo trunk, e nos dois switches.",
+      "Colocar o cabo em access na VLAN 10 resolveria só metade dos objetivos."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 220,
+          "y": 150,
+          "interfaces": [],
+          "portas": {
+            "fa1": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa2": {
+              "modo": "access",
+              "vlan": 20
+            }
+          }
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 680,
+          "y": 150,
+          "interfaces": [],
+          "portas": {
+            "fa1": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa2": {
+              "modo": "access",
+              "vlan": 20
+            }
+          }
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 110,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 330,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.20.2",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 570,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.3",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "PC4",
+          "x": 790,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.20.4",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "sw1",
+            "p": "fa8"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa8"
+          }
+        }
+      ]
+    },
+    "modulo": "campus"
+  },
+  {
+    "id": "vlans-sem-gateway",
+    "titulo": "VLANs que não se falam",
+    "dificuldade": 2,
+    "xp": 200,
+    "cenario": "A secretaria (VLAN 10) precisa acessar um servidor da diretoria (VLAN 20). O roteador tem uma interface em cada VLAN e os computadores já apontam para os gateways certos, mas o ping não passa.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Cada interface do roteador precisa estar na mesma VLAN dos computadores que a usam como gateway.",
+      "Veja em qual porta do switch cada interface do roteador está ligada e qual é a VLAN dessa porta."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 150,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.10.254"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 750,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.20.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.20.254"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 250,
+          "interfaces": [],
+          "portas": {
+            "fa1": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa2": {
+              "modo": "access",
+              "vlan": 20
+            },
+            "fa7": {
+              "modo": "access",
+              "vlan": 10
+            }
+          }
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 450,
+          "y": 420,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.10.254",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.20.254",
+              "mascara": "255.255.255.0"
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r1",
+            "p": "gi0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa7"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa8"
+          }
+        }
+      ]
+    },
+    "modulo": "campus"
+  },
+  {
+    "id": "campus-completo",
+    "titulo": "O campus inteiro",
+    "dificuldade": 3,
+    "xp": 300,
+    "cenario": "Dois prédios, duas VLANs (10 e 20) e um roteador no prédio A que liga as duas. Depois da última mudança, quase nada funciona: há mais de um defeito.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc4"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc4"
+      }
+    ],
+    "dicas": [
+      "Resolva por partes: primeiro uma VLAN dentro do prédio, depois entre os prédios, depois entre as VLANs.",
+      "Há um defeito no cabo entre os switches e outro na VLAN de uma porta de computador.",
+      "O PC4 deveria estar na VLAN 20, como o PC2. E o cabo entre os prédios precisa ser trunk nos dois lados."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 230,
+          "y": 190,
+          "interfaces": [],
+          "portas": {
+            "fa1": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa2": {
+              "modo": "access",
+              "vlan": 20
+            },
+            "fa6": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa7": {
+              "modo": "access",
+              "vlan": 20
+            }
+          }
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 670,
+          "y": 190,
+          "interfaces": [],
+          "portas": {
+            "fa1": {
+              "modo": "access",
+              "vlan": 10
+            },
+            "fa2": {
+              "modo": "access",
+              "vlan": 10
+            }
+          }
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 90,
+          "y": 380,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.10.254"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 250,
+          "y": 380,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.20.2",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.20.254"
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 600,
+          "y": 380,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.10.3",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.10.254"
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "PC4",
+          "x": 790,
+          "y": 380,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.20.4",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.20.254"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 230,
+          "y": 60,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.10.254",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.20.254",
+              "mascara": "255.255.255.0"
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "sw1",
+            "p": "fa8"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa8"
+          }
+        },
+        {
+          "id": "c6",
+          "a": {
+            "d": "r1",
+            "p": "gi0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa6"
+          }
+        },
+        {
+          "id": "c7",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa7"
+          }
+        }
+      ]
+    },
+    "modulo": "campus"
   }
 ]

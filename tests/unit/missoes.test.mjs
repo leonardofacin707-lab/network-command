@@ -94,3 +94,46 @@ test('ipDoDispositivo devolve o primeiro IP configurado ou null', () => {
   assert.equal(ipDoDispositivo(x.topologia, 'sw1'), null);
   assert.equal(ipDoDispositivo(x.topologia, 'nada'), null);
 });
+
+// ---- Campus de Redes (missões com VLAN) ----
+import { configurarPortaSwitch } from '../../js/sim/topologia.js';
+const porta = (t, sw, p, modo, vlan) => ok(configurarPortaSwitch(t, sw, p, { modo, vlan }));
+const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
+
+test('campus: 4 missões, separadas das missões comuns', () => {
+  assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'campus-completo']);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 5);
+  assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
+});
+
+test('campus: porta na VLAN errada', () => {
+  const x = m('porta-na-vlan-errada');
+  assert.equal(verificarMissao(x, porta(x.topologia, 'sw1', 'fa3', 'access', 30)).todosOk, false, 'outra VLAN errada');
+  assert.equal(verificarMissao(x, porta(x.topologia, 'sw1', 'fa3', 'access', 10)).todosOk, true);
+});
+
+test('campus: trunk esquecido exige trunk nos dois lados; access na VLAN 10 resolve só metade', () => {
+  const x = m('trunk-esquecido');
+  const um = porta(x.topologia, 'sw1', 'fa8', 'trunk');
+  assert.equal(verificarMissao(x, um).todosOk, false, 'só um lado');
+  const metade = porta(porta(x.topologia, 'sw1', 'fa8', 'access', 10), 'sw2', 'fa8', 'access', 10);
+  assert.deepEqual(feito(x, metade), [true, false]);
+  const ambos = porta(porta(x.topologia, 'sw1', 'fa8', 'trunk'), 'sw2', 'fa8', 'trunk');
+  assert.equal(verificarMissao(x, ambos).todosOk, true);
+});
+
+test('campus: interface do roteador na VLAN errada', () => {
+  const x = m('vlans-sem-gateway');
+  assert.equal(verificarMissao(x, porta(x.topologia, 'sw1', 'fa8', 'access', 10)).todosOk, false);
+  assert.equal(verificarMissao(x, porta(x.topologia, 'sw1', 'fa8', 'access', 20)).todosOk, true);
+});
+
+test('campus: o campus inteiro tem dois defeitos e cada correção sozinha não basta', () => {
+  const x = m('campus-completo');
+  const trunk = t => porta(porta(t, 'sw1', 'fa8', 'trunk'), 'sw2', 'fa8', 'trunk');
+  const vlan = t => porta(t, 'sw2', 'fa2', 'access', 20);
+  assert.equal(verificarMissao(x, trunk(x.topologia)).todosOk, false);
+  assert.equal(verificarMissao(x, vlan(x.topologia)).todosOk, false);
+  const r = verificarMissao(x, vlan(trunk(x.topologia)));
+  assert.equal(r.todosOk, true, JSON.stringify(r.objetivos));
+});

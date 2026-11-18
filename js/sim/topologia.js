@@ -42,6 +42,7 @@ function novoDispositivo(t, tipo, pos) {
     interfaces: def.portas.filter(p => p.ip).map(p => ({ id: p.id, ip: '', mascara: '' }))
   };
   if (tipo === 'pc') d.gateway = '';
+  if (tipo === 'switch') d.portas = {}; // configuração das portas, só o que foge do padrão (access, VLAN 1)
   return d;
 }
 
@@ -83,6 +84,38 @@ export function configurarInterface(t, id, portaId, { ip, mascara }) {
   return { topologia: trocar(t, id, x => ({ ...x, interfaces: x.interfaces.map(i => (i.id === portaId ? novo : i)) })) };
 }
 
+export const VLAN_MIN = 1, VLAN_MAX = 4094;
+export const PORTA_PADRAO = Object.freeze({ modo: 'access', vlan: 1 });
+
+/** Configuração de uma porta de switch: { modo: 'access'|'trunk', vlan }. Padrão: access na VLAN 1. */
+export const configDaPortaSwitch = (d, portaId) => d.portas?.[portaId] ?? PORTA_PADRAO;
+
+/** VLANs em uso nas portas de acesso que têm cabo (para o desenho do switch). */
+export function vlansDoSwitch(t, id) {
+  const d = dispositivo(t, id);
+  const usadas = new Set();
+  for (const v of vizinhos(t, id)) { const c = configDaPortaSwitch(d, v.minhaPorta); if (c.modo === 'access') usadas.add(c.vlan); }
+  return [...usadas].sort((a, b) => a - b);
+}
+
+/** Configura uma porta de switch como access (com VLAN) ou trunk (leva todas as VLANs; VLAN nativa 1). */
+export function configurarPortaSwitch(t, id, portaId, { modo, vlan }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'switch') return { erro: 'Só switches têm portas configuráveis.' };
+  if (!TIPOS.switch.portas.some(p => p.id === portaId)) return { erro: 'Porta inexistente.' };
+  if (modo !== 'access' && modo !== 'trunk') return { erro: 'Modo inválido. Use access ou trunk.' };
+  let nova;
+  if (modo === 'trunk') nova = { modo: 'trunk', vlan: 1 };
+  else {
+    const txt = String(vlan ?? '').trim();
+    if (!/^\d{1,4}$/.test(txt) || Number(txt) < VLAN_MIN || Number(txt) > VLAN_MAX) return { erro: `VLAN inválida. Use um número de ${VLAN_MIN} a ${VLAN_MAX}.` };
+    nova = { modo: 'access', vlan: Number(txt) };
+  }
+  const portas = { ...(d.portas ?? {}) };
+  if (nova.modo === 'access' && nova.vlan === 1) delete portas[portaId]; else portas[portaId] = nova;
+  return { topologia: trocar(t, id, x => ({ ...x, portas })) };
+}
+
 export function configurarGateway(t, id, gateway) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'pc') return { erro: 'Só computadores têm gateway padrão.' };
@@ -98,7 +131,6 @@ export function conectar(t, idA, idB, portaA, portaB) {
   const a = dispositivo(t, idA), b = dispositivo(t, idB);
   if (!a || !b) return { erro: 'Dispositivo não encontrado.' };
   if (idA === idB) return { erro: 'Não dá para ligar um dispositivo a ele mesmo.' };
-  if (t.cabos.some(c => (c.a.d === idA && c.b.d === idB) || (c.a.d === idB && c.b.d === idA))) return { erro: `${a.nome} e ${b.nome} já estão ligados.` };
   const pa = portaA ?? portasLivres(t, idA)[0]?.id, pb = portaB ?? portasLivres(t, idB)[0]?.id;
   if (!pa) return { erro: `${a.nome} não tem porta livre.` };
   if (!pb) return { erro: `${b.nome} não tem porta livre.` };
@@ -141,19 +173,30 @@ export function normalizarTopologia(bruto) {
       })
     };
     if (b.tipo === 'pc') { const g = lerIPv4(b.gateway); d.gateway = g === null ? '' : formatarIPv4(g); }
+    if (b.tipo === 'switch') {
+      d.portas = {};
+      if (b.portas && typeof b.portas === 'object' && !Array.isArray(b.portas)) {
+        for (const p of TIPOS.switch.portas) {
+          const c = b.portas[p.id];
+          if (!c || typeof c !== 'object') continue;
+          if (c.modo === 'trunk') d.portas[p.id] = { modo: 'trunk', vlan: 1 };
+          else if (c.modo === 'access' && Number.isInteger(c.vlan) && c.vlan >= VLAN_MIN && c.vlan <= VLAN_MAX && c.vlan !== 1) d.portas[p.id] = { modo: 'access', vlan: c.vlan };
+        }
+      }
+    }
     ids.add(d.id); nomes.add(nome.toLowerCase());
     saida.dispositivos.push(d);
   }
-  const usadas = new Set(), caboIds = new Set(), pares = new Set();
+  const usadas = new Set(), caboIds = new Set();
   for (const c of Array.isArray(bruto.cabos) ? bruto.cabos : []) {
     if (!c || typeof c.id !== 'string' || caboIds.has(c.id) || !/^c\d{1,3}$/.test(c.id)) continue;
     const da = dispositivo(saida, c.a?.d), db = dispositivo(saida, c.b?.d);
     if (!da || !db || da.id === db.id) continue;
     const okPorta = (d, p) => TIPOS[d.tipo].portas.some(x => x.id === p);
     if (!okPorta(da, c.a.p) || !okPorta(db, c.b.p)) continue;
-    const ka = `${da.id}:${c.a.p}`, kb = `${db.id}:${c.b.p}`, par = [da.id, db.id].sort().join('|');
-    if (usadas.has(ka) || usadas.has(kb) || pares.has(par)) continue;
-    usadas.add(ka); usadas.add(kb); pares.add(par); caboIds.add(c.id);
+    const ka = `${da.id}:${c.a.p}`, kb = `${db.id}:${c.b.p}`;
+    if (usadas.has(ka) || usadas.has(kb)) continue;
+    usadas.add(ka); usadas.add(kb); caboIds.add(c.id);
     saida.cabos.push({ id: c.id, a: { d: da.id, p: c.a.p }, b: { d: db.id, p: c.b.p } });
   }
   return saida;

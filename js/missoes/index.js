@@ -7,29 +7,35 @@ import { verificarMissao, calcularXp, PENALIDADE_DICA } from './verificar.js';
 const NIVEL = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
 const estadoVazio = () => ({ topologia: { dispositivos: [], cabos: [] }, concluida: false, em: null, xp: 0, dicas: 0 });
 
-export default {
-  id: 'missoes',
-  montar(raiz, { missoes, store }, params = []) {
-    const missao = params[0] ? missoes.find(m => m.id === params[0]) : null;
-    if (params[0] && !missao) {
-      raiz.innerHTML = `<section class="band"><div class="wrap"><div class="painel"><h2>Missão não encontrada</h2><p><a class="btn" href="#/missoes">Ver todas as missões</a></p></div></div></section>`;
-      return null;
+/** Cria um módulo de missões (troubleshooting no laboratório). Usado por Missões e por Campus de Redes. */
+export function criarModuloMissoes(cfg) {
+  return {
+    id: cfg.id,
+    montar(raiz, { missoes: todas, store }, params = []) {
+      const missoes = todas.filter(m => m.modulo === cfg.id);
+      const missao = params[0] ? missoes.find(m => m.id === params[0]) : null;
+      if (params[0] && !missao) {
+        raiz.innerHTML = `<section class="band"><div class="wrap"><div class="painel"><h2>Missão não encontrada</h2><p><a class="btn" href="#/${cfg.id}">Ver todas as missões</a></p></div></div></section>`;
+        return null;
+      }
+      return missao ? montarMissao(raiz, store, missao, cfg) : montarLista(raiz, store, missoes, cfg);
     }
-    return missao ? montarMissao(raiz, store, missao) : montarLista(raiz, store, missoes);
-  }
-};
+  };
+}
 
-function montarLista(raiz, store, missoes) {
+export default criarModuloMissoes({ id: 'missoes', titulo: 'Missões', intro: 'Cada missão traz uma rede com defeito. Descubra o problema com o terminal e corrija a configuração.' });
+
+function montarLista(raiz, store, missoes, cfg) {
   const desenhar = estado => {
     const feitas = missoes.filter(m => estado.missoes[m.id]?.concluida).length;
     raiz.innerHTML = `<section class="band"><div class="wrap">
-      <h2 class="titulo-pagina">Missões <span class="selo proto">protótipo</span></h2>
-      <p class="sub">Cada missão traz uma rede com defeito. Descubra o problema com o terminal e corrija a configuração. O objetivo só é cumprido quando o ping funciona de verdade no simulador.
+      <h2 class="titulo-pagina">${esc(cfg.titulo)} <span class="selo proto">protótipo</span></h2>
+      <p class="sub">${esc(cfg.intro)} O objetivo só é cumprido quando o ping funciona de verdade no simulador.
         <b>${feitas}</b> de <b>${missoes.length}</b> concluídas.</p>
       <ul class="lista-missoes">${missoes.map(m => {
         const s = estado.missoes[m.id];
         const estado_ = s?.concluida ? 'feita' : s && JSON.stringify(s.topologia) !== JSON.stringify(m.topologia) ? 'andamento' : 'nova';
-        return `<li class="missao ${estado_}"><a href="#/missoes/${m.id}" aria-label="${esc(m.titulo)}, ${NIVEL[m.dificuldade]}, ${s?.concluida ? 'concluída' : estado_ === 'andamento' ? 'em andamento' : 'não iniciada'}">
+        return `<li class="missao ${estado_}"><a href="#/${cfg.id}/${m.id}" aria-label="${esc(m.titulo)}, ${NIVEL[m.dificuldade]}, ${s?.concluida ? 'concluída' : estado_ === 'andamento' ? 'em andamento' : 'não iniciada'}">
           <b>${esc(m.titulo)}</b>
           <span class="meta">${NIVEL[m.dificuldade]} · ${m.xp} XP</span>
           <span class="situacao">${s?.concluida ? `Concluída · +${s.xp} XP` : estado_ === 'andamento' ? 'Em andamento' : 'Não iniciada'}</span>
@@ -41,7 +47,7 @@ function montarLista(raiz, store, missoes) {
   return store.ouvir(desenhar);
 }
 
-function montarMissao(raiz, store, missao) {
+function montarMissao(raiz, store, missao, cfg) {
   const atual = () => store.obter().missoes[missao.id] ?? estadoVazio();
   const gravar = mudar => store.alterar(e => ({ ...e, missoes: { ...e.missoes, [missao.id]: mudar(e.missoes[missao.id] ?? estadoVazio()) } }));
   const salva = atual();
@@ -49,7 +55,7 @@ function montarMissao(raiz, store, missao) {
   if (!salva.topologia.dispositivos.length) gravar(m => ({ ...m, topologia: missao.topologia }));
 
   raiz.innerHTML = `<section class="band"><div class="wrap">
-    <p><a href="#/missoes">← Todas as missões</a></p>
+    <p><a href="#/${cfg.id}">← Todas as missões</a></p>
     <h2 class="titulo-pagina">${esc(missao.titulo)} <span class="selo proto">protótipo</span></h2>
     <div class="painel missao-topo">
       <p>${esc(missao.cenario)}</p>

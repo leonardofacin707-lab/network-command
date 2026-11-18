@@ -11,15 +11,15 @@ css/lab.css           laboratório e missões
 data/                 conteúdo em JSON: questions, levels, categories, skills, missions, empresa, datacenter
 js/main.js            ponto de entrada: carrega dados e estado, liga a persistência
 js/core/              ui (utilitários DOM), store (estado), storage (localStorage v4), progression (XP/cargo)
-js/sim/               MOTOR (sem DOM): ipv4, topologia (modelo e validação), motor (L2/ARP/roteamento/TTL), terminal (comandos), diagnostico
+js/sim/               MOTOR (sem DOM): ipv4, topologia (modelo e validação, portas access/trunk), motor (L2 com VLAN/ARP/roteamento/TTL), terminal (comandos), diagnostico
 js/lab/               editor visual SVG + painel de configuração + terminal (reutilizado pelas missões), exemplos prontos
 js/datacenter/        disponibilidade (série/paralelo, custo, portas; sem DOM), catalogo, index (telas)
 js/empresa/           planejamento (VLSM, portas, orçamento; sem DOM), catalogo, index (telas)
-js/missoes/           verificar (objetivos e XP, sem DOM), catalogo (validação dos dados), index (telas)
+js/missoes/           verificar (objetivos e XP, sem DOM), catalogo (validação dos dados), index (telas; fábrica usada por Missões e Campus)
 js/hub/               dashboard, perfil, conquistas (regras puras em conquistas-regras.js), habilidades
 js/quiz/              catalog, scoring, unlock (regras puras), map, session, resultado, hud, types/ (5 tipos)
 legacy/               v0.1 congelada (Jornada do Pacote), referência de regressão. Não editar.
-tools/                extrair-legado.mjs e converter-legado.mjs (geraram data/ a partir da v0.1)
+tools/                extrair-legado.mjs e converter-legado.mjs (geraram data/ a partir da v0.1); gerar-missoes.mjs e gerar-campus.mjs (montam missions.json pela API do simulador)
 tests/unit            regras puras (node --test)
 tests/e2e             navegador real (playwright-core) + robô jogador
 ```

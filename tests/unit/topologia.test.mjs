@@ -68,7 +68,7 @@ test('conectar usa portas livres e recusa casos inválidos', () => {
   t = r.topologia;
   t = conectar(t, 'pc2', 'sw1').topologia;
   assert.equal(t.cabos[1].b.p, 'fa2');
-  assert.match(conectar(t, 'pc1', 'sw1').erro, /já estão ligados/);
+  assert.match(conectar(t, 'pc1', 'sw1').erro, /PC1 não tem porta livre/);
   assert.match(conectar(t, 'pc1', 'pc1').erro, /ele mesmo/);
   assert.match(conectar(t, 'pc1', 'pc2').erro, /não tem porta livre/);
   assert.ok(conectar(t, 'pc1', 'fantasma').erro);
@@ -131,4 +131,13 @@ test('normalizar é idempotente numa topologia válida', () => {
   t = configurarInterface(t, 'pc1', 'eth0', { ip: '192.168.1.10', mascara: '/24' }).topologia;
   assert.deepEqual(normalizarTopologia(t), t);
   assert.deepEqual(normalizarTopologia(JSON.parse(JSON.stringify(t))), t);
+});
+
+test('dois dispositivos podem ter mais de um cabo entre si (portas diferentes), como links redundantes', () => {
+  let t = montar('switch', 'switch');
+  t = conectar(t, 'sw1', 'sw2').topologia;
+  const r = conectar(t, 'sw1', 'sw2');
+  assert.deepEqual(r.cabo, { id: 'c2', a: { d: 'sw1', p: 'fa2' }, b: { d: 'sw2', p: 'fa2' } });
+  assert.equal(r.topologia.cabos.length, 2);
+  assert.equal(normalizarTopologia(r.topologia).cabos.length, 2, 'a normalização mantém os dois');
 });

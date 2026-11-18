@@ -2,7 +2,7 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch } from '../sim/topologia.js';
 import { criarSimulacao } from '../sim/motor.js';
 import { executar } from '../sim/terminal.js';
 import { diagnosticar } from '../sim/diagnostico.js';
@@ -71,8 +71,17 @@ export function criarEditor(raiz, opcoes) {
   const centro = id => { const d = dispositivo(topo, id); return [d.x, d.y]; };
 
   function desenharCabos() {
+    // Vários cabos entre o mesmo par de dispositivos são desenhados lado a lado.
+    const grupos = new Map();
+    for (const c of topo.cabos) { const k = [c.a.d, c.b.d].sort().join('|'); grupos.set(k, [...(grupos.get(k) ?? []), c.id]); }
     return topo.cabos.map(c => {
-      const [x1, y1] = centro(c.a.d), [x2, y2] = centro(c.b.d);
+      let [x1, y1] = centro(c.a.d), [x2, y2] = centro(c.b.d);
+      const g = grupos.get([c.a.d, c.b.d].sort().join('|'));
+      if (g.length > 1) {
+        const dist = Math.hypot(x2 - x1, y2 - y1) || 1, off = (g.indexOf(c.id) - (g.length - 1) / 2) * 12;
+        const ox = (-(y2 - y1) / dist) * off, oy = ((x2 - x1) / dist) * off;
+        x1 += ox; y1 += oy; x2 += ox; y2 += oy;
+      }
       const destaque = sel && (c.a.d === sel || c.b.d === sel);
       const rot = destaque ? `<text class="cabo-rot" x="${x1 + (x2 - x1) * .22}" y="${y1 + (y2 - y1) * .22 - 4}">${esc(rotuloDaPorta(dispositivo(topo, c.a.d), c.a.p))}</text>
         <text class="cabo-rot" x="${x1 + (x2 - x1) * .78}" y="${y1 + (y2 - y1) * .78 - 4}">${esc(rotuloDaPorta(dispositivo(topo, c.b.d), c.b.p))}</text>` : '';
@@ -82,6 +91,13 @@ export function criarEditor(raiz, opcoes) {
 
   function desenharDispositivo(d) {
     const ips = d.interfaces.filter(i => i.ip).map(i => i.ip);
+    let vlanTxt = '';
+    if (d.tipo === 'switch') {
+      const vl = vlansDoSwitch(topo, d.id);
+      const trunks = vizinhos(topo, d.id).filter(v => configDaPortaSwitch(d, v.minhaPorta).modo === 'trunk').length;
+      if (vl.some(v => v !== 1) || trunks) vlanTxt = [vl.length ? `VLAN ${vl.join(',')}` : '', trunks ? `trunk×${trunks}` : ''].filter(Boolean).join(' · ');
+      if (vlanTxt) ips.push(vlanTxt);
+    }
     const ligado = vizinhos(topo, d.id).length > 0;
     return `<g class="disp tipo-${d.tipo}${sel === d.id ? ' sel' : ''}${origemCabo === d.id ? ' origem' : ''}" data-id="${d.id}" transform="translate(${d.x} ${d.y})"
         role="button" tabindex="0" aria-label="${esc(d.nome)}, ${TIPO_ROTULO[d.tipo]}${ips.length ? ', ' + ips.join(', ') : ', sem IP'}${ligado ? '' : ', sem cabo'}">
@@ -116,7 +132,15 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-m-${i.id}">Máscara</label><input id="cfg-m-${i.id}" class="campo" name="m-${i.id}" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24" value="${esc(i.mascara)}">
       </fieldset>`).join('')}
       ${d.tipo === 'pc' ? `<label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}">` : ''}
-      ${d.tipo === 'switch' ? '<p>O switch encaminha quadros pelo endereço MAC e não tem IP nesta simulação.</p>' : ''}
+      ${d.tipo === 'switch' ? `<p>O switch não tem IP nesta simulação. Configure o modo de cada porta: <b>access</b> (uma VLAN, sem marca) ou <b>trunk</b> (leva todas as VLANs entre switches; a VLAN nativa é a 1).</p>
+        <table class="tabela portas-sw"><caption class="sr-only">Portas do switch</caption>
+          <thead><tr><th scope="col">Porta</th><th scope="col">Modo</th><th scope="col">VLAN</th></tr></thead>
+          <tbody>${TIPOS.switch.portas.map(p => {
+            const c = configDaPortaSwitch(d, p.id), v = cabos.find(x => x.minhaPorta === p.id);
+            return `<tr><th scope="row">${esc(p.rotulo)}<br><small class="motivo">${v ? '→ ' + esc(dispositivo(topo, v.outro.d).nome) : 'livre'}</small></th>
+              <td><label class="sr-only" for="cfg-modo-${p.id}">Modo da porta ${esc(p.rotulo)}</label><select id="cfg-modo-${p.id}" class="campo" name="modo-${p.id}"><option value="access"${c.modo === 'access' ? ' selected' : ''}>access</option><option value="trunk"${c.modo === 'trunk' ? ' selected' : ''}>trunk</option></select></td>
+              <td><label class="sr-only" for="cfg-vlan-${p.id}">VLAN da porta ${esc(p.rotulo)}</label><input id="cfg-vlan-${p.id}" class="campo qtd" name="vlan-${p.id}" inputmode="numeric" autocomplete="off" value="${c.modo === 'trunk' ? '' : c.vlan}" ${c.modo === 'trunk' ? 'placeholder="todas"' : ''}></td></tr>`;
+          }).join('')}</tbody></table>` : ''}
       <div class="acoes"><button class="btn" type="submit">Aplicar</button>${livre ? `<button class="btn-sec btn-perigo" type="button" data-remover-disp="${d.id}">Remover dispositivo</button>` : ''}</div>
       <h4>Cabos</h4>
       ${cabos.length ? `<ul class="cabos-lista">${cabos.map(v => `<li>${esc(rotuloDaPorta(d, v.minhaPorta))} ↔ ${esc(dispositivo(topo, v.outro.d).nome)} (${esc(rotuloDaPorta(dispositivo(topo, v.outro.d), v.outro.p))})
@@ -261,6 +285,15 @@ export function criarEditor(raiz, opcoes) {
       const passos = [t => renomear(t, sel, f.get('nome'))];
       for (const i of dispositivo(topo, sel).interfaces) passos.push(t => configurarInterface(t, sel, i.id, { ip: f.get(`ip-${i.id}`), mascara: f.get(`m-${i.id}`) }));
       if (dispositivo(topo, sel).tipo === 'pc') passos.push(t => configurarGateway(t, sel, f.get('gw')));
+      if (dispositivo(topo, sel).tipo === 'switch') {
+        for (const p of TIPOS.switch.portas) {
+          const modo = f.get(`modo-${p.id}`);
+          const atual = configDaPortaSwitch(dispositivo(topo, sel), p.id);
+          // trunk não usa VLAN; ao voltar para access sem informar VLAN, usa a que estava (ou 1)
+          const vlan = f.get(`vlan-${p.id}`) || (atual.modo === 'access' ? atual.vlan : 1);
+          passos.push(t => configurarPortaSwitch(t, sel, p.id, { modo, vlan }));
+        }
+      }
       for (const passo of passos) { r = passo(r.topologia); if (r.erro) break; }
       aplicar(r, 'Configuração aplicada.');
     } else if (e.target.id === 'form-term') {
