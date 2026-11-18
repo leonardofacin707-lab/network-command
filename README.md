@@ -17,6 +17,16 @@ Projeto de portfólio de Leonardo Facin, baseado nos tópicos do curso *Conceito
 
 "Protótipo" quer dizer que as regras são reais e testadas, mas o escopo é simplificado (os limites estão em [docs/REGISTRO.md](docs/REGISTRO.md)). Nada é gravado fora do navegador (localStorage) e não há senhas nem dados pessoais.
 
+## Capturas de tela
+
+As capturas abaixo usam um progresso de exemplo semeado só para ilustrar (não é um histórico real de uso).
+
+| | |
+|---|---|
+| ![Dashboard](docs/img/dashboard.png) | ![Mapa de níveis do quiz](docs/img/mapa-quiz.png) |
+| ![Laboratório com o exemplo de duas redes e um roteador](docs/img/laboratorio.png) | ![Missão de DNS com o painel do computador servidor](docs/img/missao-dns.png) |
+| ![Missão de filtro de pacotes com o painel do roteador](docs/img/missao-filtro.png) | ![Árvore de habilidades](docs/img/habilidades.png) |
+
 ## Como rodar
 
 O projeto usa módulos ES e arquivos JSON, então precisa de um servidor HTTP (abrir o `index.html` direto do disco não funciona):
