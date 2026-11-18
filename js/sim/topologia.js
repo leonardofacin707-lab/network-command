@@ -1,6 +1,6 @@
 // Modelo da topologia do laboratório: dispositivos, interfaces e cabos. Funções puras e imutáveis, sem DOM.
 // Cada operação devolve { topologia, ... } ou { erro } com uma mensagem em português.
-import { lerIPv4, lerMascara, validarEnderecoDeHost, formatarIPv4 } from './ipv4.js';
+import { lerIPv4, lerMascara, validarEnderecoDeHost, formatarIPv4, enderecoDeRede, mesmaRede } from './ipv4.js';
 
 export const LARGURA = 900;
 export const ALTURA = 520;
@@ -42,6 +42,7 @@ function novoDispositivo(t, tipo, pos) {
     interfaces: def.portas.filter(p => p.ip).map(p => ({ id: p.id, ip: '', mascara: '' }))
   };
   if (tipo === 'pc') d.gateway = '';
+  if (tipo === 'roteador') d.rotas = []; // rotas estáticas: [{ rede, mascara, via }]
   if (tipo === 'switch') d.portas = {}; // configuração das portas, só o que foge do padrão (access, VLAN 1)
   return d;
 }
@@ -116,6 +117,38 @@ export function configurarPortaSwitch(t, id, portaId, { modo, vlan }) {
   return { topologia: trocar(t, id, x => ({ ...x, portas })) };
 }
 
+export const MAX_ROTAS = 16;
+
+/**
+ * Acrescenta uma rota estática a um roteador: "para chegar em rede/máscara, envie ao próximo salto (via)".
+ * O próximo salto precisa estar em uma rede ligada diretamente ao roteador (alguma interface já configurada).
+ */
+export function adicionarRotaEstatica(t, id, { rede, mascara, via }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores têm rotas estáticas.' };
+  const rN = lerIPv4(String(rede ?? '').trim()), mN = lerMascara(String(mascara ?? '').trim()), vN = lerIPv4(String(via ?? '').trim());
+  if (rN === null) return { erro: 'Endereço da rede inválido. Use quatro números de 0 a 255 separados por ponto.' };
+  if (mN === null) return { erro: 'Máscara inválida. Use, por exemplo, 255.255.255.0 ou /24.' };
+  if (enderecoDeRede(rN, mN) !== rN) return { erro: `Isso não é um endereço de rede para essa máscara. O endereço de rede seria ${formatarIPv4(enderecoDeRede(rN, mN))}.` };
+  if (vN === null) return { erro: 'Próximo salto inválido. Use o endereço IP do roteador vizinho.' };
+  const minhas = d.interfaces.filter(i => i.ip);
+  if (minhas.some(i => lerIPv4(i.ip) === vN)) return { erro: 'O próximo salto não pode ser um endereço deste próprio roteador.' };
+  if (!minhas.some(i => mesmaRede(lerIPv4(i.ip), vN, lerMascara(i.mascara)))) {
+    return { erro: 'O próximo salto precisa estar em uma rede ligada diretamente a este roteador. Configure antes o IP da interface correspondente.' };
+  }
+  const rotas = d.rotas ?? [];
+  if (rotas.length >= MAX_ROTAS) return { erro: `Limite de ${MAX_ROTAS} rotas estáticas por roteador.` };
+  const nova = { rede: formatarIPv4(rN), mascara: formatarIPv4(mN), via: formatarIPv4(vN) };
+  if (rotas.some(r => r.rede === nova.rede && r.mascara === nova.mascara)) return { erro: 'Já existe uma rota para essa rede.' };
+  return { topologia: trocar(t, id, x => ({ ...x, rotas: [...rotas, nova] })) };
+}
+
+export function removerRotaEstatica(t, id, indice) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador' || !Number.isInteger(indice) || indice < 0 || indice >= (d.rotas ?? []).length) return { erro: 'Rota não encontrada.' };
+  return { topologia: trocar(t, id, x => ({ ...x, rotas: x.rotas.filter((_, i) => i !== indice) })) };
+}
+
 export function configurarGateway(t, id, gateway) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'pc') return { erro: 'Só computadores têm gateway padrão.' };
@@ -173,6 +206,17 @@ export function normalizarTopologia(bruto) {
       })
     };
     if (b.tipo === 'pc') { const g = lerIPv4(b.gateway); d.gateway = g === null ? '' : formatarIPv4(g); }
+    if (b.tipo === 'roteador') {
+      d.rotas = [];
+      for (const r of Array.isArray(b.rotas) ? b.rotas : []) {
+        if (d.rotas.length >= MAX_ROTAS || !r || typeof r !== 'object') continue;
+        const rN = lerIPv4(r.rede), mN = lerMascara(r.mascara), vN = lerIPv4(r.via);
+        if (rN === null || mN === null || vN === null || enderecoDeRede(rN, mN) !== rN) continue;
+        const rede = formatarIPv4(rN), mascara = formatarIPv4(mN);
+        if (d.rotas.some(x => x.rede === rede && x.mascara === mascara)) continue;
+        d.rotas.push({ rede, mascara, via: formatarIPv4(vN) });
+      }
+    }
     if (b.tipo === 'switch') {
       d.portas = {};
       if (b.portas && typeof b.portas === 'object' && !Array.isArray(b.portas)) {

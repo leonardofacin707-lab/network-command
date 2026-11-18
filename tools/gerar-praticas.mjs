@@ -52,6 +52,7 @@ const praticas = [
 
 // Ordem de aprendizagem dentro de cada módulo
 const ordem = ['primeira-rede', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
+  'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas',
   'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'];
 const ids = new Set(praticas.map(m => m.id));
 const todas = [...existentes.filter(m => !ids.has(m.id)), ...praticas];

@@ -1,8 +1,8 @@
 // Motor de simulação de rede (camadas 2 e 3). Puro: não conhece DOM, tela nem localStorage.
 // Modela: domínio de broadcast através de switches (com VLANs: portas access e trunk), resolução ARP, encaminhamento por
-// roteadores (rotas conectadas; uma interface física por VLAN), TTL e a resposta de volta.
-// NÃO modela: latência, perda aleatória, subinterfaces (router-on-a-stick), STP, rotas estáticas, DHCP, NAT, firewall.
-import { lerIPv4, lerMascara, mesmaRede, formatarIPv4 } from './ipv4.js';
+// roteadores (rotas conectadas e estáticas, com prefixo mais longo; uma interface física por VLAN), TTL e a resposta de volta.
+// NÃO modela: latência, perda aleatória, subinterfaces (router-on-a-stick), STP, roteamento dinâmico, DHCP, NAT, firewall.
+import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
 
 export const TTL_INICIAL = { pc: 128, roteador: 255, switch: 255 };
@@ -121,9 +121,9 @@ export function enviarPacote(t, origemId, ipDest) {
       proximoIp = gw;
     }
   } else if (o.tipo === 'roteador') {
-    const saida = rotaConectada(t, o, ipDest);
+    const saida = escolherRota(t, o, ipDest);
     if (!saida) return resultado('sem-rota', { de: meusIps[0]?.ip });
-    porta = saida.p; proximoIp = ipDest; ipDeOrigem = saida.ip;
+    porta = saida.porta; proximoIp = saida.proximo; ipDeOrigem = saida.ip;
   } else {
     return resultado('sem-ip'); // switch não origina tráfego IP
   }
@@ -146,23 +146,38 @@ export function enviarPacote(t, origemId, ipDest) {
     ttl -= 1;
     saltos.push({ d: dev.id, ip: ingresso.ip });
     if (ttl <= 0) return { status: 'ttl-expirado', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
-    const saida = rotaConectada(t, dev, ipDest);
+    const saida = escolherRota(t, dev, ipDest);
     if (!saida) return { status: 'rede-inalcancavel', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
-    arp = resolverArp(t, dev.id, saida.p, ipDest);
+    arp = resolverArp(t, dev.id, saida.porta, saida.proximo);
     if (arp.achados.length === 0) return { status: 'host-inalcancavel', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
     if (arp.achados.length > 1) return { status: 'conflito-ip', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
-    aprendizado.push({ d: dev.id, ip: ipDest, mac: arp.achados[0].mac });
+    aprendizado.push({ d: dev.id, ip: saida.proximo, mac: arp.achados[0].mac });
     atual = arp.achados[0];
   }
   return { status: 'ttl-expirado', de: ipDeOrigem, saltos, caminho, ttl: 0, aprendizado };
 }
 
-/** Rota conectada de um roteador: a interface (com link e IP) cuja sub-rede contém o destino. */
-function rotaConectada(t, roteador, ipDest) {
+/**
+ * Escolhe a rota de um roteador para ipDest: entre as rotas conectadas (interfaces com cabo e IP) e as estáticas
+ * (via um próximo salto alcançável por uma interface com cabo), vence o prefixo mais longo; em empate, a conectada.
+ * Devolve { porta, proximo, ip, prefixo, tipo } ou null. Em rota conectada o próximo é o próprio destino.
+ */
+export function escolherRota(t, roteador, ipDest) {
+  let melhor = null;
   for (const i of interfacesConfiguradas(roteador)) {
-    if (temLink(t, roteador.id, i.p) && mesmaRede(i.ip, ipDest, i.mascara)) return i;
+    if (!temLink(t, roteador.id, i.p) || !mesmaRede(i.ip, ipDest, i.mascara)) continue;
+    const prefixo = prefixoDeMascara(i.mascara);
+    if (!melhor || prefixo > melhor.prefixo) melhor = { porta: i.p, proximo: ipDest, ip: i.ip, prefixo, tipo: 'conectada' };
   }
-  return null;
+  for (const r of roteador.rotas ?? []) {
+    const rede = lerIPv4(r.rede), mascara = lerMascara(r.mascara), via = lerIPv4(r.via);
+    if (rede === null || mascara === null || via === null || !mesmaRede(rede, ipDest, mascara)) continue;
+    const prefixo = prefixoDeMascara(mascara);
+    if (melhor && prefixo <= melhor.prefixo) continue;
+    const saida = interfacesConfiguradas(roteador).find(i => temLink(t, roteador.id, i.p) && mesmaRede(i.ip, via, i.mascara));
+    if (saida) melhor = { porta: saida.p, proximo: via, ip: saida.ip, prefixo, tipo: 'estatica' };
+  }
+  return melhor;
 }
 
 /**

@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 7 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 10 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 7);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 7 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 10);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 10 concluídas/);
   assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /Sua primeira rede local, Fácil, não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(1).getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
@@ -156,7 +156,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 7 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 10 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -219,4 +219,43 @@ test('prática: duas redes, um roteador — IPs, interfaces e gateways pela inte
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+250 XP/);
   assert.deepEqual(erros, []);
   await s.contexto.close();
+});
+
+test('rotas estáticas pela interface: validação, rota de ida, de volta, remoção e conclusão (280 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/rotas-estaticas');
+  await disp('pc1').click();
+  assert.equal(await pagina.locator('#rotas-estaticas').count(), 0, 'PC não tem tabela de rotas');
+  await disp('r1').click();
+  assert.match(await pagina.locator('#rotas-estaticas').innerText(), /Nenhuma rota estática/);
+  const aplicar = async (rede, m, via) => {
+    await pagina.fill('#cfg-rota-rede', rede); await pagina.fill('#cfg-rota-m', m); await pagina.fill('#cfg-rota-via', via);
+    await pagina.locator('#form-cfg button[type=submit]').click();
+  };
+  await aplicar('172.16.0.0', '/24', '10.9.9.9');
+  assert.match(await pagina.locator('#lab-estado').innerText(), /ligada diretamente/);
+  await pagina.fill('#cfg-rota-rede', '172.16.0.0'); await pagina.fill('#cfg-rota-m', ''); await pagina.fill('#cfg-rota-via', '');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /preencha a rede, a máscara e o próximo salto/);
+  await aplicar('172.16.0.0', '/24', '10.0.0.2');
+  assert.match(await pagina.locator('#rotas-estaticas tbody').innerText(), /172\.16\.0\.0\s+255\.255\.255\.0\s+10\.0\.0\.2/);
+  assert.equal((await salvo()).missoes['rotas-estaticas']?.concluida ?? false, false);
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 2, 'só a ida não basta');
+  // rota errada na volta, depois removida
+  await disp('r2').click();
+  await aplicar('192.168.2.0', '/24', '10.0.0.1');
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.ok').count(), 0);
+  await pagina.locator('[data-remover-rota="0"]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Rota removida/);
+  assert.match(await pagina.locator('#rotas-estaticas').innerText(), /Nenhuma rota estática/);
+  await aplicar('192.168.1.0', '255.255.255.0', '10.0.0.1');
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.ok').count(), 2);
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+280 XP/);
+  const e = await salvo();
+  assert.equal(e.missoes['rotas-estaticas'].concluida, true);
+  assert.deepEqual(e.missoes['rotas-estaticas'].topologia.dispositivos.find(d => d.id === 'r2').rotas, [{ rede: '192.168.1.0', mascara: '255.255.255.0', via: '10.0.0.1' }]);
+  assert.deepEqual(erros, []);
+  await contexto.close();
 });

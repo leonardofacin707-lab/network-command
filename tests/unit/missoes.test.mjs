@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { conectar, configurarInterface, configurarGateway } from '../../js/sim/topologia.js';
+import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 7);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 10);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -203,4 +203,35 @@ test('prática: dois andares — VLANs nos PCs mais trunk nos dois lados', () =>
   assert.equal(verificarMissao(x, porta(vlans(trunk(x.topologia)), 'sw2', 'fa8', 'access', 1)).todosOk, false, 'trunk só de um lado');
   const r = verificarMissao(x, vlans(trunk(x.topologia)));
   assert.equal(r.todosOk, true, JSON.stringify(r.objetivos));
+});
+
+// ---- Missões de rotas estáticas ----
+const rotaEst = (t, id, rede, mascara, via) => ok(adicionarRotaEstatica(t, id, { rede, mascara, via }));
+
+test('rota que só vai: o pacote chega, a resposta não volta; a rota no R2 resolve', () => {
+  const x = m('rota-so-de-ida');
+  const r = verificarMissao(x, x.topologia);
+  assert.equal(r.objetivos[0].motivo, 'o pacote chegou, mas a resposta não voltou');
+  assert.equal(r.objetivos[1].motivo, 'um roteador do caminho não conhece essa rede');
+  assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r2', '192.168.1.0', '/24', '10.0.0.3')).todosOk, false, 'próximo salto sem ninguém');
+  assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r2', '192.168.1.0', '/24', '10.0.0.1')).todosOk, true);
+  assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r2', '0.0.0.0', '/0', '10.0.0.1')).todosOk, true, 'rota padrão também serve');
+});
+
+test('rotas estáticas passo a passo: exige as duas rotas', () => {
+  const x = m('rotas-estaticas');
+  const ida = rotaEst(x.topologia, 'r1', '172.16.0.0', '/24', '10.0.0.2');
+  const volta = rotaEst(x.topologia, 'r2', '192.168.1.0', '/24', '10.0.0.1');
+  assert.equal(verificarMissao(x, ida).todosOk, false);
+  assert.equal(verificarMissao(x, volta).todosOk, false);
+  assert.equal(verificarMissao(x, rotaEst(ida, 'r2', '192.168.1.0', '/24', '10.0.0.1')).todosOk, true);
+  assert.equal(verificarMissao(x, rotaEst(ida, 'r2', '192.168.2.0', '/24', '10.0.0.1')).todosOk, false, 'rota de volta para a rede errada');
+});
+
+test('rota padrão: só a rota 0.0.0.0/0 no R1 (o provedor já conhece a empresa)', () => {
+  const x = m('rota-padrao');
+  assert.equal(verificarMissao(x, x.topologia).objetivos.map(o => o.ok).join(), 'false,false');
+  assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r1', '8.8.8.0', '/24', '203.0.113.2')).todosOk, true, 'rota específica também resolve');
+  assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r1', '0.0.0.0', '/0', '203.0.113.2')).todosOk, true);
+  assert.match(adicionarRotaEstatica(x.topologia, 'r1', { rede: '0.0.0.0', mascara: '/0', via: '203.0.113.9' }).erro, /ligada diretamente/, 'próximo salto fora do enlace é recusado');
 });

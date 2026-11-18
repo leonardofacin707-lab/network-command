@@ -2,7 +2,7 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica } from '../sim/topologia.js';
 import { criarSimulacao } from '../sim/motor.js';
 import { executar } from '../sim/terminal.js';
 import { diagnosticar } from '../sim/diagnostico.js';
@@ -132,6 +132,15 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-m-${i.id}">Máscara</label><input id="cfg-m-${i.id}" class="campo" name="m-${i.id}" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24" value="${esc(i.mascara)}">
       </fieldset>`).join('')}
       ${d.tipo === 'pc' ? `<label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}">` : ''}
+      ${d.tipo === 'roteador' ? `<fieldset class="iface" id="rotas-estaticas"><legend>Rotas estáticas</legend>
+        ${(d.rotas ?? []).length ? `<table class="tabela"><caption class="sr-only">Rotas estáticas de ${esc(d.nome)}</caption>
+          <thead><tr><th scope="col">Rede</th><th scope="col">Máscara</th><th scope="col">Próximo salto</th><th scope="col"><span class="sr-only">Ação</span></th></tr></thead>
+          <tbody>${d.rotas.map((r, i) => `<tr><td>${esc(r.rede)}</td><td>${esc(r.mascara)}</td><td>${esc(r.via)}</td>
+            <td><button class="btn-sec" type="button" data-remover-rota="${i}" aria-label="Remover a rota para ${esc(r.rede)}">Remover</button></td></tr>`).join('')}</tbody></table>` : '<p>Nenhuma rota estática. O roteador só conhece as redes ligadas diretamente a ele.</p>'}
+        <label for="cfg-rota-rede">Rede de destino</label><input id="cfg-rota-rede" class="campo" name="rota-rede" inputmode="decimal" autocomplete="off" placeholder="ex.: 172.16.0.0 (0.0.0.0 = rota padrão)">
+        <label for="cfg-rota-m">Máscara da rede</label><input id="cfg-rota-m" class="campo" name="rota-m" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24 (/0 = rota padrão)">
+        <label for="cfg-rota-via">Próximo salto</label><input id="cfg-rota-via" class="campo" name="rota-via" inputmode="decimal" autocomplete="off" placeholder="ex.: 10.0.0.2 (o roteador vizinho)">
+        <p class="motivo">Preencha os três campos e use Aplicar para acrescentar a rota.</p></fieldset>` : ''}
       ${d.tipo === 'switch' ? `<p>O switch não tem IP nesta simulação. Configure o modo de cada porta: <b>access</b> (uma VLAN, sem marca) ou <b>trunk</b> (leva todas as VLANs entre switches; a VLAN nativa é a 1).</p>
         <table class="tabela portas-sw"><caption class="sr-only">Portas do switch</caption>
           <thead><tr><th scope="col">Porta</th><th scope="col">Modo</th><th scope="col">VLAN</th></tr></thead>
@@ -268,6 +277,8 @@ export function criarEditor(raiz, opcoes) {
       aplicar({ topologia: topologiaVazia() }, 'Área de trabalho limpa.');
       $('#lab-limpar').innerHTML = '<button class="btn-sec" data-acao="limpar">Limpar tudo</button>';
       renderTerm();
+    } else if (b.dataset.removerRota !== undefined) {
+      aplicar(removerRotaEstatica(topo, sel, Number(b.dataset.removerRota)), 'Rota removida.');
     } else if (b.dataset.removerCabo) {
       aplicar(removerCabo(topo, b.dataset.removerCabo), 'Cabo removido.');
     } else if (b.dataset.removerDisp) {
@@ -285,6 +296,12 @@ export function criarEditor(raiz, opcoes) {
       const passos = [t => renomear(t, sel, f.get('nome'))];
       for (const i of dispositivo(topo, sel).interfaces) passos.push(t => configurarInterface(t, sel, i.id, { ip: f.get(`ip-${i.id}`), mascara: f.get(`m-${i.id}`) }));
       if (dispositivo(topo, sel).tipo === 'pc') passos.push(t => configurarGateway(t, sel, f.get('gw')));
+      if (dispositivo(topo, sel).tipo === 'roteador') {
+        const campos = { rede: String(f.get('rota-rede') ?? '').trim(), mascara: String(f.get('rota-m') ?? '').trim(), via: String(f.get('rota-via') ?? '').trim() };
+        const preenchidos = Object.values(campos).filter(Boolean).length;
+        if (preenchidos === 3) passos.push(t => adicionarRotaEstatica(t, sel, campos));
+        else if (preenchidos > 0) passos.push(() => ({ erro: 'Para acrescentar uma rota, preencha a rede, a máscara e o próximo salto.' }));
+      }
       if (dispositivo(topo, sel).tipo === 'switch') {
         for (const p of TIPOS.switch.portas) {
           const modo = f.get(`modo-${p.id}`);

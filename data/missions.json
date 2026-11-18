@@ -819,7 +819,8 @@
               "ip": "",
               "mascara": ""
             }
-          ]
+          ],
+          "rotas": []
         }
       ],
       "cabos": [
@@ -865,6 +866,428 @@
           "b": {
             "d": "r1",
             "p": "gi1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rota-so-de-ida",
+    "modulo": "missoes",
+    "titulo": "A rota que só vai",
+    "dificuldade": 2,
+    "xp": 200,
+    "habilidades": [
+      "roteamento.diagnostico"
+    ],
+    "cenario": "Dois roteadores ligam a matriz (192.168.1.0/24) à filial (172.16.0.0/24). O R1 já sabe chegar à filial, mas o PC1 não recebe resposta nenhuma. O PC2 também não alcança a matriz.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Pelo PC1, o pacote até chega ao PC2 (veja o tracert), mas a resposta não volta. Um caminho de ida sem volta quase sempre é rota faltando no outro sentido.",
+      "Selecione o R2 e veja as rotas estáticas dele. Ele conhece a filial (rede ligada), mas não a rede 192.168.1.0/24.",
+      "No R2, acrescente a rota para 192.168.1.0 com máscara /24 e próximo salto 10.0.0.1 (a interface do R1 no enlace entre eles)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 90,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 300,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "172.16.0.0",
+              "mascara": "255.255.255.0",
+              "via": "10.0.0.2"
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 600,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.0.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "172.16.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": []
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 810,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "172.16.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "172.16.0.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rota-padrao",
+    "modulo": "missoes",
+    "titulo": "Rota padrão para a Internet",
+    "dificuldade": 2,
+    "xp": 220,
+    "habilidades": [
+      "roteamento.pratica"
+    ],
+    "cenario": "O roteador da empresa (R1) está ligado ao roteador do provedor (R2). O provedor já conhece a rede da empresa. Falta ensinar o R1 a mandar para o provedor tudo o que não for da rede local, para alcançar o servidor 8.8.8.8.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Em vez de listar todas as redes da Internet, o R1 usa uma rota padrão: um destino que corresponde a qualquer endereço.",
+      "A rota padrão é a rede 0.0.0.0 com máscara /0 (ou 0.0.0.0). O próximo salto é o endereço do provedor (R2) no enlace entre os roteadores."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 90,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 300,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "203.0.113.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": []
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 600,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "203.0.113.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "8.8.8.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "192.168.1.0",
+              "mascara": "255.255.255.0",
+              "via": "203.0.113.1"
+            }
+          ]
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 810,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "8.8.8.8",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "8.8.8.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rotas-estaticas",
+    "modulo": "missoes",
+    "titulo": "Rotas estáticas, passo a passo",
+    "dificuldade": 3,
+    "xp": 280,
+    "habilidades": [
+      "roteamento.pratica"
+    ],
+    "cenario": "Matriz e filial têm roteadores novos, com endereços e gateways já configurados, mas sem nenhuma rota entre as redes remotas. Ensine cada roteador a chegar à rede do outro lado.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Cada roteador só conhece as redes ligadas diretamente a ele. Para chegar à rede do outro lado, ele precisa de uma rota estática.",
+      "O R1 precisa de uma rota para 172.16.0.0/24. O próximo salto é o endereço do R2 no enlace entre os dois roteadores.",
+      "O R2 precisa do caminho de volta: rota para 192.168.1.0/24 com próximo salto no endereço do R1 no enlace. Sem a volta, o ping não fecha."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 90,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 300,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": []
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 600,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.0.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "172.16.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": []
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 810,
+          "y": 260,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "172.16.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "172.16.0.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
           }
         }
       ]

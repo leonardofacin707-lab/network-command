@@ -44,7 +44,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 
 - ✅ IPv4 (rede, broadcast, hosts úteis, classe), switch (domínio L2 com varredura), ARP com cache, roteador com rotas das redes conectadas, TTL (PC 128, roteador 255), caminho de volta separado do de ida, conflito de IP.
 - ✅ Terminal: `ipconfig [/all]`, `ping [-n N] destino`, `tracert`, `arp -a`, `hostname`, `help`, `cls`; histórico com setas ↑/↓. Saída no estilo do Windows em português.
-- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, rotas estáticas/dinâmicas, DHCP, NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
+- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (as rotas estáticas entraram depois, ver abaixo), DHCP, NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
 - ✅ 49 testes unitários do motor (IPv4, topologia, motor, terminal, diagnóstico) e 10 e2e do laboratório.
 
 ## Fase 5 — Missões de troubleshooting 🧪
@@ -97,6 +97,12 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Testes: unitários (cada missão começa quebrada, as soluções passam e variações erradas não) e e2e pela interface (IPs, roteador, VLAN, trunk).
 - 🧪 Continua sendo protótipo: a verificação é por ping (ida e volta); não avalia boas práticas (por exemplo, desperdício de endereços ou VLAN nativa).
 
+### Rotas estáticas (protótipo)
+- ✅ Motor: o roteador escolhe a rota pelo **prefixo mais longo**; rota conectada vence a estática de mesmo prefixo; a rota padrão é 0.0.0.0/0. O próximo salto precisa estar numa rede ligada diretamente (senão a rota é recusada). O pacote passa por vários roteadores, decrementando o TTL, e um laço de rotas termina em "TTL expirado". Funções: `adicionarRotaEstatica`, `removerRotaEstatica`, `normalizarTopologia` (descarta rotas inválidas ou duplicadas de dados salvos, máx. 16 por roteador) e `escolherRota`.
+- ✅ Laboratório e missões: ao selecionar um roteador aparece o fieldset "Rotas estáticas" (tabela com Remover + rede, máscara e próximo salto; preencher os três campos e Aplicar). Três missões novas: *A rota que só vai* (diagnóstico: ida sem volta), *Rota padrão para a Internet* e *Rotas estáticas, passo a passo*. Gerador `tools/gerar-rotas.mjs` (idempotente). Agora são 10 missões na lista de Missões.
+- ✅ Testes: `tests/unit/rotas.test.mjs` (8), três testes novos em `missoes.test.mjs` e um e2e pela interface (validação, ida, volta, remoção, conclusão).
+- 🧪 Continua sem simular: roteamento dinâmico (RIP/OSPF), distância administrativa, rotas flutuantes, ECMP, subinterfaces, DHCP, NAT e ACLs. A mensagem de "inalcançável" é simplificada.
+
 ### Revisão visual (capturas desktop e celular)
 - 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
 - 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
@@ -106,5 +112,5 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 
 ## Próximos passos
-- Fases 7 e 8: expansão de conteúdo e recursos avançados (rotas estáticas, DHCP, NAT, subinterfaces) — ⏳. VLAN já foi feita (ver Campus).
+- Fases 7 e 8: expansão de conteúdo e recursos avançados (DHCP, NAT, subinterfaces, roteamento dinâmico) — ⏳. VLAN e rotas estáticas já foram feitas (ver Campus e Rotas estáticas).
 - Quiz: os 12 níveis originais estão completos (9 desafios cada). Todas as 8 trilhas têm teoria. Faltam, para a Fase 7: mais desafios por nível/dificuldade, desafios cronometrados e conteúdo de Prática/Diagnóstico para Fundamentos, IP e Serviços.

@@ -11,7 +11,7 @@ css/lab.css           laboratório e missões
 data/                 conteúdo em JSON: questions, levels, categories, skills, missions, empresa, datacenter
 js/main.js            ponto de entrada: carrega dados e estado, liga a persistência
 js/core/              ui (utilitários DOM), store (estado), storage (localStorage v4), progression (XP/cargo)
-js/sim/               MOTOR (sem DOM): ipv4, topologia (modelo e validação, portas access/trunk), motor (L2 com VLAN/ARP/roteamento/TTL), terminal (comandos), diagnostico
+js/sim/               MOTOR (sem DOM): ipv4, topologia (modelo e validação, portas access/trunk), motor (L2 com VLAN/ARP/roteamento conectado e estático/TTL), terminal (comandos), diagnostico
 js/lab/               editor visual SVG + painel de configuração + terminal (reutilizado pelas missões), exemplos prontos
 js/datacenter/        disponibilidade (série/paralelo, custo, portas; sem DOM), catalogo, index (telas)
 js/empresa/           planejamento (VLSM, portas, orçamento; sem DOM), catalogo, index (telas)
