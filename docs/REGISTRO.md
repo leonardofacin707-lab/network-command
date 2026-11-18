@@ -150,3 +150,12 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 ## Próximos passos
 - Fases 7 e 8: expansão de conteúdo e recursos avançados (NAT, subinterfaces, roteamento dinâmico, DNS com cache/zonas, ACL por interface com portas) — ⏳. VLAN, rotas estáticas, DHCP, filtro de pacotes e DNS simplificado já foram feitos (ver Campus, Rotas estáticas, DHCP, Filtro de pacotes e DNS).
 - Quiz: os 12 níveis originais estão completos (9 desafios cada). Todas as 8 trilhas têm teoria. Faltam, para a Fase 7: mais desafios por nível/dificuldade, desafios cronometrados e conteúdo de Prática/Diagnóstico para Fundamentos, IP e Serviços.
+
+## Árvore de habilidades completa: "Dois switches" e o chefão de cinco camadas
+
+- **O que foi feito:** duas missões novas, geradas por `tools/gerar-chefao.mjs`.
+  - `dois-switches` (Fundamentos · Diagnóstico, 120 XP): dois switches ligados em cadeia, com o defeito no cabo entre eles.
+  - `chefao-cinco-camadas` (450 XP, quatro habilidades): cliente desconectado, sem pool DHCP no roteador, rota ausente, filtro bloqueando a resposta e clientes sem DNS. Cada defeito é necessário para fechar a missão (teste unitário corrige um de cada vez).
+- **Efeito:** as 16 combinações Prática/Diagnóstico da árvore têm conteúdo; o aviso "Sem conteúdo ainda" não aparece mais.
+- **Testes:** 207 unitários e 87 e2e (1 ignorado) passando.
+- **Pendente:** os desafios de quiz escritos por mim devem ser revisados contra o material oficial do NetAcad.

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 21);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 23);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -363,4 +363,30 @@ test('validarMissao aceita objetivo por nome e descarta nome inválido', () => {
   base.objetivos = [{ id: 'a', de: 'pc1', nome: 'www.loja.local' }, { id: 'b', de: 'pc1', nome: 'x y' }, { id: 'c', de: 'pc1' }, { id: 'd', de: 'pc9', nome: 'a.b' }];
   const v = validarMissao(base);
   assert.deepEqual(v.objetivos, [{ id: 'a', de: 'pc1', nome: 'www.loja.local' }]);
+});
+
+// ---- Fundamentos (switches) e o chefão de cinco camadas ----
+test('dois switches: ligar os switches (ou mover o PC3) resolve', () => {
+  const x = m('dois-switches');
+  assert.deepEqual(verificarMissao(x, x.topologia).objetivos.map(o => o.ok), [true, false, false]);
+  assert.equal(verificarMissao(x, ok(conectar(x.topologia, 'sw1', 'sw2', 'fa8', 'fa8'))).todosOk, true);
+  const movido = ok(conectar(ok(removerCabo(x.topologia, x.topologia.cabos.find(c => c.a.d === 'pc3' || c.b.d === 'pc3').id)), 'pc3', 'sw1', 'eth0', 'fa3'));
+  assert.equal(verificarMissao(x, movido).todosOk, true);
+});
+
+test('chefão de cinco camadas: cada um dos cinco defeitos é necessário', () => {
+  const x = m('chefao-cinco-camadas');
+  const t0 = x.topologia;
+  assert.equal(verificarMissao(x, t0).objetivos.every(o => !o.ok), true);
+  const correcoes = {
+    cabo: t => ok(conectar(t, 'pc2', 'sw1', 'eth0', 'fa2')),
+    pool: t => ok(configurarPoolDhcp(t, 'r1', 'gi0', { inicio: '192.168.1.100', fim: '192.168.1.110' })),
+    rota: t => rotaEst(t, 'r1', '172.16.0.0', '/24', '10.0.0.2'),
+    filtro: t => ok(removerFiltro(t, 'r2', 0)),
+    dns: t => ok(configurarDnsPc(ok(configurarDnsPc(t, 'pc1', '172.16.0.10')), 'pc2', '172.16.0.10'))
+  };
+  const aplicar = nomes => nomes.reduce((t, n) => correcoes[n](t), t0);
+  const todas = Object.keys(correcoes);
+  assert.equal(verificarMissao(x, aplicar(todas)).todosOk, true);
+  for (const faltando of todas) assert.equal(verificarMissao(x, aplicar(todas.filter(n => n !== faltando))).todosOk, false, `sem a correção "${faltando}"`);
 });

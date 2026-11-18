@@ -126,6 +126,141 @@
     }
   },
   {
+    "id": "dois-switches",
+    "modulo": "missoes",
+    "titulo": "Dois switches, uma rede só",
+    "dificuldade": 1,
+    "xp": 120,
+    "habilidades": [
+      "fundamentos.diagnostico"
+    ],
+    "cenario": "Três computadores da mesma sala usam endereços da mesma rede, mas só dois deles se falam. O terceiro está ligado a outro switch, que não está conectado ao primeiro.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o3",
+        "de": "pc3",
+        "para": "pc2"
+      }
+    ],
+    "dicas": [
+      "Os endereços estão certos: todos são 192.168.1.x com a mesma máscara. Então o problema não está na configuração, está na ligação física.",
+      "Veja a que switch cada computador está ligado. Um switch só encaminha para o que está nele, a não ser que esteja ligado a outro.",
+      "Use o modo Conectar cabo para ligar o SW1 ao SW2 (ou mova o PC3 para o SW1)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 90,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 90,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 330,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 600,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 810,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.12",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "cabo-esquecido",
     "titulo": "O cabo esquecido",
     "dificuldade": 1,
@@ -3218,6 +3353,253 @@
           "b": {
             "d": "pc3",
             "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "chefao-cinco-camadas",
+    "modulo": "missoes",
+    "titulo": "O chefão: cinco defeitos, cinco camadas",
+    "dificuldade": 3,
+    "xp": 450,
+    "habilidades": [
+      "troubleshooting.pratica",
+      "troubleshooting.diagnostico",
+      "roteamento.diagnostico",
+      "servicos.diagnostico"
+    ],
+    "cenario": "Os dois clientes da matriz precisam abrir a intranet (intranet.empresa.local) que fica na filial. O DNS e o servidor Web estão na filial, atrás de dois roteadores. Nada funciona e os defeitos estão em camadas diferentes: siga o método de baixo para cima (cabo, endereço, rota, regra de acesso e nome) e corrija um por vez.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "nome": "intranet.empresa.local"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "nome": "intranet.empresa.local"
+      }
+    ],
+    "dicas": [
+      "Comece pelo mais baixo: o Cliente2 está com algum cabo? E os clientes têm endereço (ipconfig)? Em DHCP, quem entrega o endereço é o roteador da matriz.",
+      "Com endereço, teste o ping até o Dns (172.16.0.10) e use tracert para ver onde para. Há uma rota faltando no R1 e uma regra de filtro que derruba a resposta no R2.",
+      "Por último, o nome: o DHCP simplificado não entrega o servidor DNS, então configure nos dois clientes o IP do computador Dns. Resumo: cabo do Cliente2, pool no R1 (192.168.1.x), rota do R1 para 172.16.0.0/24 via 10.0.0.2, remover o filtro do R2 e DNS 172.16.0.10 nos clientes."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 60,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 60,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 200,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 360,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": []
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 560,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.0.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "172.16.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "192.168.1.0",
+              "mascara": "255.255.255.0",
+              "via": "10.0.0.1"
+            }
+          ],
+          "pools": [],
+          "filtros": [
+            {
+              "acao": "negar",
+              "origem": "172.16.0.0",
+              "origemM": "255.255.255.0",
+              "destino": "192.168.1.0",
+              "destinoM": "255.255.255.0"
+            }
+          ]
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 700,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Dns",
+          "x": 830,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "172.16.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "172.16.0.1",
+          "registros": [
+            {
+              "nome": "intranet.empresa.local",
+              "ip": "172.16.0.20"
+            }
+          ]
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Web",
+          "x": 830,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "172.16.0.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "172.16.0.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c6",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa3"
           }
         }
       ]

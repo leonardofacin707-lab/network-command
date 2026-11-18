@@ -34,7 +34,7 @@ test('lista do Campus: 6 missões próprias, separadas das de Missões, e o menu
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Campus/);
   await pagina.goto(`${servidor.url}/index.html#/missoes`);
   await pagina.locator('.missao').first().waitFor();
-  assert.equal(await pagina.locator('.missao').count(), 21, 'a lista de Missões não ganhou as do campus');
+  assert.equal(await pagina.locator('.missao').count(), 23, 'a lista de Missões não ganhou as do campus');
   assert.deepEqual(erros, []);
   await contexto.close();
 });

@@ -24,12 +24,12 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 21 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 23 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 21);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 21 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 23);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 23 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
-  assert.match(await pagina.locator('.missao a').nth(1).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
+  assert.match(await pagina.locator('.missao a').nth(2).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
   assert.deepEqual(erros, []);
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 21 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 23 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);

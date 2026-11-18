@@ -1,11 +1,11 @@
 // Ordem de aprendizagem das missões em data/missions.json, compartilhada pelos geradores (o que não estiver aqui vai para o fim).
 export const ORDEM_MISSOES = [
-  'primeira-rede', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
+  'primeira-rede', 'dois-switches', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
   'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas',
   'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
   'filtro-convidado', 'filtro-ordem', 'filtro-resposta',
   'dns-ping-no-nome', 'dns-registro-errado', 'dns-da-empresa',
-  'filial-fora-do-ar', 'dois-sites-quatro-defeitos',
+  'filial-fora-do-ar', 'dois-sites-quatro-defeitos', 'chefao-cinco-camadas',
   'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'
 ];
 
