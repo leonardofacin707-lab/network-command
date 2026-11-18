@@ -26,7 +26,7 @@ tests/e2e             navegador real (playwright-core) + robô jogador
 ## Decisões
 
 - **Estado**: `store` imutável com `ouvir/alterar`; `main.js` liga `store.ouvir(salvar)`. Módulos não escrevem no localStorage.
-- **Armazenamento**: chave `network-command`, formato `{versao:4, perfil, quiz:{melhor, historico}, conquistas, lab:{topologia}, missoes:{id:{topologia, concluida, em, xp, dicas}}, empresa:{id:{prefixos, equip, concluida, em, xp}}}` (o campo `empresa` é aditivo: arquivos v4 antigos sem ele continuam válidos)`. Lê o formato da v0.1 (`jornada-do-pacote-v1`) e migra sem apagar. Todo dado lido é validado e entradas inválidas são descartadas. Nada de senhas ou dados pessoais além do nome de exibição.
+- **Armazenamento**: chave `network-command`, formato `{versao:4, perfil, quiz:{melhor, historico}, conquistas, lab:{topologia}, missoes:{id:{topologia, concluida, em, xp, dicas}}, empresa:{id:{prefixos, equip, concluida, em, xp}}}` (o campo `empresa` é aditivo: arquivos v4 antigos sem ele continuam válidos). Lê o formato da v0.1 (`jornada-do-pacote-v1`) e migra sem apagar. Todo dado lido é validado e entradas inválidas são descartadas. Nada de senhas ou dados pessoais além do nome de exibição.
 - **Dados**: cada pergunta tem id, categoria, assunto, dificuldade, habilidade (`trilha.nível`), enunciado, carga do tipo e explicação.
 - **Tipos de desafio**: cada arquivo em `js/quiz/types/` exporta `rotulo`, `renderizar` e `clique` (e `enviar` para número). Para criar um tipo novo basta adicionar o arquivo e registrá-lo em `session.js`.
 - **Testes como rede de segurança**: o robô jogador resolve os desafios pela interface a partir de `tests/fixtures/legado.json` (conteúdo original), então valem para a v0.1 e para a versão atual.
