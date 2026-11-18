@@ -1,0 +1,42 @@
+import { esc } from '../core/ui.js';
+import { xpTotal, cargoDe } from '../core/progression.js';
+import { maximoDoNivel, estrelasPorPontos, registrarResultado } from './scoring.js';
+import { desenharHud } from './hud.js';
+
+/** Grava o resultado da partida no estado e mostra a tela de resultado. */
+export function telaResultado({ app, catalogo, store }, run) {
+  const n = run.nivel;
+  const maximo = maximoDoNivel(n.desafios.length);
+  const estrelas = estrelasPorPontos(run.pts, maximo);
+  const antes = store.obter().quiz.melhor;
+  const cargoAntes = cargoDe(xpTotal(antes));
+  const r = registrarResultado(antes, n.id, run.pts, estrelas);
+  if (r.recorde) store.alterar(e => ({ ...e, quiz: { ...e.quiz, melhor: r.melhor } }));
+  const melhor = store.obter().quiz.melhor;
+  const cargoDepois = cargoDe(xpTotal(melhor));
+  desenharHud(melhor, catalogo);
+  const prox = catalogo.niveis[catalogo.niveis.indexOf(n) + 1];
+  const liberou = estrelas > 0 && prox && prox.desafios;
+
+  app.innerHTML = `<section class="band"><div class="jogo">
+    <article class="painel resultado">
+      <span class="mods">Nível ${n.id} · ${esc(n.nome)}</span>
+      <div class="grandes" aria-label="${estrelas} de 3 estrelas">${'★'.repeat(estrelas)}<span class="apagada">${'★'.repeat(3 - estrelas)}</span></div>
+      <h2>${estrelas === 3 ? 'Nível dominado!' : estrelas > 0 ? 'Nível concluído' : 'Quase lá'}</h2>
+      <p>${estrelas > 0 ? 'O pacote seguiu viagem pela rede.' : 'Faça pelo menos 40% dos pontos para ganhar 1 estrela e liberar o próximo nível.'}</p>
+      <div class="resumo">
+        <div><small>Pontos</small><b>${run.pts} / ${maximo}</b></div>
+        <div><small>Acertos</small><b>${run.acertos} de ${n.desafios.length}</b></div>
+        <div><small>Melhor resultado</small><b>${melhor[n.id] ? melhor[n.id].pts : 0}</b></div>
+      </div>
+      ${r.recorde && r.anterior ? '<p><b>Novo recorde neste nível!</b></p>' : ''}
+      ${cargoDepois !== cargoAntes ? `<p class="cargo-novo">Promoção! Seu novo cargo: ${cargoDepois}</p>` : ''}
+      <div class="acoes">
+        ${liberou ? `<button class="btn" data-acao="jogar" data-nivel="${prox.id}">Próximo nível</button>` : ''}
+        <button class="${liberou ? 'btn-sec' : 'btn'}" data-acao="jogar" data-nivel="${n.id}">Jogar de novo</button>
+        <button class="btn-sec" data-acao="mapa">Voltar ao mapa</button>
+      </div>
+    </article>
+  </div></section>`;
+  window.scrollTo({ top: 0 });
+}

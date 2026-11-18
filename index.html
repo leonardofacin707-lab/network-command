@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/quiz.css">
+</head>
+<body>
+<header class="topo band">
+  <div class="linha1">
+    <div>
+      <h1>Network Command</h1>
+      <p>Você é um pacote de dados atravessando a rede. Cada nível é um dispositivo no caminho, do básico ao avançado.</p>
+    </div>
+    <div class="hud" id="hud" aria-live="polite"></div>
+  </div>
+</header>
+<main id="app"></main>
+<footer>
+  Projeto de portfólio de Leonardo Facin, feito em JavaScript puro (sem frameworks).<br>
+  Trilha baseada nos tópicos do curso Conceitos Básicos de Redes (Cisco Networking Academy); perguntas e explicações originais.
+</footer>
+<script>
+  // Módulos ES e JSON exigem servidor HTTP; abrir o arquivo direto (file://) não funciona.
+  if (location.protocol === 'file:') {
+    document.getElementById('app').innerHTML = '<section class="band"><div class="painel"><h2>Abra por um servidor local</h2>' +
+      '<p>Este projeto usa módulos JavaScript e arquivos JSON, que o navegador bloqueia quando a página é aberta direto do disco.</p>' +
+      '<p>Na pasta do projeto, rode <code>npm run serve</code> (ou use a extensão Live Server do VS Code) e abra <code>http://localhost:5173</code>.</p></div></section>';
+  }
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

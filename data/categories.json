@@ -1,0 +1,18 @@
+[
+  { "id": "fundamentos", "nome": "Fundamentos de redes", "trilha": "fundamentos" },
+  { "id": "osi-tcpip", "nome": "Modelos OSI e TCP/IP", "trilha": "fundamentos" },
+  { "id": "ethernet", "nome": "Ethernet", "trilha": "ethernet-comutacao" },
+  { "id": "ipv4", "nome": "Endereçamento IPv4", "trilha": "ip" },
+  { "id": "ipv6", "nome": "Endereçamento IPv6", "trilha": "ip" },
+  { "id": "subnetting", "nome": "Subnetting", "trilha": "subnetting" },
+  { "id": "switches", "nome": "Switches", "trilha": "ethernet-comutacao" },
+  { "id": "roteadores", "nome": "Roteadores", "trilha": "roteamento" },
+  { "id": "arp", "nome": "ARP", "trilha": "ethernet-comutacao" },
+  { "id": "dhcp", "nome": "DHCP", "trilha": "servicos" },
+  { "id": "dns", "nome": "DNS", "trilha": "servicos" },
+  { "id": "nat", "nome": "NAT", "trilha": "servicos" },
+  { "id": "vlans", "nome": "VLANs", "trilha": "ethernet-comutacao" },
+  { "id": "roteamento", "nome": "Roteamento", "trilha": "roteamento" },
+  { "id": "seguranca", "nome": "Segurança de redes", "trilha": "seguranca" },
+  { "id": "troubleshooting", "nome": "Troubleshooting", "trilha": "troubleshooting" }
+]

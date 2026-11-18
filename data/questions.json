@@ -1,0 +1,653 @@
+[
+  {
+    "id": "fundamentos-001",
+    "nivel": 1,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Internet",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Quem é o dono da Internet?",
+    "alternativas": [
+      "Ninguém: ela é um conjunto de redes interligadas que seguem padrões comuns",
+      "O governo dos Estados Unidos",
+      "As grandes operadoras de telefonia",
+      "A empresa que fabrica os roteadores"
+    ],
+    "correta": 0,
+    "explicacao": "A Internet é uma \"rede de redes\". Milhares de redes independentes cooperam porque seguem os mesmos padrões, e nenhuma pessoa ou empresa controla tudo."
+  },
+  {
+    "id": "fundamentos-002",
+    "nivel": 1,
+    "tipo": "classificar",
+    "categoria": "fundamentos",
+    "assunto": "Tipos de rede",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Que tipo de rede é cada caso?",
+    "grupos": [
+      "Doméstica pequena",
+      "SOHO",
+      "Média ou grande",
+      "Mundial"
+    ],
+    "itens": [
+      {
+        "texto": "Notebook e celulares de uma família ligados ao roteador de casa",
+        "grupo": 0
+      },
+      {
+        "texto": "Escritório em casa que acessa a rede da empresa",
+        "grupo": 1
+      },
+      {
+        "texto": "Universidade com milhares de hosts em vários campi",
+        "grupo": 2
+      },
+      {
+        "texto": "Bilhões de dispositivos interligados no planeta",
+        "grupo": 3
+      }
+    ],
+    "explicacao": "SOHO significa pequeno escritório ou escritório doméstico. Redes médias e grandes têm muitos locais e centenas ou milhares de hosts. A Internet é a rede mundial."
+  },
+  {
+    "id": "fundamentos-003",
+    "nivel": 1,
+    "tipo": "numero",
+    "categoria": "fundamentos",
+    "assunto": "Unidades de velocidade",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Quantos Mbps existem em 1 Gbps?",
+    "resposta": 1000,
+    "unidade": "Mbps",
+    "dica": "Cada prefixo (K, M, G, T) multiplica por mil.",
+    "explicacao": "1 Gbps = 1.000 Mbps = 1.000.000 Kbps = 1.000.000.000 bps. Em redes, os prefixos de velocidade usam potências de 10."
+  },
+  {
+    "id": "fundamentos-004",
+    "nivel": 1,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Largura de banda e taxa real",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Seu plano de internet é de 300 Mbps, mas o teste de velocidade mostra 210 Mbps. Esses 210 Mbps são a…",
+    "alternativas": [
+      "Taxa de transferência (throughput)",
+      "Largura de banda",
+      "Latência",
+      "Frequência do sinal"
+    ],
+    "correta": 0,
+    "explicacao": "Largura de banda é a capacidade teórica do meio. A taxa de transferência é o que realmente passa, e cai por causa do volume de dados, do tipo de tráfego e da latência no caminho."
+  },
+  {
+    "id": "fundamentos-005",
+    "nivel": 1,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Latência",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Como se chama o tempo que os dados levam para ir de um ponto a outro da rede?",
+    "alternativas": [
+      "Latência",
+      "Largura de banda",
+      "Taxa de transferência",
+      "Encapsulamento"
+    ],
+    "correta": 0,
+    "explicacao": "Latência é o atraso da viagem. Quanto mais dispositivos e distância entre origem e destino, maior tende a ser a latência."
+  },
+  {
+    "id": "fundamentos-006",
+    "nivel": 1,
+    "tipo": "ligar",
+    "categoria": "fundamentos",
+    "assunto": "Tecnologias sem fio",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Ligue cada tecnologia sem fio à situação em que ela é usada.",
+    "pares": [
+      {
+        "esquerda": "Bluetooth",
+        "direita": "Fone sem fio conectado ao celular"
+      },
+      {
+        "esquerda": "NFC",
+        "direita": "Pagar encostando o celular na maquininha"
+      },
+      {
+        "esquerda": "GPS",
+        "direita": "Descobrir sua posição por satélite"
+      },
+      {
+        "esquerda": "Wi-Fi",
+        "direita": "Acessar a internet pelo roteador de casa"
+      },
+      {
+        "esquerda": "Dados móveis (4G/5G)",
+        "direita": "Navegar na rua, longe de qualquer roteador"
+      }
+    ],
+    "explicacao": "Bluetooth é de curto alcance e baixo consumo. O NFC exige que os aparelhos fiquem quase encostados. O GPS só recebe sinais de satélites. O Wi-Fi depende de um access point por perto, e os dados móveis usam as torres da operadora."
+  },
+  {
+    "id": "fundamentos-007",
+    "nivel": 1,
+    "tipo": "classificar",
+    "categoria": "fundamentos",
+    "assunto": "Privacidade de dados",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Classifique cada dado pessoal.",
+    "grupos": [
+      "Voluntário",
+      "Observado",
+      "Inferido"
+    ],
+    "itens": [
+      {
+        "texto": "Foto que você postou na rede social",
+        "grupo": 0
+      },
+      {
+        "texto": "Histórico de localização do celular",
+        "grupo": 1
+      },
+      {
+        "texto": "Score de crédito calculado a partir dos seus hábitos",
+        "grupo": 2
+      },
+      {
+        "texto": "Seu perfil com nome e cidade",
+        "grupo": 0
+      },
+      {
+        "texto": "Lista de páginas que você visitou",
+        "grupo": 1
+      }
+    ],
+    "explicacao": "Dados voluntários você cria e compartilha. Dados observados são registrados a partir do que você faz. Dados inferidos são conclusões tiradas analisando os outros dados."
+  },
+  {
+    "id": "fundamentos-008",
+    "nivel": 1,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Segurança Wi-Fi",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Você quer conectar o celular a uma rede Wi-Fi que não aparece na lista. Qual é o motivo mais provável?",
+    "alternativas": [
+      "O broadcast do SSID está desativado, então é preciso adicionar a rede manualmente",
+      "O celular está sem dados móveis",
+      "O Bluetooth está ligado",
+      "A rede só aceita cabo"
+    ],
+    "correta": 0,
+    "explicacao": "Com o SSID oculto, a rede não aparece na lista. Você adiciona manualmente digitando o SSID, o tipo de segurança e a senha exatamente como estão no roteador."
+  },
+  {
+    "id": "fundamentos-009",
+    "nivel": 1,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Wi-Fi público",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "No Wi-Fi público de uma lanchonete, qual atitude é a mais segura?",
+    "alternativas": [
+      "Usar uma VPN e nunca enviar senhas sem criptografia",
+      "Desligar o Bluetooth e pronto",
+      "Usar o modo avião com o Wi-Fi ligado",
+      "Escolher a rede com o sinal mais forte"
+    ],
+    "correta": 0,
+    "explicacao": "Em redes que você não controla, alguém pode capturar o tráfego. A VPN cria um túnel criptografado, e login ou senha nunca devem trafegar em texto puro."
+  },
+  {
+    "id": "fundamentos-010",
+    "nivel": 2,
+    "tipo": "classificar",
+    "categoria": "fundamentos",
+    "assunto": "Componentes da infraestrutura",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Separe os componentes da infraestrutura de rede.",
+    "grupos": [
+      "Dispositivo final",
+      "Dispositivo intermediário",
+      "Meio físico"
+    ],
+    "itens": [
+      {
+        "texto": "Notebook",
+        "grupo": 0
+      },
+      {
+        "texto": "Impressora de rede",
+        "grupo": 0
+      },
+      {
+        "texto": "Câmera de segurança IP",
+        "grupo": 0
+      },
+      {
+        "texto": "Switch",
+        "grupo": 1
+      },
+      {
+        "texto": "Roteador",
+        "grupo": 1
+      },
+      {
+        "texto": "Access point sem fio",
+        "grupo": 1
+      },
+      {
+        "texto": "Cabo de par trançado",
+        "grupo": 2
+      },
+      {
+        "texto": "Ondas de rádio do Wi-Fi",
+        "grupo": 2
+      }
+    ],
+    "explicacao": "O dispositivo final (host) é a origem ou o destino da mensagem. Os intermediários conectam e encaminham o tráfego. O meio físico é o caminho por onde o sinal viaja: cobre, fibra ou ar."
+  },
+  {
+    "id": "fundamentos-011",
+    "nivel": 2,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Cliente e servidor",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "O que define se um computador é cliente ou servidor?",
+    "alternativas": [
+      "O software instalado nele",
+      "O tamanho do disco",
+      "A marca do processador",
+      "Estar ligado por cabo ou por Wi-Fi"
+    ],
+    "correta": 0,
+    "explicacao": "Um host vira servidor quando roda software de servidor (web, e-mail, arquivos). O mesmo computador pode ser cliente e servidor ao mesmo tempo."
+  },
+  {
+    "id": "fundamentos-012",
+    "nivel": 2,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Redes ponto a ponto",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Qual é uma DESVANTAGEM da rede ponto a ponto (P2P)?",
+    "alternativas": [
+      "Não tem administração centralizada e é menos segura",
+      "É cara de montar",
+      "Exige um servidor dedicado",
+      "É difícil de configurar"
+    ],
+    "correta": 0,
+    "explicacao": "A P2P é barata e simples, mas não escala bem, não tem gestão central, é menos segura e o desempenho cai quando todos são cliente e servidor ao mesmo tempo."
+  },
+  {
+    "id": "fundamentos-013",
+    "nivel": 2,
+    "tipo": "ligar",
+    "categoria": "fundamentos",
+    "assunto": "Roteador doméstico",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Ligue cada equipamento à parte certa do roteador doméstico.",
+    "pares": [
+      {
+        "esquerda": "Modem do provedor",
+        "direita": "Porta Internet (WAN)"
+      },
+      {
+        "esquerda": "PC de mesa com cabo",
+        "direita": "Porta LAN (switch interno)"
+      },
+      {
+        "esquerda": "Celular",
+        "direita": "Access point sem fio interno"
+      }
+    ],
+    "explicacao": "A porta Internet liga o roteador a outra rede, a do provedor. As portas LAN e o Wi-Fi ficam na mesma rede local da casa."
+  },
+  {
+    "id": "fundamentos-014",
+    "nivel": 2,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Roteador doméstico: portas LAN e WAN",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Os aparelhos ligados nas portas LAN e os conectados ao Wi-Fi do mesmo roteador estão…",
+    "alternativas": [
+      "Na mesma rede local; só a porta Internet fica em outra rede",
+      "Em redes separadas, uma com fio e outra sem fio",
+      "Cada um em uma rede diferente",
+      "Na rede do provedor"
+    ],
+    "correta": 0,
+    "explicacao": "Por padrão, o roteador doméstico junta portas LAN e Wi-Fi na mesma LAN. A porta Internet é a única que fica em outra rede."
+  },
+  {
+    "id": "fundamentos-015",
+    "nivel": 2,
+    "tipo": "ligar",
+    "categoria": "fundamentos",
+    "assunto": "Meios físicos",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Ligue cada cabo ao uso mais comum dele.",
+    "pares": [
+      {
+        "esquerda": "Par trançado Cat5e",
+        "direita": "Ligar o PC ao switch na rede local"
+      },
+      {
+        "esquerda": "Coaxial",
+        "direita": "Levar internet e TV a cabo até o modem"
+      },
+      {
+        "esquerda": "Fibra óptica",
+        "direita": "Longas distâncias em alta velocidade, sem interferência elétrica"
+      }
+    ],
+    "explicacao": "O par trançado (4 pares trançados contra interferência) é o mais comum nas LANs. O coaxial vem das operadoras de TV a cabo. A fibra usa pulsos de luz e alcança grandes distâncias."
+  },
+  {
+    "id": "fundamentos-016",
+    "nivel": 2,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Interferência sem fio",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "O fone Bluetooth está atrapalhando o Wi-Fi do notebook. Para qual faixa vale mudar o Wi-Fi?",
+    "alternativas": [
+      "5 GHz, porque o Bluetooth usa 2,4 GHz",
+      "2,4 GHz, porque é mais rápida",
+      "900 MHz",
+      "Tanto faz, o Bluetooth não usa rádio"
+    ],
+    "correta": 0,
+    "explicacao": "Wi-Fi doméstico usa as faixas não licenciadas de 2,4 GHz e 5 GHz. O Bluetooth divide a faixa de 2,4 GHz, então os 5 GHz evitam essa disputa."
+  },
+  {
+    "id": "fundamentos-017",
+    "nivel": 2,
+    "tipo": "ligar",
+    "categoria": "fundamentos",
+    "assunto": "Conexões com o provedor",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Ligue cada tipo de conexão com o provedor (ISP) à característica dela.",
+    "pares": [
+      {
+        "esquerda": "Cabo",
+        "direita": "Usa o mesmo coaxial da TV a cabo"
+      },
+      {
+        "esquerda": "DSL",
+        "direita": "Usa a linha telefônica"
+      },
+      {
+        "esquerda": "Satélite",
+        "direita": "Precisa de visada livre até o céu"
+      },
+      {
+        "esquerda": "Celular",
+        "direita": "Usa as torres da operadora"
+      },
+      {
+        "esquerda": "Discada",
+        "direita": "Barata, mas com banda muito pequena"
+      }
+    ],
+    "explicacao": "A escolha depende do lugar onde você está e dos provedores disponíveis. Em áreas sem cabo ou DSL, satélite e celular resolvem. Nas cidades, a fibra até a casa é cada vez mais comum."
+  },
+  {
+    "id": "fundamentos-018",
+    "nivel": 2,
+    "tipo": "pergunta",
+    "categoria": "fundamentos",
+    "assunto": "Escolha do meio de transmissão",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Qual destes NÃO é um critério para escolher o meio físico da rede?",
+    "alternativas": [
+      "A cor da capa do cabo",
+      "A distância máxima que o sinal alcança",
+      "O ambiente onde será instalado",
+      "O custo do meio e da instalação"
+    ],
+    "correta": 0,
+    "explicacao": "Os critérios são distância, ambiente, quantidade e velocidade dos dados, e custo. A cor da capa só ajuda na organização."
+  },
+  {
+    "id": "osi-tcpip-001",
+    "nivel": 3,
+    "tipo": "pergunta",
+    "categoria": "osi-tcpip",
+    "assunto": "Protocolos",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Em redes, um protocolo é…",
+    "alternativas": [
+      "Um conjunto de regras que emissor e receptor seguem para se entender",
+      "Um tipo de cabo",
+      "Um programa antivírus",
+      "O endereço de um site"
+    ],
+    "correta": 0,
+    "explicacao": "Assim como uma conversa precisa de idioma, ritmo e confirmação, os computadores precisam de regras comuns: formato, tamanho, temporização, codificação e forma de entrega."
+  },
+  {
+    "id": "osi-tcpip-002",
+    "nivel": 3,
+    "tipo": "ligar",
+    "categoria": "osi-tcpip",
+    "assunto": "Características de protocolos",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Ligue cada característica de protocolo ao que ela define.",
+    "pares": [
+      {
+        "esquerda": "Formato",
+        "direita": "A estrutura que a mensagem precisa seguir"
+      },
+      {
+        "esquerda": "Tamanho",
+        "direita": "Mensagens longas são divididas em partes menores"
+      },
+      {
+        "esquerda": "Temporização",
+        "direita": "A velocidade e o momento em que cada host pode transmitir"
+      },
+      {
+        "esquerda": "Codificação",
+        "direita": "Como a informação vira sinais no meio físico"
+      }
+    ],
+    "explicacao": "Essas regras garantem que a mensagem chegue e seja entendida. A temporização, por exemplo, evita que todos transmitam ao mesmo tempo."
+  },
+  {
+    "id": "osi-tcpip-003",
+    "nivel": 3,
+    "tipo": "ordenar",
+    "categoria": "osi-tcpip",
+    "assunto": "Modelo OSI",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Monte o modelo OSI, da camada 7 (topo) até a camada 1.",
+    "itens": [
+      "Aplicação",
+      "Apresentação",
+      "Sessão",
+      "Transporte",
+      "Rede",
+      "Enlace de dados",
+      "Física"
+    ],
+    "explicacao": "Do topo para a base: 7 Aplicação, 6 Apresentação, 5 Sessão, 4 Transporte, 3 Rede, 2 Enlace de dados, 1 Física."
+  },
+  {
+    "id": "osi-tcpip-004",
+    "nivel": 3,
+    "tipo": "ordenar",
+    "categoria": "osi-tcpip",
+    "assunto": "Modelo TCP/IP",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Agora o modelo TCP/IP, do topo para a base.",
+    "itens": [
+      "Aplicação",
+      "Transporte",
+      "Internet",
+      "Acesso à rede"
+    ],
+    "explicacao": "O TCP/IP tem 4 camadas. É o modelo de protocolos que a Internet usa de verdade."
+  },
+  {
+    "id": "osi-tcpip-005",
+    "nivel": 3,
+    "tipo": "classificar",
+    "categoria": "osi-tcpip",
+    "assunto": "OSI x TCP/IP",
+    "dificuldade": 3,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Em qual camada do TCP/IP cai cada camada do OSI?",
+    "grupos": [
+      "Aplicação",
+      "Transporte",
+      "Internet",
+      "Acesso à rede"
+    ],
+    "itens": [
+      {
+        "texto": "OSI 7 · Aplicação",
+        "grupo": 0
+      },
+      {
+        "texto": "OSI 6 · Apresentação",
+        "grupo": 0
+      },
+      {
+        "texto": "OSI 5 · Sessão",
+        "grupo": 0
+      },
+      {
+        "texto": "OSI 4 · Transporte",
+        "grupo": 1
+      },
+      {
+        "texto": "OSI 3 · Rede",
+        "grupo": 2
+      },
+      {
+        "texto": "OSI 2 · Enlace de dados",
+        "grupo": 3
+      },
+      {
+        "texto": "OSI 1 · Física",
+        "grupo": 3
+      }
+    ],
+    "explicacao": "As camadas 5, 6 e 7 do OSI viram a Aplicação do TCP/IP. Transporte e Rede (Internet) batem direto. Enlace e Física juntas formam o Acesso à rede."
+  },
+  {
+    "id": "osi-tcpip-006",
+    "nivel": 3,
+    "tipo": "ligar",
+    "categoria": "osi-tcpip",
+    "assunto": "Funções por camada OSI",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Ligue cada função à camada OSI responsável por ela.",
+    "pares": [
+      {
+        "esquerda": "Escolhe o melhor caminho usando endereços IP",
+        "direita": "3 · Rede"
+      },
+      {
+        "esquerda": "Troca quadros entre dispositivos no mesmo meio",
+        "direita": "2 · Enlace de dados"
+      },
+      {
+        "esquerda": "Segmenta, transfere e remonta os dados",
+        "direita": "4 · Transporte"
+      },
+      {
+        "esquerda": "Transmite bits como sinais elétricos, luz ou rádio",
+        "direita": "1 · Física"
+      },
+      {
+        "esquerda": "Dá uma representação comum aos dados",
+        "direita": "6 · Apresentação"
+      }
+    ],
+    "explicacao": "Uma dica para lembrar: a camada 3 trabalha com IP (pacotes), a 2 com MAC (quadros), a 4 com portas (segmentos) e a 1 com bits."
+  },
+  {
+    "id": "osi-tcpip-007",
+    "nivel": 3,
+    "tipo": "pergunta",
+    "categoria": "osi-tcpip",
+    "assunto": "Padronização da Internet",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Onde fica registrada a evolução de um padrão da Internet?",
+    "alternativas": [
+      "Em documentos numerados chamados RFC (Request for Comments)",
+      "No manual de cada roteador",
+      "Em um arquivo dentro do navegador",
+      "Na tabela de roteamento"
+    ],
+    "correta": 0,
+    "explicacao": "Cada proposta de padrão passa por discussão e testes, e tudo fica registrado em RFCs numeradas, mantidas por organizações como a IETF."
+  },
+  {
+    "id": "osi-tcpip-008",
+    "nivel": 3,
+    "tipo": "pergunta",
+    "categoria": "osi-tcpip",
+    "assunto": "Modelo em camadas",
+    "dificuldade": 1,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Qual é uma vantagem de usar um modelo em camadas?",
+    "alternativas": [
+      "Mudar uma camada não obriga a mudar as outras",
+      "Elimina a necessidade de cabos",
+      "Deixa a rede imune a vírus",
+      "Dispensa endereços IP"
+    ],
+    "correta": 0,
+    "explicacao": "As camadas separam responsabilidades. Isso facilita projetar protocolos, permite que produtos de fabricantes diferentes funcionem juntos e cria uma linguagem comum para descrever a rede."
+  },
+  {
+    "id": "osi-tcpip-009",
+    "nivel": 3,
+    "tipo": "pergunta",
+    "categoria": "osi-tcpip",
+    "assunto": "Interoperabilidade",
+    "dificuldade": 2,
+    "habilidade": "fundamentos.teoria",
+    "enunciado": "Por que um celular de uma marca consegue abrir um site hospedado no servidor de outra marca?",
+    "alternativas": [
+      "Porque ambos seguem os mesmos padrões abertos de protocolo",
+      "Porque as marcas fizeram um acordo particular",
+      "Porque o site foi feito para aquele celular",
+      "Porque a operadora converte tudo"
+    ],
+    "correta": 0,
+    "explicacao": "Padrões abertos garantem que qualquer dispositivo que implemente as mesmas regras consiga se comunicar, não importa o fabricante."
+  }
+]

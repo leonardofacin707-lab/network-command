@@ -1,0 +1,125 @@
+[
+  {
+    "id": 1,
+    "nome": "Mundo conectado",
+    "icone": "pc",
+    "modulos": "Módulos 1 a 3",
+    "categoria": "fundamentos",
+    "resumo": [
+      "Tipos de rede e quem \"é dono\" da Internet",
+      "Largura de banda, taxa de transferência e latência",
+      "Wi-Fi, Bluetooth, NFC, GPS e dados móveis"
+    ],
+    "desafios": [
+      "fundamentos-001",
+      "fundamentos-002",
+      "fundamentos-003",
+      "fundamentos-004",
+      "fundamentos-005",
+      "fundamentos-006",
+      "fundamentos-007",
+      "fundamentos-008",
+      "fundamentos-009"
+    ]
+  },
+  {
+    "id": 2,
+    "nome": "Rede doméstica",
+    "icone": "wifi",
+    "modulos": "Módulos 2, 4 e 6",
+    "categoria": "fundamentos",
+    "resumo": [
+      "Dispositivos finais, intermediários e meios físicos",
+      "Portas do roteador doméstico, SSID e frequências",
+      "Cabos e formas de conexão com o provedor"
+    ],
+    "desafios": [
+      "fundamentos-010",
+      "fundamentos-011",
+      "fundamentos-012",
+      "fundamentos-013",
+      "fundamentos-014",
+      "fundamentos-015",
+      "fundamentos-016",
+      "fundamentos-017",
+      "fundamentos-018"
+    ]
+  },
+  {
+    "id": 3,
+    "nome": "Camadas",
+    "icone": "camadas",
+    "modulos": "Módulo 5",
+    "categoria": "osi-tcpip",
+    "resumo": [
+      "Protocolos e suas regras",
+      "Modelo OSI (7 camadas) e TCP/IP (4 camadas)",
+      "Padrões abertos e RFCs"
+    ],
+    "desafios": [
+      "osi-tcpip-001",
+      "osi-tcpip-002",
+      "osi-tcpip-003",
+      "osi-tcpip-004",
+      "osi-tcpip-005",
+      "osi-tcpip-006",
+      "osi-tcpip-007",
+      "osi-tcpip-008",
+      "osi-tcpip-009"
+    ]
+  },
+  {
+    "id": 4,
+    "nome": "Dentro do switch",
+    "icone": "switch",
+    "modulos": "Módulo 7"
+  },
+  {
+    "id": 5,
+    "nome": "Endereço IPv4",
+    "icone": "ip",
+    "modulos": "Módulos 8 e 9"
+  },
+  {
+    "id": 6,
+    "nome": "Sub-redes",
+    "icone": "subrede",
+    "modulos": "Módulo 9"
+  },
+  {
+    "id": 7,
+    "nome": "IPv6",
+    "icone": "ipv6",
+    "modulos": "Módulo 10"
+  },
+  {
+    "id": 8,
+    "nome": "DHCP e NAT",
+    "icone": "dhcp",
+    "modulos": "Módulos 11 e 12"
+  },
+  {
+    "id": 9,
+    "nome": "ARP e roteamento",
+    "icone": "roteador",
+    "modulos": "Módulos 13 e 14"
+  },
+  {
+    "id": 10,
+    "nome": "TCP, UDP e portas",
+    "icone": "portas",
+    "modulos": "Módulo 15"
+  },
+  {
+    "id": 11,
+    "nome": "Serviços",
+    "icone": "globo",
+    "modulos": "Módulo 16"
+  },
+  {
+    "id": 12,
+    "nome": "Chefão: diagnóstico",
+    "icone": "ferramenta",
+    "modulos": "Módulo 17"
+  }
+]

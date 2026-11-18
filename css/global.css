@@ -1,0 +1,39 @@
+/* Base do site: tema, tipografia, faixas, painéis, botões e rodapé. */
+/* VOICE  jogo educativo, animado mas limpo: o jogador é um pacote atravessando a rede
+   IDEA   a topologia de rede do Packet Tracer: cada nível é um dispositivo ligado por cabo
+   PICTURE o mapa de níveis desenhado como topologia, com um pacote viajando até o próximo destino
+   COLOUR azul de cabo de rede (campo dominante), branco, amarelo do pacote como destaque, verde de link ativo
+   TYPE   Chakra Petch (títulos, cara de painel de equipamento) + Inter (texto)
+   LAYOUT faixa azul com título, placar e mapa; abaixo, o próximo destino. No celular o mapa vira 2 colunas */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0d1117);--ink:light-dark(#0f1424,#eef1f8);--suave:light-dark(#545c72,#a3abc2);--painel:light-dark(#ffffff,#161c2c);--linha:light-dark(#d5dbe8,#2b3452);--mapa:light-dark(#1546c9,#103599);--mapa2:light-dark(#0f3aa8,#0b2a7a);--sinal:#ffcc00;--ok:#13995a;--erro:#d93d42;--okbg:light-dark(#e3f6ec,#0f2a1e);--errobg:light-dark(#fdeaea,#2e1517)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Chakra Petch",Inter,sans-serif;line-height:1.08;letter-spacing:-.01em;margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+.band{padding-block:clamp(20px,3vw,40px);padding-inline:max(5vw,16px)}
+.topo{background:var(--mapa);color:#fff;padding-bottom:0}
+.topo .linha1{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.topo h1{font-size:clamp(32px,5vw,48px)}
+.topo p{margin:4px 0 0;color:#dbe5ff;max-width:60ch}
+.hud{display:flex;flex-wrap:wrap;gap:8px}
+.hud div{background:var(--mapa2);border-radius:10px;padding:8px 14px;min-width:6.5em}
+.hud small{display:block;color:#b9c9f5;font-size:13px}
+.hud b{font-family:"Chakra Petch",sans-serif;font-size:20px;white-space:nowrap}
+.wrap{max-width:1100px;margin:0 auto}
+.painel{background:var(--painel);border:1px solid var(--linha);border-radius:14px;padding:clamp(18px,3vw,28px)}
+.painel h2{font-size:clamp(24px,3vw,32px);margin-bottom:6px}
+.painel p{margin:6px 0;color:var(--suave)}
+.painel ul{margin:8px 0 0;padding-left:20px}
+.painel li{margin:4px 0}
+.mods{display:inline-block;font-size:14px;font-weight:600;color:var(--mapa);background:light-dark(#e6edff,#1a2547);border-radius:6px;padding:2px 8px;margin-bottom:8px}
+.btn{background:var(--mapa);color:#fff;border:0;border-radius:10px;padding:12px 22px;min-height:44px;font-weight:600}
+.btn:hover{background:var(--mapa2)}
+.btn-sec{background:none;border:1px solid var(--linha);border-radius:10px;padding:10px 16px;min-height:44px;font-weight:600}
+.btn-sec:hover{border-color:var(--mapa)}
+.btn:focus-visible,.btn-sec:focus-visible{outline:3px solid var(--sinal);outline-offset:2px}
+.acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+footer{padding:20px max(5vw,16px) 28px;color:var(--suave);font-size:14px;text-align:center;border-top:1px solid var(--linha);margin-top:20px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
