@@ -1,5 +1,6 @@
 // Acrescenta 3 missões de DHCP (2 de diagnóstico e 1 de prática) em data/missions.json. Idempotente (substitui as de mesmo id).
 import { readFileSync, writeFileSync } from 'node:fs';
+import { ordenarMissoes } from './ordem-missoes.mjs';
 import { topologiaVazia, adicionarDispositivo, conectar, configurarInterface, configurarGateway, configurarDhcpPc, configurarPoolDhcp } from '../js/sim/topologia.js';
 
 const destino = new URL('../data/missions.json', import.meta.url);
@@ -56,10 +57,6 @@ const missoes = [
 
 const ids = new Set(missoes.map(m => m.id));
 const todas = [...existentes.filter(m => !ids.has(m.id)), ...missoes];
-const ordem = ['primeira-rede', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
-  'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas', 'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
-  'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'];
-const pos = m => (ordem.includes(m.id) ? ordem.indexOf(m.id) : ordem.length);
-const saida = todas.map((m, i) => ({ m, i })).sort((a, b) => pos(a.m) - pos(b.m) || a.i - b.i).map(x => x.m);
+const saida = ordenarMissoes(todas);
 writeFileSync(destino, JSON.stringify(saida, null, 2) + '\n');
 console.log(`${missoes.length} missões de DHCP gravadas (${todas.length} no total).`);

@@ -2,6 +2,7 @@
 // Idempotente: substitui as de mesmo id e reordena as missões na ordem de aprendizagem.
 // Objetivos com esperado: "falha" são de isolamento (o ping NÃO deve passar), usados nas missões de VLAN.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { ordenarMissoes } from './ordem-missoes.mjs';
 import { topologiaVazia, adicionarDispositivo, conectar, configurarInterface } from '../js/sim/topologia.js';
 
 const destino = new URL('../data/missions.json', import.meta.url);
@@ -50,13 +51,9 @@ const praticas = [
       ips: [ip24('pc1', '192.168.1.1'), ip24('pc2', '192.168.1.2'), ip24('pc3', '192.168.1.3'), ip24('pc4', '192.168.1.4')] }) }
 ];
 
-// Ordem de aprendizagem dentro de cada módulo
-const ordem = ['primeira-rede', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
-  'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas', 'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
-  'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'];
+// Ordem de aprendizagem: ver tools/ordem-missoes.mjs
 const ids = new Set(praticas.map(m => m.id));
 const todas = [...existentes.filter(m => !ids.has(m.id)), ...praticas];
-const pos = m => (ordem.includes(m.id) ? ordem.indexOf(m.id) : ordem.length);
-const saida = todas.map((m, i) => ({ m, i })).sort((a, b) => pos(a.m) - pos(b.m) || a.i - b.i).map(x => x.m);
+const saida = ordenarMissoes(todas);
 writeFileSync(destino, JSON.stringify(saida, null, 2) + '\n');
 console.log(`${praticas.length} missões de prática gravadas (${saida.length} no total).`);

@@ -1,6 +1,7 @@
 // Acrescenta 3 missões de ROTAS ESTÁTICAS (1 de diagnóstico e 2 de prática) em data/missions.json.
 // Idempotente: substitui as de mesmo id e mantém a ordem de aprendizagem definida em gerar-praticas.mjs.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { ordenarMissoes } from './ordem-missoes.mjs';
 import { topologiaVazia, adicionarDispositivo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica } from '../js/sim/topologia.js';
 
 const destino = new URL('../data/missions.json', import.meta.url);
@@ -43,10 +44,6 @@ const rotas = [
 
 const ids = new Set(rotas.map(m => m.id));
 const todas = [...existentes.filter(m => !ids.has(m.id)), ...rotas];
-const ordem = ['primeira-rede', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
-  'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas', 'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
-  'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'];
-const pos = m => (ordem.includes(m.id) ? ordem.indexOf(m.id) : ordem.length);
-const saida = todas.map((m, i) => ({ m, i })).sort((a, b) => pos(a.m) - pos(b.m) || a.i - b.i).map(x => x.m);
+const saida = ordenarMissoes(todas);
 writeFileSync(destino, JSON.stringify(saida, null, 2) + '\n');
 console.log(`${rotas.length} missões de rotas gravadas (${saida.length} no total).`);

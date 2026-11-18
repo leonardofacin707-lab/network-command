@@ -44,7 +44,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 
 - ✅ IPv4 (rede, broadcast, hosts úteis, classe), switch (domínio L2 com varredura), ARP com cache, roteador com rotas das redes conectadas, TTL (PC 128, roteador 255), caminho de volta separado do de ida, conflito de IP.
 - ✅ Terminal: `ipconfig [/all]`, `ping [-n N] destino`, `tracert`, `arp -a`, `hostname`, `help`, `cls`; histórico com setas ↑/↓. Saída no estilo do Windows em português.
-- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (rotas estáticas e DHCP simplificado entraram depois, ver abaixo), NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
+- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (rotas estáticas, DHCP e filtro de pacotes simplificados entraram depois, ver abaixo), NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
 - ✅ 49 testes unitários do motor (IPv4, topologia, motor, terminal, diagnóstico) e 10 e2e do laboratório.
 
 ## Fase 5 — Missões de troubleshooting 🧪
@@ -111,6 +111,14 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Testes: `tests/unit/dhcp.test.mjs` (9), três testes em `missoes.test.mjs` e um e2e pela interface.
 - 🧪 Simplificações assumidas: **não há DORA mensagem a mensagem**, nem tempo de concessão (lease), nem renovação, `ipconfig /release`, opções (DNS), relay (ip helper-address) ou servidor DHCP em PC. A concessão é determinística pela ordem dos dispositivos, e roteadores não são clientes DHCP.
 
+### Filtro de pacotes / ACL simplificada (protótipo)
+- ✅ Motor: o roteador tem uma lista ordenada de regras `permitir`/`negar` com origem e destino (rede + máscara; vazio = qualquer). Ao **encaminhar** um pacote vale a primeira regra que casa; o roteador não filtra o que origina nem o que recebe para si. Novo estado de pacote: `bloqueado` (ping: "Comunicação proibida administrativamente"; tracert mostra o roteador que bloqueou). Funções: `adicionarFiltro`, `removerFiltro`, `moverFiltro` (a ordem decide), `filtroNega`; limite de 12 regras por roteador; normalização descarta regras inválidas.
+- ✅ O filtro **não tem estado**: a resposta do ping também é filtrada com origem e destino trocados, então uma regra de um sentido só pode dar "timeout" (a ida passa e a volta é bloqueada). Isso é de propósito, para ensinar por que firewalls reais usam inspeção com estado.
+- ✅ Laboratório: fieldset "Filtro de pacotes" no roteador (tabela com ↑ ↓ Remover e formulário de nova regra, com aviso na tela das simplificações).
+- ✅ Missões novas (agora 16): *O convidado não acessa o servidor* (prática de Segurança), *A regra que nunca vale* (ordem das regras) e *A resposta que não volta* (filtro sem estado), as duas últimas de diagnóstico. A árvore passa a medir Prática e Diagnóstico de Segurança. Gerador `tools/gerar-filtros.mjs`; a ordem das missões vive em `tools/ordem-missoes.mjs`, compartilhada pelos geradores.
+- ✅ Testes: `tests/unit/filtros.test.mjs` (7), três testes em `missoes.test.mjs` e um e2e pela interface.
+- 🧪 **Diferença importante de uma ACL Cisco**: aqui o que não casa com nenhuma regra é **permitido** (na Cisco há um "negar tudo" implícito no fim). Também não há ACL por interface/sentido (in/out), portas/protocolos (TCP/UDP), ACL nomeada nem log. O aviso aparece na própria tela.
+
 ### Revisão visual (capturas desktop e celular)
 - 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
 - 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
@@ -120,5 +128,5 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 
 ## Próximos passos
-- Fases 7 e 8: expansão de conteúdo e recursos avançados (NAT, subinterfaces, roteamento dinâmico, DNS) — ⏳. VLAN, rotas estáticas e DHCP já foram feitos (ver Campus, Rotas estáticas e DHCP).
+- Fases 7 e 8: expansão de conteúdo e recursos avançados (NAT, subinterfaces, roteamento dinâmico, DNS, ACL por interface com portas) — ⏳. VLAN, rotas estáticas, DHCP e filtro de pacotes já foram feitos (ver Campus, Rotas estáticas, DHCP e Filtro de pacotes).
 - Quiz: os 12 níveis originais estão completos (9 desafios cada). Todas as 8 trilhas têm teoria. Faltam, para a Fase 7: mais desafios por nível/dificuldade, desafios cronometrados e conteúdo de Prática/Diagnóstico para Fundamentos, IP e Serviços.

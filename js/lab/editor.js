@@ -2,7 +2,7 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro } from '../sim/topologia.js';
 import { criarSimulacao } from '../sim/motor.js';
 import { formatarIPv4 } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
@@ -117,6 +117,7 @@ export function criarEditor(raiz, opcoes) {
   }
 
   // ---------- painel de configuração ----------
+  const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : `${rede} ${mascara}`);
   const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
   function infoConcessao(d) {
     const c = sim.concessoes.get(d.id);
@@ -155,6 +156,19 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-rota-m">Máscara da rede</label><input id="cfg-rota-m" class="campo" name="rota-m" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24 (/0 = rota padrão)">
         <label for="cfg-rota-via">Próximo salto</label><input id="cfg-rota-via" class="campo" name="rota-via" inputmode="decimal" autocomplete="off" placeholder="ex.: 10.0.0.2 (o roteador vizinho)">
         <p class="motivo">Preencha os três campos e use Aplicar para acrescentar a rota.</p></fieldset>` : ''}
+      ${d.tipo === 'roteador' ? `<fieldset class="iface" id="filtros-pacotes"><legend>Filtro de pacotes</legend>
+        ${(d.filtros ?? []).length ? `<table class="tabela"><caption class="sr-only">Regras de filtro de ${esc(d.nome)}, lidas de cima para baixo</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">Ação</th><th scope="col">Origem</th><th scope="col">Destino</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+          <tbody>${d.filtros.map((f, i) => `<tr><td>${i + 1}</td><td>${f.acao === 'negar' ? 'negar' : 'permitir'}</td><td>${esc(alvoFiltro(f.origem, f.origemM))}</td><td>${esc(alvoFiltro(f.destino, f.destinoM))}</td>
+            <td class="acoes-regra"><button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="-1" aria-label="Subir a regra ${i + 1}"${i === 0 ? ' disabled' : ''}>↑</button>
+            <button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="1" aria-label="Descer a regra ${i + 1}"${i === d.filtros.length - 1 ? ' disabled' : ''}>↓</button>
+            <button class="btn-sec" type="button" data-remover-filtro="${i}" aria-label="Remover a regra ${i + 1}">Remover</button></td></tr>`).join('')}</tbody></table>` : '<p>Nenhuma regra: o roteador encaminha tudo.</p>'}
+        <label for="cfg-filtro-acao">Nova regra: ação</label><select id="cfg-filtro-acao" class="campo" name="filtro-acao"><option value="">(não acrescentar)</option><option value="negar">negar</option><option value="permitir">permitir</option></select>
+        <label for="cfg-filtro-o">Origem: rede</label><input id="cfg-filtro-o" class="campo" name="filtro-o" inputmode="decimal" autocomplete="off" placeholder="vazio = qualquer origem">
+        <label for="cfg-filtro-om">Origem: máscara</label><input id="cfg-filtro-om" class="campo" name="filtro-om" autocomplete="off" placeholder="ex.: /24 ou /32 para um só PC">
+        <label for="cfg-filtro-d">Destino: rede</label><input id="cfg-filtro-d" class="campo" name="filtro-d" inputmode="decimal" autocomplete="off" placeholder="vazio = qualquer destino">
+        <label for="cfg-filtro-dm">Destino: máscara</label><input id="cfg-filtro-dm" class="campo" name="filtro-dm" autocomplete="off" placeholder="ex.: 255.255.255.0">
+        <p class="motivo">As regras valem de cima para baixo; vale a primeira que casa. O que não casa com nenhuma é <b>permitido</b> (numa ACL Cisco seria negado). O filtro não guarda estado: a resposta de um ping também passa por ele, com origem e destino trocados.</p></fieldset>` : ''}
       ${d.tipo === 'switch' ? `<p>O switch não tem IP nesta simulação. Configure o modo de cada porta: <b>access</b> (uma VLAN, sem marca) ou <b>trunk</b> (leva todas as VLANs entre switches; a VLAN nativa é a 1).</p>
         <table class="tabela portas-sw"><caption class="sr-only">Portas do switch</caption>
           <thead><tr><th scope="col">Porta</th><th scope="col">Modo</th><th scope="col">VLAN</th></tr></thead>
@@ -291,6 +305,10 @@ export function criarEditor(raiz, opcoes) {
       aplicar({ topologia: topologiaVazia() }, 'Área de trabalho limpa.');
       $('#lab-limpar').innerHTML = '<button class="btn-sec" data-acao="limpar">Limpar tudo</button>';
       renderTerm();
+    } else if (b.dataset.removerFiltro !== undefined) {
+      aplicar(removerFiltro(topo, sel, Number(b.dataset.removerFiltro)), 'Regra removida.');
+    } else if (b.dataset.moverFiltro !== undefined) {
+      aplicar(moverFiltro(topo, sel, Number(b.dataset.moverFiltro), Number(b.dataset.delta)), 'Regra movida.');
     } else if (b.dataset.removerRota !== undefined) {
       aplicar(removerRotaEstatica(topo, sel, Number(b.dataset.removerRota)), 'Rota removida.');
     } else if (b.dataset.removerCabo) {
@@ -318,6 +336,9 @@ export function criarEditor(raiz, opcoes) {
       if (!usaDhcp) {
         for (const i of alvoCfg.interfaces) passos.push(t => configurarInterface(t, sel, i.id, { ip: f.get(`ip-${i.id}`), mascara: f.get(`m-${i.id}`) }));
         if (alvoCfg.tipo === 'pc') passos.push(t => configurarGateway(t, sel, f.get('gw')));
+      }
+      if (alvoCfg.tipo === 'roteador' && f.get('filtro-acao')) {
+        passos.push(t => adicionarFiltro(t, sel, { acao: f.get('filtro-acao'), origem: f.get('filtro-o'), origemM: f.get('filtro-om'), destino: f.get('filtro-d'), destinoM: f.get('filtro-dm') }));
       }
       if (alvoCfg.tipo === 'roteador') for (const i of alvoCfg.interfaces) passos.push(t => configurarPoolDhcp(t, sel, i.id, { inicio: f.get(`pool-ini-${i.id}`), fim: f.get(`pool-fim-${i.id}`) }));
       if (dispositivo(topo, sel).tipo === 'roteador') {

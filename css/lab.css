@@ -67,3 +67,5 @@
 .iface-dhcp .opcao{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600}
 .iface-dhcp .opcao input{width:18px;height:18px;flex:none}
 .iface[disabled]{opacity:.55}
+.acoes-regra{white-space:nowrap}
+.acoes-regra .btn-sec{padding:2px 8px;min-height:32px}

@@ -73,7 +73,8 @@ const MSG_TENTATIVA = {
   'rede-inalcancavel': r => `Resposta de ${formatarIPv4(r.de)}: Rede de destino inacessível.`,
   'arp-falhou': r => `Resposta de ${formatarIPv4(r.de)}: Host de destino inacessível.`,
   'host-inalcancavel': r => `Resposta de ${formatarIPv4(r.de)}: Host de destino inacessível.`,
-  'ttl-expirado': r => `Resposta de ${formatarIPv4(r.de)}: Tempo de vida (TTL) expirado em trânsito.`
+  'ttl-expirado': r => `Resposta de ${formatarIPv4(r.de)}: Tempo de vida (TTL) expirado em trânsito.`,
+  bloqueado: r => `Resposta de ${formatarIPv4(r.de)}: Comunicação proibida administrativamente (bloqueada por um filtro do roteador).`
 };
 
 function ping(t, sim, d, args) {
@@ -119,6 +120,7 @@ function tracert(t, sim, d, args) {
     case 'sem-ip': case 'sem-link': case 'gateway-fora': linhas.push('Falha geral.'); break;
     case 'sem-rota': linhas.push(`${String(++n).padStart(3)}  ${formatarIPv4(r.de)}  relata: Rede de destino inacessível.`, '', 'Rastreamento concluído.'); break;
     case 'rede-inalcancavel': linhas.push(`${String(++n).padStart(3)}  ${formatarIPv4(r.de)}  relata: Rede de destino inacessível.`, '', 'Rastreamento concluído.'); break;
+    case 'bloqueado': linhas.push(`${String(++n).padStart(3)}  ${formatarIPv4(r.de)}  relata: Comunicação proibida administrativamente.`, '', 'Rastreamento concluído.'); break;
     case 'arp-falhou': case 'host-inalcancavel': linhas.push(`${String(++n).padStart(3)}  ${formatarIPv4(r.de)}  relata: Host de destino inacessível.`, '', 'Rastreamento concluído.'); break;
     default: linhas.push(`${String(++n).padStart(3)}     *        *        *     Esgotado o tempo limite do pedido.`, '', 'Rastreamento concluído.');
   }

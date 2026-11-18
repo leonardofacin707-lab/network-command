@@ -42,7 +42,7 @@ function novoDispositivo(t, tipo, pos) {
     interfaces: def.portas.filter(p => p.ip).map(p => ({ id: p.id, ip: '', mascara: '' }))
   };
   if (tipo === 'pc') d.gateway = '';
-  if (tipo === 'roteador') { d.rotas = []; d.pools = []; } // rotas estáticas: [{ rede, mascara, via }]; pools DHCP: [{ porta, inicio, fim }]
+  if (tipo === 'roteador') { d.rotas = []; d.pools = []; d.filtros = []; } // filtros: [{ acao, origem, origemM, destino, destinoM }]; rotas estáticas: [{ rede, mascara, via }]; pools DHCP: [{ porta, inicio, fim }]
   if (tipo === 'switch') d.portas = {}; // configuração das portas, só o que foge do padrão (access, VLAN 1)
   return d;
 }
@@ -147,6 +147,50 @@ export function removerRotaEstatica(t, id, indice) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'roteador' || !Number.isInteger(indice) || indice < 0 || indice >= (d.rotas ?? []).length) return { erro: 'Rota não encontrada.' };
   return { topologia: trocar(t, id, x => ({ ...x, rotas: x.rotas.filter((_, i) => i !== indice) })) };
+}
+
+/** Máximo de regras de filtro por roteador. */
+export const MAX_FILTROS = 12;
+
+function lerAlvoDeFiltro(rede, mascara, rotulo) {
+  const rTxt = String(rede ?? '').trim(), mTxt = String(mascara ?? '').trim();
+  if (!rTxt && !mTxt) return { ip: 0, m: 0 }; // vazio = qualquer
+  if (!rTxt || !mTxt) return { erro: `${rotulo}: preencha a rede e a máscara (ou deixe os dois vazios para "qualquer").` };
+  const ip = lerIPv4(rTxt), m = lerMascara(mTxt);
+  if (ip === null) return { erro: `${rotulo}: endereço inválido. Use quatro números de 0 a 255 separados por ponto.` };
+  if (m === null) return { erro: `${rotulo}: máscara inválida. Use, por exemplo, 255.255.255.0 ou /24.` };
+  if (enderecoDeRede(ip, m) !== ip) return { erro: `${rotulo}: com essa máscara o endereço de rede seria ${formatarIPv4(enderecoDeRede(ip, m))}.` };
+  return { ip, m };
+}
+
+/**
+ * Acrescenta uma regra ao filtro de pacotes do roteador (simplificação de uma ACL): as regras são lidas em ordem e vale a
+ * primeira que casa com origem e destino do pacote; sem correspondência o pacote é permitido (numa ACL Cisco seria negado).
+ */
+export function adicionarFiltro(t, id, { acao, origem, origemM, destino, destinoM }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores têm filtro de pacotes nesta simulação.' };
+  if (acao !== 'negar' && acao !== 'permitir') return { erro: 'Escolha a ação da regra: permitir ou negar.' };
+  if ((d.filtros ?? []).length >= MAX_FILTROS) return { erro: `Limite de ${MAX_FILTROS} regras por roteador.` };
+  const o = lerAlvoDeFiltro(origem, origemM, 'Origem'); if (o.erro) return o;
+  const dest = lerAlvoDeFiltro(destino, destinoM, 'Destino'); if (dest.erro) return dest;
+  const regra = { acao, origem: formatarIPv4(o.ip), origemM: formatarIPv4(o.m), destino: formatarIPv4(dest.ip), destinoM: formatarIPv4(dest.m) };
+  if (d.filtros.some(f => Object.keys(regra).every(k => f[k] === regra[k]))) return { erro: 'Essa regra já existe.' };
+  return { topologia: trocar(t, id, x => ({ ...x, filtros: [...x.filtros, regra] })) };
+}
+
+export function removerFiltro(t, id, indice) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador' || !Number.isInteger(indice) || indice < 0 || indice >= (d.filtros ?? []).length) return { erro: 'Regra não encontrada.' };
+  return { topologia: trocar(t, id, x => ({ ...x, filtros: x.filtros.filter((_, i) => i !== indice) })) };
+}
+
+/** Sobe (delta -1) ou desce (+1) uma regra: a ordem decide qual regra vale primeiro. */
+export function moverFiltro(t, id, indice, delta) {
+  const d = dispositivo(t, id);
+  const alvo = indice + delta;
+  if (!d || d.tipo !== 'roteador' || !Number.isInteger(indice) || (delta !== -1 && delta !== 1) || indice < 0 || alvo < 0 || alvo >= (d.filtros ?? []).length) return { erro: 'Não dá para mover a regra nessa direção.' };
+  return { topologia: trocar(t, id, x => { const f = [...x.filtros]; [f[indice], f[alvo]] = [f[alvo], f[indice]]; return { ...x, filtros: f }; }) };
 }
 
 /** Máximo de endereços num pool DHCP do laboratório. */
@@ -254,6 +298,13 @@ export function normalizarTopologia(bruto) {
         const rede = formatarIPv4(rN), mascara = formatarIPv4(mN);
         if (d.rotas.some(x => x.rede === rede && x.mascara === mascara)) continue;
         d.rotas.push({ rede, mascara, via: formatarIPv4(vN) });
+      }
+      d.filtros = [];
+      for (const f of Array.isArray(b.filtros) ? b.filtros : []) {
+        if (d.filtros.length >= MAX_FILTROS || !f || typeof f !== 'object' || (f.acao !== 'negar' && f.acao !== 'permitir')) continue;
+        const oN = lerIPv4(f.origem), omN = lerMascara(f.origemM), dN = lerIPv4(f.destino), dmN = lerMascara(f.destinoM);
+        if (oN === null || omN === null || dN === null || dmN === null || enderecoDeRede(oN, omN) !== oN || enderecoDeRede(dN, dmN) !== dN) continue;
+        d.filtros.push({ acao: f.acao, origem: formatarIPv4(oN), origemM: formatarIPv4(omN), destino: formatarIPv4(dN), destinoM: formatarIPv4(dmN) });
       }
       d.pools = [];
       for (const q of Array.isArray(b.pools) ? b.pools : []) {

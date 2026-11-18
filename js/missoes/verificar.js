@@ -20,6 +20,7 @@ const MOTIVO = {
   'rede-inalcancavel': 'um roteador do caminho não conhece essa rede',
   'host-inalcancavel': 'o roteador não encontrou o destino na rede dele',
   'ttl-expirado': 'o pacote expirou no caminho',
+  bloqueado: 'um filtro de pacotes de um roteador bloqueou o tráfego',
   descartado: 'o pacote foi descartado',
   timeout: 'o pacote chegou, mas a resposta não voltou'
 };

@@ -2,7 +2,8 @@
 // Modela: domínio de broadcast através de switches (com VLANs: portas access e trunk), resolução ARP, encaminhamento por
 // roteadores (rotas conectadas e estáticas, com prefixo mais longo; uma interface física por VLAN), TTL e a resposta de volta.
 // DHCP simplificado: o roteador dá concessões fixas (sem tempo de lease nem DORA mensagem a mensagem).
-// NÃO modela: latência, perda aleatória, subinterfaces (router-on-a-stick), STP, roteamento dinâmico, NAT, firewall.
+// Filtro de pacotes simplificado nos roteadores (regras em ordem, sem estado). NÃO modela: latência, perda aleatória,
+// subinterfaces (router-on-a-stick), STP, roteamento dinâmico, NAT, firewall com estado.
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
 
@@ -97,7 +98,7 @@ export function conflitosDeIp(t) {
 /**
  * Leva um pacote de origemId até ipDest. Resultado:
  *  status: 'entregue' | 'sem-ip' | 'sem-link' | 'sem-rota' | 'gateway-fora' | 'arp-falhou' | 'conflito-ip'
- *        | 'descartado' | 'ttl-expirado' | 'rede-inalcancavel' | 'host-inalcancavel'
+ *        | 'descartado' | 'bloqueado' | 'ttl-expirado' | 'rede-inalcancavel' | 'host-inalcancavel'
  *  de: IP de quem reportou o erro; saltos: roteadores atravessados [{ d, ip }]; ttl: TTL ao chegar;
  *  destino: { d, p } quando entregue; caminho: ids dos dispositivos lógicos percorridos.
  */
@@ -147,6 +148,7 @@ export function enviarPacote(t, origemId, ipDest) {
     ttl -= 1;
     saltos.push({ d: dev.id, ip: ingresso.ip });
     if (ttl <= 0) return { status: 'ttl-expirado', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
+    if (filtroNega(dev, ipDeOrigem, ipDest)) return { status: 'bloqueado', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
     const saida = escolherRota(t, dev, ipDest);
     if (!saida) return { status: 'rede-inalcancavel', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
     arp = resolverArp(t, dev.id, saida.porta, saida.proximo);
@@ -156,6 +158,18 @@ export function enviarPacote(t, origemId, ipDest) {
     atual = arp.achados[0];
   }
   return { status: 'ttl-expirado', de: ipDeOrigem, saltos, caminho, ttl: 0, aprendizado };
+}
+
+/**
+ * Filtro de pacotes do roteador: primeira regra que casa (origem e destino) decide; sem regra que case, permite.
+ * Sem estado: a resposta de um ping também é filtrada, com origem e destino trocados.
+ */
+export function filtroNega(roteador, ipOrigem, ipDest) {
+  for (const f of roteador.filtros ?? []) {
+    const casa = (rede, m, ip) => mesmaRede(lerIPv4(rede), ip, lerMascara(m));
+    if (casa(f.origem, f.origemM, ipOrigem) && casa(f.destino, f.destinoM, ipDest)) return f.acao === 'negar';
+  }
+  return false;
 }
 
 /**

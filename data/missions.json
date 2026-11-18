@@ -821,7 +821,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         }
       ],
       "cabos": [
@@ -941,7 +942,8 @@
               "via": "10.0.0.2"
             }
           ],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "r2",
@@ -962,7 +964,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "pc2",
@@ -1079,7 +1082,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "r2",
@@ -1106,7 +1110,8 @@
               "via": "203.0.113.1"
             }
           ],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "pc2",
@@ -1224,7 +1229,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "r2",
@@ -1245,7 +1251,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "pc2",
@@ -1348,7 +1355,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "sw1",
@@ -1515,7 +1523,8 @@
               "inicio": "192.168.10.100",
               "fim": "192.168.10.102"
             }
-          ]
+          ],
+          "filtros": []
         },
         {
           "id": "sw1",
@@ -1708,7 +1717,8 @@
             }
           ],
           "rotas": [],
-          "pools": []
+          "pools": [],
+          "filtros": []
         },
         {
           "id": "sw1",
@@ -1858,6 +1868,503 @@
           "b": {
             "d": "sw2",
             "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "filtro-convidado",
+    "modulo": "missoes",
+    "titulo": "O convidado não acessa o servidor",
+    "dificuldade": 2,
+    "xp": 260,
+    "habilidades": [
+      "seguranca.pratica"
+    ],
+    "cenario": "A rede 192.168.1.0/24 tem o computador de um funcionário (.10) e o de um convidado (.20). O servidor da empresa fica na rede 192.168.2.0/24, atrás do roteador, e hoje os dois alcançam o servidor. Bloqueie só o convidado, sem atrapalhar o funcionário.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "esperado": "falha"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc2"
+      }
+    ],
+    "dicas": [
+      "O roteador encaminha o tráfego entre as redes, então é lá que o bloqueio entra: selecione o R1 e use o Filtro de pacotes.",
+      "A regra é \"negar\" com origem 192.168.1.20 e máscara /32 (um único computador) e destino 192.168.2.0 com máscara /24.",
+      "Cuidado com a origem: negar a rede 192.168.1.0/24 inteira bloqueia também o funcionário."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Funcionario",
+          "x": 90,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Convidado",
+          "x": 90,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 810,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.2.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.2.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 330,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 570,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.2.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": []
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "filtro-ordem",
+    "modulo": "missoes",
+    "titulo": "A regra que nunca vale",
+    "dificuldade": 3,
+    "xp": 240,
+    "habilidades": [
+      "seguranca.diagnostico"
+    ],
+    "cenario": "O administrador quis bloquear toda a rede 192.168.1.0/24 para o servidor, exceto o computador do funcionário (.10). Criou as duas regras, mas o funcionário continua sem acesso ao servidor.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "esperado": "falha"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc2"
+      }
+    ],
+    "dicas": [
+      "As regras são lidas de cima para baixo e vale a primeira que casa com o pacote. Veja a ordem das duas regras no R1.",
+      "A regra \"negar a rede inteira\" está na frente e já pega o pacote do funcionário, então a de \"permitir\" nunca é alcançada.",
+      "Suba a regra de permitir para a primeira posição (botão ↑) ou troque as duas de lugar."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Funcionario",
+          "x": 90,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Convidado",
+          "x": 90,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 810,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.2.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.2.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 330,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 570,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.2.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [
+            {
+              "acao": "negar",
+              "origem": "192.168.1.0",
+              "origemM": "255.255.255.0",
+              "destino": "192.168.2.0",
+              "destinoM": "255.255.255.0"
+            },
+            {
+              "acao": "permitir",
+              "origem": "192.168.1.10",
+              "origemM": "255.255.255.255",
+              "destino": "192.168.2.10",
+              "destinoM": "255.255.255.255"
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "filtro-resposta",
+    "modulo": "missoes",
+    "titulo": "A resposta que não volta",
+    "dificuldade": 3,
+    "xp": 220,
+    "habilidades": [
+      "seguranca.diagnostico"
+    ],
+    "cenario": "Para proteger a rede de funcionários, alguém criou uma regra negando tudo que vem do servidor (192.168.2.0/24) para a rede 192.168.1.0/24. Desde então, ninguém da rede 192.168.1.0/24 consegue falar com o servidor. Lembre: neste simulador o filtro não guarda estado, então ele não diferencia uma conexão nova de uma resposta.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      }
+    ],
+    "dicas": [
+      "Use o terminal do Funcionario: o ping chega ao servidor (veja que o tracert passa pelo R1), mas a resposta não volta.",
+      "A resposta do servidor tem origem 192.168.2.10 e destino na rede 192.168.1.0/24, exatamente o que a regra nega.",
+      "Um filtro sem estado não consegue \"permitir só respostas\". Remova a regra: firewalls de verdade usam inspeção com estado para isso."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Funcionario",
+          "x": 90,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Convidado",
+          "x": 90,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 810,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.2.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.2.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 330,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 570,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.2.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [
+            {
+              "acao": "negar",
+              "origem": "192.168.2.0",
+              "origemM": "255.255.255.0",
+              "destino": "192.168.1.0",
+              "destinoM": "255.255.255.0"
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi1"
           }
         }
       ]

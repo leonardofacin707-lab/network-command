@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, configurarPoolDhcp } from '../../js/sim/topologia.js';
+import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 13);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 16);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -266,4 +266,33 @@ test('DHCP para duas redes: precisa de um pool em cada interface (a concessão t
   assert.equal(verificarMissao(x, dois).todosOk, true);
   const curto = pool(so1, 'gi1', '192.168.20.100', '192.168.20.100');
   assert.equal(verificarMissao(x, curto).todosOk, false, 'um endereço para dois PCs');
+});
+
+// ---- Missões de filtro de pacotes ----
+const nega = (t, origem, origemM, destino, destinoM) => ok(adicionarFiltro(t, 'r1', { acao: 'negar', origem, origemM, destino, destinoM }));
+
+test('filtro do convidado: tudo passa no começo (o isolamento falha); negar só o convidado resolve', () => {
+  const x = m('filtro-convidado');
+  assert.deepEqual(verificarMissao(x, x.topologia).objetivos.map(o => o.ok), [true, false, true]);
+  assert.equal(verificarMissao(x, nega(x.topologia, '192.168.1.20', '/32', '192.168.2.0', '/24')).todosOk, true);
+  assert.equal(verificarMissao(x, nega(x.topologia, '192.168.1.20', '/32', '', '')).todosOk, true, 'qualquer destino também serve');
+  const demais = verificarMissao(x, nega(x.topologia, '192.168.1.0', '/24', '192.168.2.0', '/24'));
+  assert.deepEqual(demais.objetivos.map(o => o.ok), [false, true, true], 'negar a rede inteira derruba o funcionário');
+  assert.match(demais.objetivos[0].motivo, /filtro de pacotes/);
+});
+
+test('regra que nunca vale: subir a permissão resolve; remover o bloqueio geral estraga o isolamento', () => {
+  const x = m('filtro-ordem');
+  assert.deepEqual(verificarMissao(x, x.topologia).objetivos.map(o => o.ok), [false, true, true]);
+  assert.equal(verificarMissao(x, ok(moverFiltro(x.topologia, 'r1', 1, -1))).todosOk, true);
+  assert.deepEqual(verificarMissao(x, ok(removerFiltro(x.topologia, 'r1', 0))).objetivos.map(o => o.ok), [true, false, true]);
+});
+
+test('a resposta que não volta: só removendo a regra (o filtro não tem estado)', () => {
+  const x = m('filtro-resposta');
+  const r = verificarMissao(x, x.topologia);
+  assert.deepEqual(r.objetivos.map(o => o.ok), [false, false]);
+  assert.equal(r.objetivos[0].motivo, 'o pacote chegou, mas a resposta não voltou');
+  assert.equal(verificarMissao(x, ok(removerFiltro(x.topologia, 'r1', 0))).todosOk, true);
+  assert.equal(verificarMissao(x, nega(x.topologia, '192.168.2.10', '/32', '192.168.1.10', '/32')).todosOk, false, 'estreitar a regra não resolve o funcionário bloqueado');
 });

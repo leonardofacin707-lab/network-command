@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 13 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 16 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 13);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 13 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 16);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 16 concluídas/);
   assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /Sua primeira rede local, Fácil, não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(1).getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
@@ -156,7 +156,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 13 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 16 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -294,6 +294,39 @@ test('DHCP pela interface: sem pool não há IP; com pool os PCs recebem endere�
   const e = await salvo();
   assert.equal(e.missoes['dhcp-sem-servidor'].concluida, true);
   assert.deepEqual(e.missoes['dhcp-sem-servidor'].topologia.dispositivos.find(d => d.id === 'r1').pools, [{ porta: 'gi0', inicio: '192.168.10.100', fim: '192.168.10.150' }]);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('filtro de pacotes pela interface: validação, mover regra para cima e concluir (240 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/filtro-ordem');
+  await disp('r1').click();
+  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 2);
+  assert.match(await pagina.locator('#filtros-pacotes tbody tr').nth(0).innerText(), /negar\s+192\.168\.1\.0 255\.255\.255\.0\s+192\.168\.2\.0 255\.255\.255\.0/);
+  assert.equal(await pagina.locator('[data-mover-filtro="0"][data-delta="-1"]').isDisabled(), true, 'a primeira regra não sobe');
+  await pagina.locator('#m-verificar').click();
+  assert.deepEqual(await pagina.locator('#m-objetivos li').evaluateAll(l => l.map(x => x.className.includes('ok'))), [false, true, true]);
+  // nova regra inválida é recusada com a mensagem do motor
+  await pagina.selectOption('#cfg-filtro-acao', 'negar');
+  await pagina.fill('#cfg-filtro-o', '192.168.1.5'); await pagina.fill('#cfg-filtro-om', '/24');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /endereço de rede seria 192\.168\.1\.0/);
+  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 2);
+  await pagina.locator('[data-mover-filtro="1"][data-delta="-1"]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Regra movida/);
+  assert.match(await pagina.locator('#filtros-pacotes tbody tr').nth(0).innerText(), /permitir/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+240 XP/);
+  const e = await salvo();
+  assert.deepEqual(e.missoes['filtro-ordem'].topologia.dispositivos.find(d => d.id === 'r1').filtros.map(f => f.acao), ['permitir', 'negar']);
+  // acrescentar e remover uma regra pela interface
+  await pagina.selectOption('#cfg-filtro-acao', 'negar');
+  await pagina.fill('#cfg-filtro-d', '192.168.2.10'); await pagina.fill('#cfg-filtro-dm', '/32');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 3);
+  assert.match(await pagina.locator('#filtros-pacotes tbody tr').nth(2).innerText(), /negar\s+qualquer\s+192\.168\.2\.10 255\.255\.255\.255/);
+  await pagina.locator('[data-remover-filtro="2"]').click();
+  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 2);
   assert.deepEqual(erros, []);
   await contexto.close();
 });
