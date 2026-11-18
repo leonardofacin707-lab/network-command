@@ -1,0 +1,584 @@
+[
+ {
+  "id": 1,
+  "nome": "Mundo conectado",
+  "icone": "pc",
+  "modulos": "Módulos 1 a 3",
+  "resumo": [
+   "Tipos de rede e quem \"é dono\" da Internet",
+   "Largura de banda, taxa de transferência e latência",
+   "Wi-Fi, Bluetooth, NFC, GPS e dados móveis"
+  ],
+  "desafios": [
+   {
+    "tipo": "quiz",
+    "pergunta": "Quem é o dono da Internet?",
+    "opcoes": [
+     "Ninguém: ela é um conjunto de redes interligadas que seguem padrões comuns",
+     "O governo dos Estados Unidos",
+     "As grandes operadoras de telefonia",
+     "A empresa que fabrica os roteadores"
+    ],
+    "certa": 0,
+    "explica": "A Internet é uma \"rede de redes\". Milhares de redes independentes cooperam porque seguem os mesmos padrões, e nenhuma pessoa ou empresa controla tudo."
+   },
+   {
+    "tipo": "classificar",
+    "pergunta": "Que tipo de rede é cada caso?",
+    "grupos": [
+     "Doméstica pequena",
+     "SOHO",
+     "Média ou grande",
+     "Mundial"
+    ],
+    "itens": [
+     [
+      "Notebook e celulares de uma família ligados ao roteador de casa",
+      0
+     ],
+     [
+      "Escritório em casa que acessa a rede da empresa",
+      1
+     ],
+     [
+      "Universidade com milhares de hosts em vários campi",
+      2
+     ],
+     [
+      "Bilhões de dispositivos interligados no planeta",
+      3
+     ]
+    ],
+    "explica": "SOHO significa pequeno escritório ou escritório doméstico. Redes médias e grandes têm muitos locais e centenas ou milhares de hosts. A Internet é a rede mundial."
+   },
+   {
+    "tipo": "numero",
+    "pergunta": "Quantos Mbps existem em 1 Gbps?",
+    "resposta": 1000,
+    "unidade": "Mbps",
+    "dica": "Cada prefixo (K, M, G, T) multiplica por mil.",
+    "explica": "1 Gbps = 1.000 Mbps = 1.000.000 Kbps = 1.000.000.000 bps. Em redes, os prefixos de velocidade usam potências de 10."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Seu plano de internet é de 300 Mbps, mas o teste de velocidade mostra 210 Mbps. Esses 210 Mbps são a…",
+    "opcoes": [
+     "Taxa de transferência (throughput)",
+     "Largura de banda",
+     "Latência",
+     "Frequência do sinal"
+    ],
+    "certa": 0,
+    "explica": "Largura de banda é a capacidade teórica do meio. A taxa de transferência é o que realmente passa, e cai por causa do volume de dados, do tipo de tráfego e da latência no caminho."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Como se chama o tempo que os dados levam para ir de um ponto a outro da rede?",
+    "opcoes": [
+     "Latência",
+     "Largura de banda",
+     "Taxa de transferência",
+     "Encapsulamento"
+    ],
+    "certa": 0,
+    "explica": "Latência é o atraso da viagem. Quanto mais dispositivos e distância entre origem e destino, maior tende a ser a latência."
+   },
+   {
+    "tipo": "ligar",
+    "pergunta": "Ligue cada tecnologia sem fio à situação em que ela é usada.",
+    "pares": [
+     [
+      "Bluetooth",
+      "Fone sem fio conectado ao celular"
+     ],
+     [
+      "NFC",
+      "Pagar encostando o celular na maquininha"
+     ],
+     [
+      "GPS",
+      "Descobrir sua posição por satélite"
+     ],
+     [
+      "Wi-Fi",
+      "Acessar a internet pelo roteador de casa"
+     ],
+     [
+      "Dados móveis (4G/5G)",
+      "Navegar na rua, longe de qualquer roteador"
+     ]
+    ],
+    "explica": "Bluetooth é de curto alcance e baixo consumo. O NFC exige que os aparelhos fiquem quase encostados. O GPS só recebe sinais de satélites. O Wi-Fi depende de um access point por perto, e os dados móveis usam as torres da operadora."
+   },
+   {
+    "tipo": "classificar",
+    "pergunta": "Classifique cada dado pessoal.",
+    "grupos": [
+     "Voluntário",
+     "Observado",
+     "Inferido"
+    ],
+    "itens": [
+     [
+      "Foto que você postou na rede social",
+      0
+     ],
+     [
+      "Histórico de localização do celular",
+      1
+     ],
+     [
+      "Score de crédito calculado a partir dos seus hábitos",
+      2
+     ],
+     [
+      "Seu perfil com nome e cidade",
+      0
+     ],
+     [
+      "Lista de páginas que você visitou",
+      1
+     ]
+    ],
+    "explica": "Dados voluntários você cria e compartilha. Dados observados são registrados a partir do que você faz. Dados inferidos são conclusões tiradas analisando os outros dados."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Você quer conectar o celular a uma rede Wi-Fi que não aparece na lista. Qual é o motivo mais provável?",
+    "opcoes": [
+     "O broadcast do SSID está desativado, então é preciso adicionar a rede manualmente",
+     "O celular está sem dados móveis",
+     "O Bluetooth está ligado",
+     "A rede só aceita cabo"
+    ],
+    "certa": 0,
+    "explica": "Com o SSID oculto, a rede não aparece na lista. Você adiciona manualmente digitando o SSID, o tipo de segurança e a senha exatamente como estão no roteador."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "No Wi-Fi público de uma lanchonete, qual atitude é a mais segura?",
+    "opcoes": [
+     "Usar uma VPN e nunca enviar senhas sem criptografia",
+     "Desligar o Bluetooth e pronto",
+     "Usar o modo avião com o Wi-Fi ligado",
+     "Escolher a rede com o sinal mais forte"
+    ],
+    "certa": 0,
+    "explica": "Em redes que você não controla, alguém pode capturar o tráfego. A VPN cria um túnel criptografado, e login ou senha nunca devem trafegar em texto puro."
+   }
+  ]
+ },
+ {
+  "id": 2,
+  "nome": "Rede doméstica",
+  "icone": "wifi",
+  "modulos": "Módulos 2, 4 e 6",
+  "resumo": [
+   "Dispositivos finais, intermediários e meios físicos",
+   "Portas do roteador doméstico, SSID e frequências",
+   "Cabos e formas de conexão com o provedor"
+  ],
+  "desafios": [
+   {
+    "tipo": "classificar",
+    "pergunta": "Separe os componentes da infraestrutura de rede.",
+    "grupos": [
+     "Dispositivo final",
+     "Dispositivo intermediário",
+     "Meio físico"
+    ],
+    "itens": [
+     [
+      "Notebook",
+      0
+     ],
+     [
+      "Impressora de rede",
+      0
+     ],
+     [
+      "Câmera de segurança IP",
+      0
+     ],
+     [
+      "Switch",
+      1
+     ],
+     [
+      "Roteador",
+      1
+     ],
+     [
+      "Access point sem fio",
+      1
+     ],
+     [
+      "Cabo de par trançado",
+      2
+     ],
+     [
+      "Ondas de rádio do Wi-Fi",
+      2
+     ]
+    ],
+    "explica": "O dispositivo final (host) é a origem ou o destino da mensagem. Os intermediários conectam e encaminham o tráfego. O meio físico é o caminho por onde o sinal viaja: cobre, fibra ou ar."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "O que define se um computador é cliente ou servidor?",
+    "opcoes": [
+     "O software instalado nele",
+     "O tamanho do disco",
+     "A marca do processador",
+     "Estar ligado por cabo ou por Wi-Fi"
+    ],
+    "certa": 0,
+    "explica": "Um host vira servidor quando roda software de servidor (web, e-mail, arquivos). O mesmo computador pode ser cliente e servidor ao mesmo tempo."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Qual é uma DESVANTAGEM da rede ponto a ponto (P2P)?",
+    "opcoes": [
+     "Não tem administração centralizada e é menos segura",
+     "É cara de montar",
+     "Exige um servidor dedicado",
+     "É difícil de configurar"
+    ],
+    "certa": 0,
+    "explica": "A P2P é barata e simples, mas não escala bem, não tem gestão central, é menos segura e o desempenho cai quando todos são cliente e servidor ao mesmo tempo."
+   },
+   {
+    "tipo": "ligar",
+    "pergunta": "Ligue cada equipamento à parte certa do roteador doméstico.",
+    "pares": [
+     [
+      "Modem do provedor",
+      "Porta Internet (WAN)"
+     ],
+     [
+      "PC de mesa com cabo",
+      "Porta LAN (switch interno)"
+     ],
+     [
+      "Celular",
+      "Access point sem fio interno"
+     ]
+    ],
+    "explica": "A porta Internet liga o roteador a outra rede, a do provedor. As portas LAN e o Wi-Fi ficam na mesma rede local da casa."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Os aparelhos ligados nas portas LAN e os conectados ao Wi-Fi do mesmo roteador estão…",
+    "opcoes": [
+     "Na mesma rede local; só a porta Internet fica em outra rede",
+     "Em redes separadas, uma com fio e outra sem fio",
+     "Cada um em uma rede diferente",
+     "Na rede do provedor"
+    ],
+    "certa": 0,
+    "explica": "Por padrão, o roteador doméstico junta portas LAN e Wi-Fi na mesma LAN. A porta Internet é a única que fica em outra rede."
+   },
+   {
+    "tipo": "ligar",
+    "pergunta": "Ligue cada cabo ao uso mais comum dele.",
+    "pares": [
+     [
+      "Par trançado Cat5e",
+      "Ligar o PC ao switch na rede local"
+     ],
+     [
+      "Coaxial",
+      "Levar internet e TV a cabo até o modem"
+     ],
+     [
+      "Fibra óptica",
+      "Longas distâncias em alta velocidade, sem interferência elétrica"
+     ]
+    ],
+    "explica": "O par trançado (4 pares trançados contra interferência) é o mais comum nas LANs. O coaxial vem das operadoras de TV a cabo. A fibra usa pulsos de luz e alcança grandes distâncias."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "O fone Bluetooth está atrapalhando o Wi-Fi do notebook. Para qual faixa vale mudar o Wi-Fi?",
+    "opcoes": [
+     "5 GHz, porque o Bluetooth usa 2,4 GHz",
+     "2,4 GHz, porque é mais rápida",
+     "900 MHz",
+     "Tanto faz, o Bluetooth não usa rádio"
+    ],
+    "certa": 0,
+    "explica": "Wi-Fi doméstico usa as faixas não licenciadas de 2,4 GHz e 5 GHz. O Bluetooth divide a faixa de 2,4 GHz, então os 5 GHz evitam essa disputa."
+   },
+   {
+    "tipo": "ligar",
+    "pergunta": "Ligue cada tipo de conexão com o provedor (ISP) à característica dela.",
+    "pares": [
+     [
+      "Cabo",
+      "Usa o mesmo coaxial da TV a cabo"
+     ],
+     [
+      "DSL",
+      "Usa a linha telefônica"
+     ],
+     [
+      "Satélite",
+      "Precisa de visada livre até o céu"
+     ],
+     [
+      "Celular",
+      "Usa as torres da operadora"
+     ],
+     [
+      "Discada",
+      "Barata, mas com banda muito pequena"
+     ]
+    ],
+    "explica": "A escolha depende do lugar onde você está e dos provedores disponíveis. Em áreas sem cabo ou DSL, satélite e celular resolvem. Nas cidades, a fibra até a casa é cada vez mais comum."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Qual destes NÃO é um critério para escolher o meio físico da rede?",
+    "opcoes": [
+     "A cor da capa do cabo",
+     "A distância máxima que o sinal alcança",
+     "O ambiente onde será instalado",
+     "O custo do meio e da instalação"
+    ],
+    "certa": 0,
+    "explica": "Os critérios são distância, ambiente, quantidade e velocidade dos dados, e custo. A cor da capa só ajuda na organização."
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "nome": "Camadas",
+  "icone": "camadas",
+  "modulos": "Módulo 5",
+  "resumo": [
+   "Protocolos e suas regras",
+   "Modelo OSI (7 camadas) e TCP/IP (4 camadas)",
+   "Padrões abertos e RFCs"
+  ],
+  "desafios": [
+   {
+    "tipo": "quiz",
+    "pergunta": "Em redes, um protocolo é…",
+    "opcoes": [
+     "Um conjunto de regras que emissor e receptor seguem para se entender",
+     "Um tipo de cabo",
+     "Um programa antivírus",
+     "O endereço de um site"
+    ],
+    "certa": 0,
+    "explica": "Assim como uma conversa precisa de idioma, ritmo e confirmação, os computadores precisam de regras comuns: formato, tamanho, temporização, codificação e forma de entrega."
+   },
+   {
+    "tipo": "ligar",
+    "pergunta": "Ligue cada característica de protocolo ao que ela define.",
+    "pares": [
+     [
+      "Formato",
+      "A estrutura que a mensagem precisa seguir"
+     ],
+     [
+      "Tamanho",
+      "Mensagens longas são divididas em partes menores"
+     ],
+     [
+      "Temporização",
+      "A velocidade e o momento em que cada host pode transmitir"
+     ],
+     [
+      "Codificação",
+      "Como a informação vira sinais no meio físico"
+     ]
+    ],
+    "explica": "Essas regras garantem que a mensagem chegue e seja entendida. A temporização, por exemplo, evita que todos transmitam ao mesmo tempo."
+   },
+   {
+    "tipo": "ordenar",
+    "pergunta": "Monte o modelo OSI, da camada 7 (topo) até a camada 1.",
+    "itens": [
+     "Aplicação",
+     "Apresentação",
+     "Sessão",
+     "Transporte",
+     "Rede",
+     "Enlace de dados",
+     "Física"
+    ],
+    "explica": "Do topo para a base: 7 Aplicação, 6 Apresentação, 5 Sessão, 4 Transporte, 3 Rede, 2 Enlace de dados, 1 Física."
+   },
+   {
+    "tipo": "ordenar",
+    "pergunta": "Agora o modelo TCP/IP, do topo para a base.",
+    "itens": [
+     "Aplicação",
+     "Transporte",
+     "Internet",
+     "Acesso à rede"
+    ],
+    "explica": "O TCP/IP tem 4 camadas. É o modelo de protocolos que a Internet usa de verdade."
+   },
+   {
+    "tipo": "classificar",
+    "pergunta": "Em qual camada do TCP/IP cai cada camada do OSI?",
+    "grupos": [
+     "Aplicação",
+     "Transporte",
+     "Internet",
+     "Acesso à rede"
+    ],
+    "itens": [
+     [
+      "OSI 7 · Aplicação",
+      0
+     ],
+     [
+      "OSI 6 · Apresentação",
+      0
+     ],
+     [
+      "OSI 5 · Sessão",
+      0
+     ],
+     [
+      "OSI 4 · Transporte",
+      1
+     ],
+     [
+      "OSI 3 · Rede",
+      2
+     ],
+     [
+      "OSI 2 · Enlace de dados",
+      3
+     ],
+     [
+      "OSI 1 · Física",
+      3
+     ]
+    ],
+    "explica": "As camadas 5, 6 e 7 do OSI viram a Aplicação do TCP/IP. Transporte e Rede (Internet) batem direto. Enlace e Física juntas formam o Acesso à rede."
+   },
+   {
+    "tipo": "ligar",
+    "pergunta": "Ligue cada função à camada OSI responsável por ela.",
+    "pares": [
+     [
+      "Escolhe o melhor caminho usando endereços IP",
+      "3 · Rede"
+     ],
+     [
+      "Troca quadros entre dispositivos no mesmo meio",
+      "2 · Enlace de dados"
+     ],
+     [
+      "Segmenta, transfere e remonta os dados",
+      "4 · Transporte"
+     ],
+     [
+      "Transmite bits como sinais elétricos, luz ou rádio",
+      "1 · Física"
+     ],
+     [
+      "Dá uma representação comum aos dados",
+      "6 · Apresentação"
+     ]
+    ],
+    "explica": "Uma dica para lembrar: a camada 3 trabalha com IP (pacotes), a 2 com MAC (quadros), a 4 com portas (segmentos) e a 1 com bits."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Onde fica registrada a evolução de um padrão da Internet?",
+    "opcoes": [
+     "Em documentos numerados chamados RFC (Request for Comments)",
+     "No manual de cada roteador",
+     "Em um arquivo dentro do navegador",
+     "Na tabela de roteamento"
+    ],
+    "certa": 0,
+    "explica": "Cada proposta de padrão passa por discussão e testes, e tudo fica registrado em RFCs numeradas, mantidas por organizações como a IETF."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Qual é uma vantagem de usar um modelo em camadas?",
+    "opcoes": [
+     "Mudar uma camada não obriga a mudar as outras",
+     "Elimina a necessidade de cabos",
+     "Deixa a rede imune a vírus",
+     "Dispensa endereços IP"
+    ],
+    "certa": 0,
+    "explica": "As camadas separam responsabilidades. Isso facilita projetar protocolos, permite que produtos de fabricantes diferentes funcionem juntos e cria uma linguagem comum para descrever a rede."
+   },
+   {
+    "tipo": "quiz",
+    "pergunta": "Por que um celular de uma marca consegue abrir um site hospedado no servidor de outra marca?",
+    "opcoes": [
+     "Porque ambos seguem os mesmos padrões abertos de protocolo",
+     "Porque as marcas fizeram um acordo particular",
+     "Porque o site foi feito para aquele celular",
+     "Porque a operadora converte tudo"
+    ],
+    "certa": 0,
+    "explica": "Padrões abertos garantem que qualquer dispositivo que implemente as mesmas regras consiga se comunicar, não importa o fabricante."
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "nome": "Dentro do switch",
+  "icone": "switch",
+  "modulos": "Módulo 7"
+ },
+ {
+  "id": 5,
+  "nome": "Endereço IPv4",
+  "icone": "ip",
+  "modulos": "Módulos 8 e 9"
+ },
+ {
+  "id": 6,
+  "nome": "Sub-redes",
+  "icone": "subrede",
+  "modulos": "Módulo 9"
+ },
+ {
+  "id": 7,
+  "nome": "IPv6",
+  "icone": "ipv6",
+  "modulos": "Módulo 10"
+ },
+ {
+  "id": 8,
+  "nome": "DHCP e NAT",
+  "icone": "dhcp",
+  "modulos": "Módulos 11 e 12"
+ },
+ {
+  "id": 9,
+  "nome": "ARP e roteamento",
+  "icone": "roteador",
+  "modulos": "Módulos 13 e 14"
+ },
+ {
+  "id": 10,
+  "nome": "TCP, UDP e portas",
+  "icone": "portas",
+  "modulos": "Módulo 15"
+ },
+ {
+  "id": 11,
+  "nome": "Serviços",
+  "icone": "globo",
+  "modulos": "Módulo 16"
+ },
+ {
+  "id": 12,
+  "nome": "Chefão: diagnóstico",
+  "icone": "ferramenta",
+  "modulos": "Módulo 17"
+ }
+]
