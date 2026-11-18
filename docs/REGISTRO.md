@@ -159,3 +159,10 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **Efeito:** as 16 combinações Prática/Diagnóstico da árvore têm conteúdo; o aviso "Sem conteúdo ainda" não aparece mais.
 - **Testes:** 207 unitários e 87 e2e (1 ignorado) passando.
 - **Pendente:** os desafios de quiz escritos por mim devem ser revisados contra o material oficial do NetAcad.
+
+## Treino misto (Conhecimento)
+
+- Nova aba "Treino misto": sorteia até 10 desafios entre os níveis já liberados (regra pura em `js/quiz/treino.js`, com sorteio injetável nos testes).
+- Não vale pontos nem estrelas (usa o mesmo caminho da revisão de erros); as respostas entram no histórico, então erros vão para a revisão.
+- Corrigido junto: o cabeçalho da revisão mostrava "Nível revisao · ..."; agora mostra só o nome.
+- Testes: `tests/unit/treino.test.mjs` e um e2e em `hub.test.mjs`.

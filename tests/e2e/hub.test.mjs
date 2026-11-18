@@ -124,6 +124,21 @@ test('revisão: lista o desafio errado, refazer acertando tira da lista', async 
   await contexto.close();
 });
 
+test('treino misto: sorteia entre os desafios liberados e não dá estrelas', async () => {
+  const { pagina, erros, salvo, contexto } = await abrir('conhecimento/treino');
+  await pagina.locator('[data-acao="treinar"]').waitFor();
+  assert.match(await pagina.locator('.aba[aria-current=page]').innerText(), /Treino misto/);
+  assert.match(await pagina.locator('#app').innerText(), /Sorteia 9 desafios entre os 9 dos níveis que você já liberou/);
+  await pagina.locator('[data-acao="treinar"]').click();
+  await pagina.locator('.card').waitFor();
+  assert.equal((await pagina.locator('.barra b').innerText()).trim(), 'Treino misto');
+  assert.match(await pagina.locator('.tipo').innerText(), /1 de 9/);
+  await pagina.locator('.op').first().click({ timeout: 1500 }).catch(() => {});
+  assert.deepEqual((await salvo())?.quiz.melhor ?? {}, {});
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
 test('a revisão não dá XP nem estrelas', async () => {
   const { pagina, salvo, contexto } = await abrirComEstado('conhecimento/revisao', ESTADO);
   const antes = (await salvo()).quiz.melhor;
@@ -287,7 +302,7 @@ test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async (
 });
 
 test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async () => {
-  const rotas = [...ROTAS_MENU, 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
+  const rotas = [...ROTAS_MENU, 'conhecimento/treino', 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
   for (const largura of [1280, 390]) {
     for (const rota of rotas) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 900 });

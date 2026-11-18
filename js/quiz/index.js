@@ -2,12 +2,13 @@
 import { desenharMapa, pararMapa } from './map.js';
 import { criarSessao } from './session.js';
 import { telaResultado } from './resultado.js';
-import { telaRevisao, telaHistorico, telaAssuntos } from './abas.js';
+import { telaRevisao, telaHistorico, telaAssuntos, telaTreino } from './abas.js';
+import { desafiosLiberados, sortearTreino } from './treino.js';
 import { registrarResposta, listaRevisao } from './historico.js';
 import { statusDoNivel } from './unlock.js';
 import { limparHash } from '../app/router.js';
 
-const ABAS = [['', 'Mapa de níveis'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
+const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino misto'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
 
 export default {
   id: 'conhecimento',
@@ -35,6 +36,11 @@ export default {
       if (desafios.length) jogar({ id: 'revisao', nome: 'Revisão de erros', revisao: true, desafios });
     };
 
+    const treinar = () => {
+      const desafios = sortearTreino(desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor));
+      if (desafios.length) jogar({ id: 'treino', nome: 'Treino misto', revisao: true, treino: true, desafios });
+    };
+
     const cliques = e => {
       const alvo = e.target.closest('button');
       if (!alvo) return;
@@ -46,6 +52,7 @@ export default {
       if (acao === 'mapa') { limparHash('conhecimento'); marcarAba('#/conhecimento'); return abrirMapa(); }
       if (acao === 'jogar') return jogarId(Number(alvo.dataset.nivel));
       if (acao === 'revisar') return revisar();
+      if (acao === 'treinar') return treinar();
       if (acao === 'proximo') return sessao.proximo();
       sessao.clique(alvo);
     };
@@ -53,7 +60,8 @@ export default {
     raiz.addEventListener('click', cliques);
     raiz.addEventListener('submit', envio);
 
-    if (aba === 'revisao') telaRevisao(tela, ctx);
+    if (aba === 'treino') telaTreino(tela, ctx);
+    else if (aba === 'revisao') telaRevisao(tela, ctx);
     else if (aba === 'historico') telaHistorico(tela, ctx);
     else if (aba === 'assuntos') telaAssuntos(tela, ctx);
     else {

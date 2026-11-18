@@ -2,6 +2,7 @@
 import { esc, dataHora } from '../core/ui.js';
 import { listaRevisao, ultimaPorPergunta, estatisticas, foiPerfeita } from './historico.js';
 import { desempenhoPorAssunto } from '../hub/dominio.js';
+import { desafiosLiberados, TAMANHO_TREINO } from './treino.js';
 
 const resumo = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
 const rotuloResultado = r => (foiPerfeita(r) ? '<span class="ok-txt">✓ De primeira</span>'
@@ -65,5 +66,15 @@ export function telaAssuntos(app, { catalogo, store }) {
       ${lista.map(a => `<tr><td>${esc(a.assunto)}</td><td>${esc(nomeCat[a.categoria] ?? a.categoria)}</td><td>${a.tentativas}</td>
         <td><div class="barra-prog" role="img" aria-label="${Math.round(a.taxa * 100)}% de acertos de primeira"><i style="width:${a.taxa * 100}%"></i></div>${Math.round(a.taxa * 100)}%</td></tr>`).join('')}
     </tbody></table>
+  </div></section>`;
+}
+
+export function telaTreino(app, { catalogo, store }) {
+  const pool = desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor);
+  const quantos = Math.min(TAMANHO_TREINO, pool.length);
+  app.innerHTML = `<section class="band"><div class="wrap painel">
+    <h2>Treino misto</h2>
+    <p>Sorteia ${quantos} desafios entre os ${pool.length} dos níveis que você já liberou, de assuntos variados. Não vale pontos nem estrelas, mas as respostas entram no histórico: o que você errar vai para a revisão de erros.</p>
+    <div class="acoes"><button class="btn" data-acao="treinar" ${quantos ? '' : 'disabled'}>Começar treino (${quantos})</button></div>
   </div></section>`;
 }

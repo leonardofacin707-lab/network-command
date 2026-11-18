@@ -48,12 +48,13 @@ function telaResultadoRevisao(app, run) {
   const perfeitas = run.perfeitas;
   app.innerHTML = `<section class="band"><div class="jogo">
     <article class="painel resultado">
-      <span class="mods">Revisão de erros</span>
-      <h2>${perfeitas === total ? 'Tudo certo agora!' : 'Revisão concluída'}</h2>
-      <p>Você acertou de primeira ${perfeitas} de ${total} desafios revisados.</p>
-      <p>${perfeitas === total ? 'Nenhum deles volta para a lista de revisão.' : 'Os que ainda tiveram erro continuam na lista de revisão.'}</p>
+      <span class="mods">${esc(run.nivel.nome)}</span>
+      <h2>${perfeitas === total ? (run.nivel.treino ? 'Treino perfeito!' : 'Tudo certo agora!') : (run.nivel.treino ? 'Treino concluído' : 'Revisão concluída')}</h2>
+      <p>Você acertou de primeira ${perfeitas} de ${total} desafios ${run.nivel.treino ? 'do treino' : 'revisados'}.</p>
+      <p>${run.nivel.treino ? 'Os desafios com erro foram para a revisão de erros.' : perfeitas === total ? 'Nenhum deles volta para a lista de revisão.' : 'Os que ainda tiveram erro continuam na lista de revisão.'}</p>
       <div class="acoes">
-        <button class="btn" data-acao="mapa">Voltar ao mapa</button>
+        ${run.nivel.treino ? '<button class="btn" data-acao="treinar">Novo treino</button>' : ''}
+        <button class="${run.nivel.treino ? 'btn-sec' : 'btn'}" data-acao="mapa">Voltar ao mapa</button>
       </div>
     </article>
   </div></section>`;
