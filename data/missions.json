@@ -2371,6 +2371,431 @@
     }
   },
   {
+    "id": "filial-fora-do-ar",
+    "modulo": "missoes",
+    "titulo": "Filial fora do ar: três defeitos",
+    "dificuldade": 3,
+    "xp": 320,
+    "habilidades": [
+      "troubleshooting.diagnostico",
+      "roteamento.diagnostico",
+      "servicos.diagnostico"
+    ],
+    "cenario": "A matriz (192.168.1.0/24) acabou de ser ligada à filial (172.16.0.0/24) por dois roteadores. Os computadores da filial pedem endereço automático. Nada funciona e há mais de um defeito. Descubra, um por vez, com o terminal.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc3"
+      }
+    ],
+    "dicas": [
+      "Comece pelo que está mais perto: ipconfig no PC1 e nos PCs da filial. Quem tem endereço e quem não tem?",
+      "Os computadores da filial não recebem IP: falta o pool no roteador deles. Há ainda um problema no gateway do PC1 e uma rota que falta em um dos roteadores.",
+      "Gateway do PC1: é o IP do R1 na rede da matriz (192.168.1.1). Pool: faixa de 172.16.0.x na interface Gi1 do R2. Rota: o R2 precisa chegar à rede 192.168.1.0/24 pelo R1 (10.0.0.1)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 70,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.254"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 270,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "172.16.0.0",
+              "mascara": "255.255.255.0",
+              "via": "10.0.0.2"
+            }
+          ],
+          "pools": [],
+          "filtros": []
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 520,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.0.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "172.16.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": []
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 690,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 810,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 810,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "dois-sites-quatro-defeitos",
+    "modulo": "missoes",
+    "titulo": "Dois sites, quatro defeitos",
+    "dificuldade": 3,
+    "xp": 380,
+    "habilidades": [
+      "troubleshooting.diagnostico",
+      "seguranca.diagnostico",
+      "servicos.diagnostico",
+      "roteamento.diagnostico"
+    ],
+    "cenario": "A matriz tem dois computadores em DHCP e fala com o servidor da filial por dois roteadores. Alguém mexeu em tudo: um pool, uma rota, um filtro de pacotes e o gateway do servidor. Há defeitos de camadas diferentes, e consertar um revela o próximo.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      },
+      {
+        "id": "o3",
+        "de": "pc3",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Use ipconfig nos PCs da matriz: um deles não recebe endereço. Depois use ping e tracert a partir do PC1 até o servidor (PC3).",
+      "Defeitos: o pool do R1 tem um único endereço para dois computadores; a rota do R1 para a filial aponta para um próximo salto que não existe; o R2 tem um filtro que nega a volta para a matriz; e o servidor (PC3) está com o gateway errado (o certo é o IP do R2 na filial).",
+      "Próximo salto certo da rota: o IP do R2 na rede entre os roteadores (10.0.0.2). Para o filtro, lembre-se de que ele não guarda estado: a resposta do servidor também é bloqueada."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 60,
+          "y": 110,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 60,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 190,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 380,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.248"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "172.16.0.0",
+              "mascara": "255.255.255.0",
+              "via": "10.0.0.3"
+            }
+          ],
+          "pools": [
+            {
+              "porta": "gi0",
+              "inicio": "192.168.1.100",
+              "fim": "192.168.1.100"
+            }
+          ],
+          "filtros": []
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 600,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.0.2",
+              "mascara": "255.255.255.248"
+            },
+            {
+              "id": "gi1",
+              "ip": "172.16.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "192.168.1.0",
+              "mascara": "255.255.255.0",
+              "via": "10.0.0.1"
+            }
+          ],
+          "pools": [],
+          "filtros": [
+            {
+              "acao": "negar",
+              "origem": "172.16.0.0",
+              "origemM": "255.255.255.0",
+              "destino": "192.168.1.0",
+              "destinoM": "255.255.255.0"
+            }
+          ]
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 810,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "172.16.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "172.16.0.254"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "setores-separados",
     "modulo": "campus",
     "titulo": "Setores separados por VLAN",

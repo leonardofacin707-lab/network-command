@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro } from '../../js/sim/topologia.js';
+import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 16);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 18);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -295,4 +295,31 @@ test('a resposta que não volta: só removendo a regra (o filtro não tem estado
   assert.equal(r.objetivos[0].motivo, 'o pacote chegou, mas a resposta não voltou');
   assert.equal(verificarMissao(x, ok(removerFiltro(x.topologia, 'r1', 0))).todosOk, true);
   assert.equal(verificarMissao(x, nega(x.topologia, '192.168.2.10', '/32', '192.168.1.10', '/32')).todosOk, false, 'estreitar a regra não resolve o funcionário bloqueado');
+});
+
+// ---- Missões com vários defeitos ----
+test('filial fora do ar: três defeitos, e cada correção sozinha não basta', () => {
+  const x = m('filial-fora-do-ar');
+  const t0 = x.topologia;
+  assert.equal(verificarMissao(x, t0).objetivos.every(o => !o.ok), true);
+  const gw = ok(configurarGateway(t0, 'pc1', '192.168.1.1'));
+  const pl = ok(configurarPoolDhcp(t0, 'r2', 'gi1', { inicio: '172.16.0.100', fim: '172.16.0.110' }));
+  const rt = rotaEst(t0, 'r2', '192.168.1.0', '/24', '10.0.0.1');
+  for (const parcial of [gw, pl, rt, ok(configurarPoolDhcp(gw, 'r2', 'gi1', { inicio: '172.16.0.100', fim: '172.16.0.110' })), rotaEst(pl, 'r2', '192.168.1.0', '/24', '10.0.0.1')]) {
+    assert.equal(verificarMissao(x, parcial).todosOk, false);
+  }
+  assert.equal(verificarMissao(x, rotaEst(ok(configurarPoolDhcp(gw, 'r2', 'gi1', { inicio: '172.16.0.100', fim: '172.16.0.110' })), 'r2', '192.168.1.0', '/24', '10.0.0.1')).todosOk, true);
+});
+
+test('dois sites, quatro defeitos: só consertando os quatro todos os objetivos passam', () => {
+  const x = m('dois-sites-quatro-defeitos');
+  const t0 = x.topologia;
+  assert.equal(verificarMissao(x, t0).objetivos.every(o => !o.ok), true);
+  const pool = t => ok(configurarPoolDhcp(t, 'r1', 'gi0', { inicio: '192.168.1.100', fim: '192.168.1.110' }));
+  const rota = t => rotaEst(ok(removerRotaEstatica(t, 'r1', 0)), 'r1', '172.16.0.0', '/24', '10.0.0.2');
+  const filtro = t => ok(removerFiltro(t, 'r2', 0));
+  const gwSrv = t => ok(configurarGateway(t, 'pc3', '172.16.0.1'));
+  const combinacoes = [[pool], [rota], [filtro], [gwSrv], [pool, rota, filtro], [pool, rota, gwSrv], [pool, filtro, gwSrv], [rota, filtro, gwSrv]];
+  for (const c of combinacoes) assert.equal(verificarMissao(x, c.reduce((t, f) => f(t), t0)).todosOk, false, `faltando um defeito (${c.length} correções)`);
+  assert.equal(verificarMissao(x, [pool, rota, filtro, gwSrv].reduce((t, f) => f(t), t0)).todosOk, true);
 });

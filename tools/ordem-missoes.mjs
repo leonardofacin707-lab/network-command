@@ -4,6 +4,7 @@ export const ORDEM_MISSOES = [
   'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas',
   'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
   'filtro-convidado', 'filtro-ordem', 'filtro-resposta',
+  'filial-fora-do-ar', 'dois-sites-quatro-defeitos',
   'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'
 ];
 

@@ -119,6 +119,11 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Testes: `tests/unit/filtros.test.mjs` (7), três testes em `missoes.test.mjs` e um e2e pela interface.
 - 🧪 **Diferença importante de uma ACL Cisco**: aqui o que não casa com nenhuma regra é **permitido** (na Cisco há um "negar tudo" implícito no fim). Também não há ACL por interface/sentido (in/out), portas/protocolos (TCP/UDP), ACL nomeada nem log. O aviso aparece na própria tela.
 
+### Missões com vários defeitos (diagnóstico)
+- ✅ *Filial fora do ar: três defeitos* (gateway errado, pool DHCP ausente e rota de volta faltando) e *Dois sites, quatro defeitos* (pool de um endereço para dois PCs, rota com próximo salto inexistente, filtro que bloqueia a volta e gateway errado no servidor). Agora são 18 missões. Gerador `tools/gerar-chefoes.mjs`.
+- ✅ Teste unitário prova que **cada defeito importa**: com qualquer um deles sem corrigir a missão não conclui (todas as combinações de "todos menos um").
+- Treinam várias habilidades ao mesmo tempo (Troubleshooting, Roteamento, Serviços e Segurança), então contam em mais de uma trilha da árvore.
+
 ### Revisão visual (capturas desktop e celular)
 - 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
 - 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
