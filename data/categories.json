@@ -14,5 +14,6 @@
   { "id": "vlans", "nome": "VLANs", "trilha": "ethernet-comutacao" },
   { "id": "roteamento", "nome": "Roteamento", "trilha": "roteamento" },
   { "id": "seguranca", "nome": "Segurança de redes", "trilha": "seguranca" },
+  { "id": "transporte", "nome": "Transporte (TCP e UDP)", "trilha": "servicos" },
   { "id": "troubleshooting", "nome": "Troubleshooting", "trilha": "troubleshooting" }
 ]

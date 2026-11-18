@@ -226,3 +226,12 @@ test('nível 9 (ARP e roteamento): rota mais específica, TTL e direto/gateway c
   for (const it of q4.itens) assert.equal(ip.mesmaRede(host, ip.lerIPv4(it.texto), m24) ? 0 : 1, it.grupo, it.texto);
   assert.deepEqual(porId.get('arp-002').itens.map(i => i[0]), ['A', 'B', 'A', 'A']);
 });
+
+test('nível 10 (TCP, UDP e portas): handshake, portas e quantidade de portas', () => {
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  assert.equal(niveis.find(n => n.id === 10).desafios.length, 9);
+  assert.deepEqual(porId.get('transporte-003').itens, ['SYN', 'SYN-ACK', 'ACK']);
+  assert.equal(porId.get('transporte-005').resposta, 2 ** 16);
+  assert.deepEqual(porId.get('transporte-004').pares.map(p => [p.esquerda, p.direita]), [['HTTP', '80'], ['HTTPS', '443'], ['DNS', '53'], ['SSH', '22']]);
+  assert.ok(categorias.some(c => c.id === 'transporte' && c.trilha === 'servicos'));
+});

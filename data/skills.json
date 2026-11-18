@@ -9,7 +9,7 @@
     { "id": "ethernet-comutacao", "nome": "Ethernet e comutação", "descricao": "Quadros, MAC, switches, ARP e VLANs." },
     { "id": "ip", "nome": "Endereçamento IP", "descricao": "IPv4 e IPv6." },
     { "id": "subnetting", "nome": "Sub-redes", "descricao": "Máscaras, prefixos e divisão de redes." },
-    { "id": "servicos", "nome": "Serviços de rede", "descricao": "DHCP, DNS e NAT." },
+    { "id": "servicos", "nome": "Serviços de rede", "descricao": "TCP e UDP, DHCP, DNS e NAT." },
     { "id": "roteamento", "nome": "Roteamento", "descricao": "Roteadores, tabelas de rotas e gateway padrão." },
     { "id": "seguranca", "nome": "Segurança", "descricao": "Ameaças, boas práticas e proteção de redes." },
     { "id": "troubleshooting", "nome": "Diagnóstico de falhas", "descricao": "Método para encontrar e corrigir problemas." }

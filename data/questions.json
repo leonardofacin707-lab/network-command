@@ -978,9 +978,9 @@
     "enunciado": "Um computador aparece com o endereço 169.254.37.8. O que isso indica?",
     "alternativas": [
       "Ele não recebeu endereço de um servidor DHCP e se autoatribuiu um",
-      "Ele está usando o endereço de loopback para falar consigo mesmo",
-      "Ele tem um endereço público fixo entregue pelo provedor",
-      "Ele faz parte de um grupo multicast dentro da rede local"
+      "Ele está usando o endereço de loopback para falar consigo mesmo na rede",
+      "Ele tem um endereço público fixo entregue pelo provedor de Internet",
+      "Ele faz parte de um grupo multicast dentro da rede local do escritório"
     ],
     "correta": 0,
     "explicacao": "O bloco 169.254.0.0/16 é de endereços link-local (APIPA). O sistema se atribui um deles quando não consegue obter um endereço do DHCP. Costuma indicar falha ao pedir endereço."
@@ -1247,10 +1247,10 @@
     "dificuldade": 1,
     "enunciado": "Qual é a principal razão para a criação do IPv6?",
     "alternativas": [
-      "Os endereços IPv4 estão se esgotando, e o IPv6 oferece um espaço muito maior",
-      "O IPv4 não funciona em redes sem fio e precisava ser substituído",
-      "Os cabos novos só aceitam endereços escritos em hexadecimal",
-      "O IPv6 elimina a necessidade de qualquer equipamento de rede"
+      "Os endereços IPv4 estão acabando, e o IPv6 oferece um espaço bem maior",
+      "O IPv4 não funciona em redes sem fio e precisava ser substituído por outro",
+      "Os cabos novos só aceitam endereços escritos em hexadecimal puro",
+      "O IPv6 elimina a necessidade de qualquer equipamento de rede no caminho"
     ],
     "correta": 0,
     "explicacao": "O espaço de 32 bits do IPv4 não comporta tantos dispositivos. O IPv6 usa 128 bits, o que permite dar endereços a praticamente qualquer dispositivo, além de simplificar alguns processos de rede."
@@ -1266,9 +1266,9 @@
     "enunciado": "Como um endereço IPv6 completo é escrito?",
     "alternativas": [
       "Oito grupos de quatro dígitos hexadecimais separados por dois-pontos",
-      "Quatro números decimais de 0 a 255 separados por pontos",
-      "Seis pares de dígitos hexadecimais separados por dois-pontos",
-      "Um único número decimal de 128 dígitos sem separadores"
+      "Quatro números decimais de 0 a 255 separados por pontos finais",
+      "Seis pares de dígitos hexadecimais separados por dois-pontos ou hífens",
+      "Um único número decimal de 128 dígitos, escrito sem nenhum separador"
     ],
     "correta": 0,
     "explicacao": "Um endereço IPv6 tem 8 grupos de 16 bits (4 dígitos hexadecimais cada), como 2001:0db8:acad:0001:0000:0000:0000:0010. Os quatro números decimais são o formato do IPv4, e os seis pares são o do endereço MAC."
@@ -1421,10 +1421,10 @@
     "dificuldade": 1,
     "enunciado": "Qual é a função do DHCP?",
     "alternativas": [
-      "Entregar automaticamente endereço IP, máscara, gateway e DNS aos dispositivos",
-      "Traduzir nomes como www.exemplo.com em endereços IP",
+      "Entregar automaticamente IP, máscara, gateway e DNS aos dispositivos",
+      "Traduzir nomes como www.exemplo.com em endereços IP de servidores",
       "Trocar endereços privados por públicos ao sair para a Internet",
-      "Criptografar o tráfego entre o computador e o roteador"
+      "Criptografar o tráfego entre o computador e o roteador da casa"
     ],
     "correta": 0,
     "explicacao": "O DHCP (Dynamic Host Configuration Protocol) configura os hosts automaticamente, sem ninguém digitar endereços. Traduzir nomes é função do DNS, e trocar endereços privados por públicos é função do NAT."
@@ -1456,10 +1456,10 @@
     "dificuldade": 2,
     "enunciado": "Por que o DHCPDISCOVER é enviado em broadcast?",
     "alternativas": [
-      "O cliente ainda não tem endereço IP nem sabe onde está o servidor DHCP",
-      "O broadcast é a única forma de criptografar a mensagem inicial",
-      "O servidor DHCP só aceita mensagens enviadas a todos os hosts",
-      "O switch exige broadcast em toda mensagem que passa por ele"
+      "O cliente ainda não tem IP nem sabe onde está o servidor DHCP",
+      "O broadcast é a única forma de criptografar a mensagem inicial do cliente",
+      "O servidor DHCP só aceita mensagens enviadas a todos os hosts da rede",
+      "O switch exige broadcast em toda mensagem que passa por ele na rede"
     ],
     "correta": 0,
     "explicacao": "Ao conectar, o cliente não tem endereço IP e não sabe qual é o servidor. Por isso grita para toda a rede local, e qualquer servidor DHCP que ouvir pode responder."
@@ -1489,9 +1489,9 @@
     "enunciado": "O que é a concessão (lease) de um endereço DHCP?",
     "alternativas": [
       "O tempo durante o qual o cliente pode usar o endereço antes de renová-lo",
-      "A taxa que o provedor cobra por cada endereço entregue",
-      "O número máximo de dispositivos que o roteador aceita",
-      "O endereço do servidor DHCP que o cliente deve decorar"
+      "A taxa que o provedor cobra por cada endereço entregue ao cliente",
+      "O número máximo de dispositivos que o roteador aceita ao mesmo tempo",
+      "O endereço do servidor DHCP que o cliente precisa decorar para pedir"
     ],
     "correta": 0,
     "explicacao": "O servidor empresta o endereço por um tempo determinado. Antes de expirar, o cliente pede a renovação. Se não renovar, o endereço volta para o conjunto de endereços disponíveis."
@@ -1506,10 +1506,10 @@
     "dificuldade": 2,
     "enunciado": "Por que uma rede doméstica precisa de NAT para acessar a Internet?",
     "alternativas": [
-      "Endereços privados não são roteados na Internet e precisam ser traduzidos para um público",
-      "Sem o NAT o roteador não consegue ligar à energia do provedor",
-      "O NAT é o que escolhe a velocidade do plano contratado",
-      "Sem o NAT os endereços MAC dos dispositivos seriam apagados"
+      "Endereços privados não circulam na Internet e precisam de tradução",
+      "Sem o NAT, o roteador não consegue se ligar à rede elétrica do provedor",
+      "O NAT é o que define a velocidade máxima do plano contratado com o provedor",
+      "Sem o NAT, os endereços MAC dos aparelhos seriam apagados da rede"
     ],
     "correta": 0,
     "explicacao": "Endereços como 192.168.0.15 são privados e não são roteados na Internet. O NAT, normalmente no roteador, troca o endereço privado por um público na saída e faz o caminho inverso na volta. Isso também economiza endereços IPv4."
@@ -1784,12 +1784,202 @@
     "dificuldade": 3,
     "enunciado": "Um roteador recebe um pacote para um destino sem rota correspondente e sem rota padrão. O que acontece?",
     "alternativas": [
-      "O pacote é descartado, e o roteador pode avisar a origem com um ICMP \"destino inalcançável\"",
-      "O pacote é enviado por todas as interfaces até alguém aceitar",
-      "O pacote fica guardado no roteador até uma rota aparecer",
-      "O pacote é entregue ao switch mais próximo, que decide o destino"
+      "O pacote é descartado, e o roteador pode avisar a origem com um ICMP",
+      "O pacote é enviado por todas as interfaces até que alguém o aceite",
+      "O pacote fica guardado no roteador até que uma rota apareça na tabela",
+      "O pacote é entregue ao switch mais próximo, que decide o destino final"
     ],
     "correta": 0,
     "explicacao": "Sem rota, o roteador não sabe para onde enviar e descarta o pacote. Normalmente avisa a origem com uma mensagem ICMP de destino inalcançável. É o que aparece no ping quando falta rota."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-001",
+    "tipo": "pergunta",
+    "assunto": "TCP",
+    "dificuldade": 1,
+    "enunciado": "Qual característica descreve o TCP?",
+    "alternativas": [
+      "Estabelece uma conexão e confirma a entrega dos dados",
+      "Envia os dados sem avisar e sem conferir se chegaram",
+      "Entrega endereços IP automaticamente aos dispositivos",
+      "Traduz nomes de sites em endereços IP"
+    ],
+    "correta": 0,
+    "explicacao": "O TCP é orientado a conexão e confiável: numera os dados, o destino confirma o que recebeu e o que se perde é reenviado. Quem envia sem conexão e sem confirmação é o UDP."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-002",
+    "tipo": "classificar",
+    "assunto": "TCP ou UDP",
+    "dificuldade": 2,
+    "enunciado": "Qual protocolo de transporte cada aplicação costuma usar?",
+    "grupos": [
+      "TCP",
+      "UDP"
+    ],
+    "itens": [
+      {
+        "texto": "Página da web (HTTPS)",
+        "grupo": 0
+      },
+      {
+        "texto": "Envio de e-mail",
+        "grupo": 0
+      },
+      {
+        "texto": "Download de um arquivo",
+        "grupo": 0
+      },
+      {
+        "texto": "Chamada de voz pela Internet",
+        "grupo": 1
+      },
+      {
+        "texto": "Transmissão de vídeo ao vivo",
+        "grupo": 1
+      },
+      {
+        "texto": "Consulta DNS",
+        "grupo": 1
+      }
+    ],
+    "explicacao": "Web, e-mail e arquivos não podem perder pedaços, então usam TCP. Voz, vídeo ao vivo e consultas DNS preferem rapidez: uma perda pequena é tolerável e reenviar atrasaria tudo, então usam UDP."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-003",
+    "tipo": "ordenar",
+    "assunto": "Three-way handshake",
+    "dificuldade": 2,
+    "enunciado": "Coloque em ordem as mensagens que abrem uma conexão TCP (three-way handshake).",
+    "itens": [
+      "SYN",
+      "SYN-ACK",
+      "ACK"
+    ],
+    "explicacao": "O cliente propõe a conexão (SYN), o servidor aceita e propõe a sua parte (SYN-ACK) e o cliente confirma (ACK). Só depois os dados são enviados."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-004",
+    "tipo": "ligar",
+    "assunto": "Portas conhecidas",
+    "dificuldade": 2,
+    "enunciado": "Ligue cada protocolo à sua porta padrão.",
+    "pares": [
+      {
+        "esquerda": "HTTP",
+        "direita": "80"
+      },
+      {
+        "esquerda": "HTTPS",
+        "direita": "443"
+      },
+      {
+        "esquerda": "DNS",
+        "direita": "53"
+      },
+      {
+        "esquerda": "SSH",
+        "direita": "22"
+      }
+    ],
+    "explicacao": "HTTP usa a porta 80 e HTTPS a 443. O DNS usa a 53 (UDP e TCP) e o SSH, acesso remoto seguro, usa a 22."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-005",
+    "tipo": "numero",
+    "assunto": "Quantidade de portas",
+    "dificuldade": 3,
+    "enunciado": "Quantos números de porta existem no TCP (de 0 até o maior valor possível)?",
+    "resposta": 65536,
+    "unidade": "portas",
+    "dica": "O número da porta tem 16 bits.",
+    "explicacao": "O número de porta tem 16 bits, então são 2^16 = 65.536 valores, de 0 a 65.535."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-006",
+    "tipo": "pergunta",
+    "assunto": "Função da porta",
+    "dificuldade": 1,
+    "enunciado": "Para que serve o número de porta?",
+    "alternativas": [
+      "Indicar qual aplicação do computador deve receber os dados",
+      "Indicar em qual porta física do switch o cabo está ligado",
+      "Indicar qual roteador deve encaminhar o pacote",
+      "Indicar a velocidade em que o dado será enviado"
+    ],
+    "correta": 0,
+    "explicacao": "O endereço IP leva o pacote até o dispositivo, e o número de porta leva os dados até o programa certo dentro dele (navegador, e-mail, jogo). Por isso vários programas usam a rede ao mesmo tempo sem se misturar."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-007",
+    "tipo": "pergunta",
+    "assunto": "Soquete",
+    "dificuldade": 2,
+    "enunciado": "O que é um soquete (socket)?",
+    "alternativas": [
+      "A combinação de um endereço IP com um número de porta",
+      "O conector físico em que o cabo de rede é encaixado",
+      "A combinação de um endereço MAC com um endereço IP",
+      "O pedaço de dados enviado por uma conexão TCP"
+    ],
+    "correta": 0,
+    "explicacao": "Um soquete é o par endereço IP + porta, como 192.168.1.10:443. Uma conexão fica definida pelos dois soquetes: o do cliente e o do servidor."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-008",
+    "tipo": "pergunta",
+    "assunto": "Confiabilidade do TCP",
+    "dificuldade": 2,
+    "enunciado": "Como o TCP garante que os dados chegaram?",
+    "alternativas": [
+      "Numera os segmentos, recebe ACK e reenvia o que não foi confirmado",
+      "Envia cada segmento três vezes seguidas para compensar as perdas na rede",
+      "Pede ao roteador que guarde uma cópia de todos os segmentos enviados",
+      "Confia na camada de enlace, que nunca perde um quadro durante o envio"
+    ],
+    "correta": 0,
+    "explicacao": "Cada segmento tem um número de sequência. O destino confirma o que recebeu com ACK, e o que não é confirmado a tempo é retransmitido. Também reordena os segmentos se chegarem fora de ordem."
+  },
+  {
+    "nivel": 10,
+    "categoria": "transporte",
+    "habilidade": "servicos.teoria",
+    "id": "transporte-009",
+    "tipo": "pergunta",
+    "assunto": "Faixas de portas",
+    "dificuldade": 3,
+    "enunciado": "Como são chamadas as portas de 0 a 1023?",
+    "alternativas": [
+      "Portas conhecidas (well-known), reservadas a serviços padrão",
+      "Portas dinâmicas, escolhidas ao acaso pelo cliente a cada conexão",
+      "Portas registradas, usadas só por aplicativos de uma fabricante",
+      "Portas privadas, bloqueadas por padrão em qualquer rede"
+    ],
+    "correta": 0,
+    "explicacao": "As portas de 0 a 1023 são as conhecidas (HTTP 80, HTTPS 443, SSH 22…). De 1024 a 49151 ficam as registradas, e de 49152 a 65535 as dinâmicas, que os clientes usam como porta de origem temporária."
   }
 ]

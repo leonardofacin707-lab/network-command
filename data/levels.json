@@ -210,7 +210,24 @@
     "id": 10,
     "nome": "TCP, UDP e portas",
     "icone": "portas",
-    "modulos": "Módulo 15"
+    "modulos": "Módulo 15",
+    "categoria": "transporte",
+    "resumo": [
+      "TCP (confiável) e UDP (rápido): quando usar cada um",
+      "Three-way handshake, confirmações e retransmissão",
+      "Portas, soquetes e portas conhecidas"
+    ],
+    "desafios": [
+      "transporte-001",
+      "transporte-002",
+      "transporte-003",
+      "transporte-004",
+      "transporte-005",
+      "transporte-006",
+      "transporte-007",
+      "transporte-008",
+      "transporte-009"
+    ]
   },
   {
     "id": 11,
