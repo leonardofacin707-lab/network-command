@@ -44,7 +44,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 
 - ✅ IPv4 (rede, broadcast, hosts úteis, classe), switch (domínio L2 com varredura), ARP com cache, roteador com rotas das redes conectadas, TTL (PC 128, roteador 255), caminho de volta separado do de ida, conflito de IP.
 - ✅ Terminal: `ipconfig [/all]`, `ping [-n N] destino`, `tracert`, `arp -a`, `hostname`, `help`, `cls`; histórico com setas ↑/↓. Saída no estilo do Windows em português.
-- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (as rotas estáticas entraram depois, ver abaixo), DHCP, NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
+- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (rotas estáticas e DHCP simplificado entraram depois, ver abaixo), NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
 - ✅ 49 testes unitários do motor (IPv4, topologia, motor, terminal, diagnóstico) e 10 e2e do laboratório.
 
 ## Fase 5 — Missões de troubleshooting 🧪
@@ -103,6 +103,14 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Testes: `tests/unit/rotas.test.mjs` (8), três testes novos em `missoes.test.mjs` e um e2e pela interface (validação, ida, volta, remoção, conclusão).
 - 🧪 Continua sem simular: roteamento dinâmico (RIP/OSPF), distância administrativa, rotas flutuantes, ECMP, subinterfaces, DHCP, NAT e ACLs. A mensagem de "inalcançável" é simplificada.
 
+### DHCP simplificado (protótipo)
+- ✅ Motor: o roteador ganha um **pool por interface** (`pools: [{ porta, inicio, fim }]`, dentro da sub-rede da interface, sem endereço de rede/broadcast, até 254) e o computador ganha o modo "obter endereço automaticamente" (`dhcp: true`). Ao criar a simulação, cada PC em DHCP recebe o primeiro endereço livre do pool de um roteador do **seu domínio de broadcast** (respeita VLANs), pulando o IP do roteador, IPs fixos do domínio e concessões já dadas. Máscara e gateway vêm da interface do roteador. Motivos de falha: sem cabo, sem servidor, pool inválido, pool esgotado. A topologia salva não é alterada: a concessão só existe na simulação (`sim.concessoes`, `sim.topologia`).
+- ✅ Terminal: `ipconfig` e `ipconfig /all` mostram DHCP habilitado, servidor e o motivo de falha; `ipconfig /renew` mostra a concessão ou o porquê de ter falhado.
+- ✅ Laboratório: caixa "Obter endereço automaticamente (DHCP)" no PC (campos fixos ficam desabilitados e guardados) e campos de pool em cada interface do roteador; o desenho e os avisos mostram o endereço recebido.
+- ✅ Missões novas (agora 13): *Ninguém recebe endereço*, *O pool que acabou* (diagnóstico) e *DHCP para duas redes* (prática). Treinam a habilidade `servicos.*` (a árvore passa a medir Prática e Diagnóstico de Serviços). Gerador `tools/gerar-dhcp.mjs`. A verificação por ping passou a usar a topologia com as concessões.
+- ✅ Testes: `tests/unit/dhcp.test.mjs` (9), três testes em `missoes.test.mjs` e um e2e pela interface.
+- 🧪 Simplificações assumidas: **não há DORA mensagem a mensagem**, nem tempo de concessão (lease), nem renovação, `ipconfig /release`, opções (DNS), relay (ip helper-address) ou servidor DHCP em PC. A concessão é determinística pela ordem dos dispositivos, e roteadores não são clientes DHCP.
+
 ### Revisão visual (capturas desktop e celular)
 - 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
 - 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
@@ -112,5 +120,5 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 
 ## Próximos passos
-- Fases 7 e 8: expansão de conteúdo e recursos avançados (DHCP, NAT, subinterfaces, roteamento dinâmico) — ⏳. VLAN e rotas estáticas já foram feitas (ver Campus e Rotas estáticas).
+- Fases 7 e 8: expansão de conteúdo e recursos avançados (NAT, subinterfaces, roteamento dinâmico, DNS) — ⏳. VLAN, rotas estáticas e DHCP já foram feitos (ver Campus, Rotas estáticas e DHCP).
 - Quiz: os 12 níveis originais estão completos (9 desafios cada). Todas as 8 trilhas têm teoria. Faltam, para a Fase 7: mais desafios por nível/dificuldade, desafios cronometrados e conteúdo de Prática/Diagnóstico para Fundamentos, IP e Serviços.

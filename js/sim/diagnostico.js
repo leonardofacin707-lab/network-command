@@ -13,7 +13,8 @@ export function diagnosticar(t) {
       const ligada = vizinhos(t, d.id).some(v => v.minhaPorta === i.id);
       const cfg = configDaInterface(d, i.id);
       if (!ligada && d.tipo === 'pc') avisos.push({ dispositivo: d.id, texto: `${d.nome} está sem cabo de rede.` });
-      if (ligada && !cfg) avisos.push({ dispositivo: d.id, texto: `${d.nome} está ligado, mas a interface ${i.id === 'eth0' ? 'Ethernet0' : i.id} não tem IP configurado.` });
+      if (ligada && !cfg && d.dhcp) avisos.push({ dispositivo: d.id, texto: `${d.nome} usa DHCP, mas não recebeu endereço (use ipconfig /renew no terminal para ver o motivo).` });
+      else if (ligada && !cfg) avisos.push({ dispositivo: d.id, texto: `${d.nome} está ligado, mas a interface ${i.id === 'eth0' ? 'Ethernet0' : i.id} não tem IP configurado.` });
     }
     if (d.tipo === 'pc') {
       const cfg = configDaInterface(d, 'eth0');

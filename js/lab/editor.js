@@ -2,9 +2,10 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc } from '../sim/topologia.js';
 import { criarSimulacao } from '../sim/motor.js';
-import { executar } from '../sim/terminal.js';
+import { formatarIPv4 } from '../sim/ipv4.js';
+import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
 import { diagnosticar } from '../sim/diagnostico.js';
 import { exemploLan, exemploDuasRedes } from './exemplos.js';
 
@@ -90,7 +91,8 @@ export function criarEditor(raiz, opcoes) {
   }
 
   function desenharDispositivo(d) {
-    const ips = d.interfaces.filter(i => i.ip).map(i => i.ip);
+    const efetivo = dispositivo(sim.topologia, d.id) ?? d; // com as concessões DHCP aplicadas
+    const ips = efetivo.interfaces.filter(i => i.ip).map(i => i.ip);
     let vlanTxt = '';
     if (d.tipo === 'switch') {
       const vl = vlansDoSwitch(topo, d.id);
@@ -110,11 +112,19 @@ export function criarEditor(raiz, opcoes) {
 
   function desenhar() {
     svg.innerHTML = `<g class="cabos">${desenharCabos()}</g>${topo.dispositivos.map(desenharDispositivo).join('')}`;
-    $('#lab-avisos').innerHTML = diagnosticar(topo).map(a => `<li>${esc(a.texto)}</li>`).join('');
+    $('#lab-avisos').innerHTML = diagnosticar(sim.topologia).map(a => `<li>${esc(a.texto)}</li>`).join('');
     renderCfg();
   }
 
   // ---------- painel de configuração ----------
+  const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
+  function infoConcessao(d) {
+    const c = sim.concessoes.get(d.id);
+    if (!c) return '';
+    if (!c.ok) return `<p class="motivo" role="status">${esc(MOTIVO_DHCP[c.motivo] ?? 'Sem concessão.')}</p>`;
+    return `<p class="motivo" role="status">Concessão: ${esc(formatarIPv4(c.ip))} / ${esc(formatarIPv4(c.mascara))}, gateway ${esc(formatarIPv4(c.gateway))}, servidor ${esc(formatarIPv4(c.servidor.ip))}.</p>`;
+  }
+
   function renderCfg() {
     const alvo = $('#lab-cfg');
     const d = sel ? dispositivo(topo, sel) : null;
@@ -127,11 +137,15 @@ export function criarEditor(raiz, opcoes) {
     alvo.innerHTML = `<form class="painel" id="form-cfg" novalidate>
       <h3>${esc(d.nome)} <small>(${TIPO_ROTULO[d.tipo]})</small></h3>
       <label for="cfg-nome">Nome</label><input id="cfg-nome" class="campo" name="nome" maxlength="15" value="${esc(d.nome)}" autocomplete="off">
-      ${d.interfaces.map(i => `<fieldset class="iface"><legend>${esc(rotuloDaPorta(d, i.id))}</legend>
+      ${d.tipo === 'pc' ? `<div class="iface-dhcp"><label class="opcao"><input type="checkbox" id="cfg-dhcp" name="dhcp"${d.dhcp ? ' checked' : ''}> Obter endereço automaticamente (DHCP)</label>
+        ${d.dhcp ? infoConcessao(d) : '<p class="motivo">Desmarcado: use os endereços fixos abaixo.</p>'}</div>` : ''}
+      ${d.interfaces.map(i => `<fieldset class="iface"${d.dhcp ? ' disabled' : ''}><legend>${esc(rotuloDaPorta(d, i.id))}</legend>
         <label for="cfg-ip-${i.id}">Endereço IPv4</label><input id="cfg-ip-${i.id}" class="campo" name="ip-${i.id}" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.10" value="${esc(i.ip)}">
         <label for="cfg-m-${i.id}">Máscara</label><input id="cfg-m-${i.id}" class="campo" name="m-${i.id}" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24" value="${esc(i.mascara)}">
+        ${d.tipo === 'roteador' ? `<label for="cfg-pool-ini-${i.id}">Pool DHCP: primeiro endereço</label><input id="cfg-pool-ini-${i.id}" class="campo" name="pool-ini-${i.id}" inputmode="decimal" autocomplete="off" placeholder="vazio = sem DHCP nesta interface" value="${esc(poolDe(d, i.id)?.inicio ?? '')}">
+        <label for="cfg-pool-fim-${i.id}">Pool DHCP: último endereço</label><input id="cfg-pool-fim-${i.id}" class="campo" name="pool-fim-${i.id}" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.200" value="${esc(poolDe(d, i.id)?.fim ?? '')}">` : ''}
       </fieldset>`).join('')}
-      ${d.tipo === 'pc' ? `<label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}">` : ''}
+      ${d.tipo === 'pc' ? `<fieldset class="iface"${d.dhcp ? ' disabled' : ''}><legend>Gateway</legend><label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}"></fieldset>` : ''}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="rotas-estaticas"><legend>Rotas estáticas</legend>
         ${(d.rotas ?? []).length ? `<table class="tabela"><caption class="sr-only">Rotas estáticas de ${esc(d.nome)}</caption>
           <thead><tr><th scope="col">Rede</th><th scope="col">Máscara</th><th scope="col">Próximo salto</th><th scope="col"><span class="sr-only">Ação</span></th></tr></thead>
@@ -288,14 +302,24 @@ export function criarEditor(raiz, opcoes) {
     }
   }, { signal });
 
+  raiz.addEventListener('change', e => {
+    if (e.target.id !== 'cfg-dhcp') return;
+    for (const fs of raiz.querySelectorAll('#form-cfg fieldset.iface:not(#rotas-estaticas)')) fs.disabled = e.target.checked;
+  }, { signal });
+
   raiz.addEventListener('submit', e => {
     e.preventDefault();
     if (e.target.id === 'form-cfg') {
       const f = new FormData(e.target);
       let r = { topologia: topo };
       const passos = [t => renomear(t, sel, f.get('nome'))];
-      for (const i of dispositivo(topo, sel).interfaces) passos.push(t => configurarInterface(t, sel, i.id, { ip: f.get(`ip-${i.id}`), mascara: f.get(`m-${i.id}`) }));
-      if (dispositivo(topo, sel).tipo === 'pc') passos.push(t => configurarGateway(t, sel, f.get('gw')));
+      const alvoCfg = dispositivo(topo, sel), usaDhcp = alvoCfg.tipo === 'pc' && f.get('dhcp') === 'on';
+      if (alvoCfg.tipo === 'pc') passos.push(t => configurarDhcpPc(t, sel, usaDhcp));
+      if (!usaDhcp) {
+        for (const i of alvoCfg.interfaces) passos.push(t => configurarInterface(t, sel, i.id, { ip: f.get(`ip-${i.id}`), mascara: f.get(`m-${i.id}`) }));
+        if (alvoCfg.tipo === 'pc') passos.push(t => configurarGateway(t, sel, f.get('gw')));
+      }
+      if (alvoCfg.tipo === 'roteador') for (const i of alvoCfg.interfaces) passos.push(t => configurarPoolDhcp(t, sel, i.id, { inicio: f.get(`pool-ini-${i.id}`), fim: f.get(`pool-fim-${i.id}`) }));
       if (dispositivo(topo, sel).tipo === 'roteador') {
         const campos = { rede: String(f.get('rota-rede') ?? '').trim(), mascara: String(f.get('rota-m') ?? '').trim(), via: String(f.get('rota-via') ?? '').trim() };
         const preenchidos = Object.values(campos).filter(Boolean).length;

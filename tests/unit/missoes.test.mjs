@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica } from '../../js/sim/topologia.js';
+import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, configurarPoolDhcp } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 10);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 13);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -234,4 +234,36 @@ test('rota padrão: só a rota 0.0.0.0/0 no R1 (o provedor já conhece a empresa
   assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r1', '8.8.8.0', '/24', '203.0.113.2')).todosOk, true, 'rota específica também resolve');
   assert.equal(verificarMissao(x, rotaEst(x.topologia, 'r1', '0.0.0.0', '/0', '203.0.113.2')).todosOk, true);
   assert.match(adicionarRotaEstatica(x.topologia, 'r1', { rede: '0.0.0.0', mascara: '/0', via: '203.0.113.9' }).erro, /ligada diretamente/, 'próximo salto fora do enlace é recusado');
+});
+
+// ---- Missões de DHCP ----
+const pool = (t, porta, inicio, fim) => ok(configurarPoolDhcp(t, 'r1', porta, { inicio, fim }));
+
+test('DHCP sem servidor: nenhum PC recebe endereço até o roteador ganhar um pool', () => {
+  const x = m('dhcp-sem-servidor');
+  assert.equal(verificarMissao(x, x.topologia).objetivos.every(o => !o.ok), true);
+  assert.equal(verificarMissao(x, pool(x.topologia, 'gi0', '192.168.10.100', '192.168.10.150')).todosOk, true);
+  assert.equal(verificarMissao(x, pool(x.topologia, 'gi0', '192.168.10.100', '192.168.10.101')).todosOk, false, 'pool de 2 endereços para 3 PCs');
+  assert.match(configurarPoolDhcp(x.topologia, 'r1', 'gi0', { inicio: '192.168.20.1', fim: '192.168.20.9' }).erro, /não está na sub-rede/);
+});
+
+test('pool curto: aumentar o pool resolve; o PC4 só fica sem endereço por falta de pool', () => {
+  const x = m('dhcp-pool-curto');
+  const r = verificarMissao(x, x.topologia);
+  assert.equal(r.todosOk, false);
+  assert.equal(r.objetivos.filter(o => o.ok).length, 1, 'só PC2↔PC3 funciona');
+  assert.equal(verificarMissao(x, pool(x.topologia, 'gi0', '192.168.10.100', '192.168.10.103')).todosOk, true);
+  assert.equal(verificarMissao(x, pool(x.topologia, 'gi0', '192.168.10.50', '192.168.10.99')).todosOk, true, 'outro pool qualquer da rede serve');
+});
+
+test('DHCP para duas redes: precisa de um pool em cada interface (a concessão traz o gateway)', () => {
+  const x = m('dhcp-duas-redes');
+  assert.equal(verificarMissao(x, x.topologia).objetivos.every(o => !o.ok), true);
+  const so1 = pool(x.topologia, 'gi0', '192.168.10.100', '192.168.10.110');
+  const r1 = verificarMissao(x, so1);
+  assert.deepEqual(r1.objetivos.map(o => o.ok), [true, false, false, false], 'só a rede 10 funciona');
+  const dois = pool(so1, 'gi1', '192.168.20.100', '192.168.20.110');
+  assert.equal(verificarMissao(x, dois).todosOk, true);
+  const curto = pool(so1, 'gi1', '192.168.20.100', '192.168.20.100');
+  assert.equal(verificarMissao(x, curto).todosOk, false, 'um endereço para dois PCs');
 });

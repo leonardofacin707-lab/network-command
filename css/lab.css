@@ -63,3 +63,7 @@
 .tabela .faixa{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--destaque);word-break:break-word}
 @media(max-width:1000px){.empresa-grade{grid-template-columns:minmax(0,1fr)}.painel{overflow-x:auto}}
 .portas-sw .campo{min-width:0}.portas-sw .qtd{max-width:80px}
+.iface-dhcp{margin:12px 0 0}
+.iface-dhcp .opcao{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600}
+.iface-dhcp .opcao input{width:18px;height:18px;flex:none}
+.iface[disabled]{opacity:.55}

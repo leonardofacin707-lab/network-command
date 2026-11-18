@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 10 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 13 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 10);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 10 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 13);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 13 concluídas/);
   assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /Sua primeira rede local, Fácil, não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(1).getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
@@ -156,7 +156,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 10 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 13 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -256,6 +256,44 @@ test('rotas estáticas pela interface: validação, rota de ida, de volta, remo�
   const e = await salvo();
   assert.equal(e.missoes['rotas-estaticas'].concluida, true);
   assert.deepEqual(e.missoes['rotas-estaticas'].topologia.dispositivos.find(d => d.id === 'r2').rotas, [{ rede: '192.168.1.0', mascara: '255.255.255.0', via: '10.0.0.1' }]);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('DHCP pela interface: sem pool não há IP; com pool os PCs recebem endereço e a missão conclui (120 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/dhcp-sem-servidor');
+  await disp('pc1').click();
+  assert.equal(await pagina.locator('#cfg-dhcp').isChecked(), true);
+  assert.equal(await pagina.locator('#cfg-ip-eth0').isDisabled(), true, 'com DHCP ligado os campos fixos ficam desabilitados');
+  assert.match(await pagina.locator('.iface-dhcp').innerText(), /Nenhum servidor DHCP respondeu/);
+  await pagina.fill('#term-entrada', 'ipconfig /renew');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Operação falhou: Nenhum servidor DHCP respondeu/);
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 2);
+  // pool inválido (fora da rede) é recusado
+  await disp('r1').click();
+  await pagina.fill('#cfg-pool-ini-gi0', '10.0.0.5'); await pagina.fill('#cfg-pool-fim-gi0', '10.0.0.9');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /não está na sub-rede/);
+  await pagina.fill('#cfg-pool-ini-gi0', '192.168.10.100'); await pagina.fill('#cfg-pool-fim-gi0', '192.168.10.150');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
+  assert.match(await disp('pc2').getAttribute('aria-label'), /192\.168\.10\.101/, 'o desenho mostra o endereço recebido');
+  await disp('pc1').click();
+  assert.match(await pagina.locator('.iface-dhcp').innerText(), /Concessão: 192\.168\.10\.100/);
+  await pagina.fill('#term-entrada', 'ipconfig /renew');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Concessão DHCP obtida[\s\S]*192\.168\.10\.100/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+120 XP/);
+  // desligar o DHCP volta aos campos fixos, que continuam vazios
+  await disp('pc3').click();
+  await pagina.locator('#cfg-dhcp').uncheck();
+  assert.equal(await pagina.locator('#cfg-ip-eth0').isDisabled(), false);
+  const e = await salvo();
+  assert.equal(e.missoes['dhcp-sem-servidor'].concluida, true);
+  assert.deepEqual(e.missoes['dhcp-sem-servidor'].topologia.dispositivos.find(d => d.id === 'r1').pools, [{ porta: 'gi0', inicio: '192.168.10.100', fim: '192.168.10.150' }]);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

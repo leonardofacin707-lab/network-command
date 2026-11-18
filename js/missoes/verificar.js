@@ -44,7 +44,7 @@ export function verificarMissao(missao, topologia) {
     const isolar = o.esperado === 'falha';
     const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${nome(o.para)}`;
     if (!dispositivo(topologia, o.de) || !dispositivo(topologia, o.para)) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
-    const ip = ipDoDispositivo(topologia, o.para);
+    const ip = ipDoDispositivo(sim.topologia, o.para); // com as concessões DHCP
     if (ip === null) return { id: o.id, texto, ok: false, motivo: `${nome(o.para)} não tem IP configurado` };
     const r = sim.ping(o.de, ip);
     const entregue = r.status === 'entregue';

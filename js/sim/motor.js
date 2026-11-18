@@ -1,7 +1,8 @@
 // Motor de simulação de rede (camadas 2 e 3). Puro: não conhece DOM, tela nem localStorage.
 // Modela: domínio de broadcast através de switches (com VLANs: portas access e trunk), resolução ARP, encaminhamento por
 // roteadores (rotas conectadas e estáticas, com prefixo mais longo; uma interface física por VLAN), TTL e a resposta de volta.
-// NÃO modela: latência, perda aleatória, subinterfaces (router-on-a-stick), STP, roteamento dinâmico, DHCP, NAT, firewall.
+// DHCP simplificado: o roteador dá concessões fixas (sem tempo de lease nem DORA mensagem a mensagem).
+// NÃO modela: latência, perda aleatória, subinterfaces (router-on-a-stick), STP, roteamento dinâmico, NAT, firewall.
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
 
@@ -184,14 +185,72 @@ export function escolherRota(t, roteador, ipDest) {
  * Simulação com estado de sessão (cache ARP). Recriar a simulação limpa os caches, como reiniciar a rede.
  * ping: ida e volta; rastrear: caminho de ida com os roteadores.
  */
-export function criarSimulacao(t) {
+/**
+ * DHCP (simplificado): para cada computador em modo automático, procura no seu domínio de broadcast um roteador com pool
+ * numa interface configurada e entrega o primeiro endereço livre (fora de IPs fixos do domínio e de concessões já dadas).
+ * Devolve Map(pcId -> { ok:true, ip, mascara, gateway, servidor:{ d, p, ip } } | { ok:false, motivo }).
+ * motivos: 'sem-link', 'sem-servidor', 'pool-invalido', 'pool-esgotado'.
+ */
+export function concessoesDhcp(t) {
+  const res = new Map(), dadas = new Map(); // chave do pool -> Set(ip)
+  for (const pc of t.dispositivos) {
+    if (pc.tipo !== 'pc' || !pc.dhcp) continue;
+    const dominio = dominioL2(t, pc.id, 'eth0');
+    if (dominio === null) { res.set(pc.id, { ok: false, motivo: 'sem-link' }); continue; }
+    const servidores = [];
+    for (const e of dominio) {
+      const dev = dispositivo(t, e.d);
+      const pool = dev.tipo === 'roteador' ? (dev.pools ?? []).find(q => q.porta === e.p) : null, cfg = pool && configDaInterface(dev, e.p);
+      if (cfg) servidores.push({ dev, e, pool, cfg });
+    }
+    if (!servidores.length) { res.set(pc.id, { ok: false, motivo: 'sem-servidor' }); continue; }
+    const fixos = new Set();
+    for (const e of dominio) {
+      const dev = dispositivo(t, e.d);
+      if (dev.tipo === 'pc' && dev.dhcp) continue;
+      const c = configDaInterface(dev, e.p);
+      if (c) fixos.add(c.ip);
+    }
+    let motivo = 'pool-invalido';
+    for (const { dev, e, pool, cfg } of servidores) {
+      const ini = lerIPv4(pool.inicio), fim = lerIPv4(pool.fim);
+      if (ini === null || fim === null || ini > fim || !mesmaRede(ini, cfg.ip, cfg.mascara) || !mesmaRede(fim, cfg.ip, cfg.mascara)) continue;
+      const chave = `${dev.id}/${e.p}`;
+      if (!dadas.has(chave)) dadas.set(chave, new Set());
+      const usados = dadas.get(chave);
+      let livre = null;
+      for (let n = ini; n <= fim; n++) if (n !== cfg.ip && !fixos.has(n) && !usados.has(n)) { livre = n; break; }
+      if (livre === null) { motivo = 'pool-esgotado'; continue; }
+      usados.add(livre);
+      res.set(pc.id, { ok: true, ip: livre, mascara: cfg.mascara, gateway: cfg.ip, servidor: { d: dev.id, p: e.p, ip: cfg.ip } });
+      motivo = null;
+      break;
+    }
+    if (motivo) res.set(pc.id, { ok: false, motivo });
+  }
+  return res;
+}
+
+/** A topologia como o PC a enxerga depois do DHCP: concessão no lugar da configuração manual (ou sem IP, se não houve). */
+function aplicarConcessoes(t, concessoes) {
+  if (!concessoes.size) return t;
+  return { ...t, dispositivos: t.dispositivos.map(d => {
+    const c = concessoes.get(d.id);
+    if (!c) return d;
+    const iface = c.ok ? { id: 'eth0', ip: formatarIPv4(c.ip), mascara: formatarIPv4(c.mascara) } : { id: 'eth0', ip: '', mascara: '' };
+    return { ...d, interfaces: d.interfaces.map(i => (i.id === 'eth0' ? iface : i)), gateway: c.ok ? formatarIPv4(c.gateway) : '' };
+  }) };
+}
+
+export function criarSimulacao(original) {
+  const concessoes = concessoesDhcp(original), t = aplicarConcessoes(original, concessoes);
   const arp = new Map(); // dispositivoId -> Map(ipNum -> mac)
   const aprender = lista => {
     for (const a of lista ?? []) if (a.mac) { if (!arp.has(a.d)) arp.set(a.d, new Map()); arp.get(a.d).set(a.ip, a.mac); }
   };
 
   return {
-    topologia: t,
+    topologia: t, concessoes,
     ping(origemId, ipDest) {
       const ida = enviarPacote(t, origemId, ipDest);
       aprender(ida.aprendizado);

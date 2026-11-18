@@ -8,6 +8,7 @@ import { dispositivo, rotuloDaPorta } from './topologia.js';
 const AJUDA = [
   'Comandos disponíveis:',
   '  ipconfig [/all]     mostra a configuração de IP desta máquina',
+  '  ipconfig /renew     pede um endereço ao servidor DHCP (se o DHCP estiver ligado)',
   '  ping [-n N] destino  testa a conexão com um IP ou nome de dispositivo',
   '  tracert destino     mostra os roteadores no caminho até o destino',
   '  arp -a              mostra os endereços MAC já descobertos',
@@ -26,6 +27,21 @@ function resolverDestino(t, texto) {
   return primeiro ? { ip: primeiro.ip, nome: d.nome } : null;
 }
 
+export const MOTIVO_DHCP = {
+  'sem-servidor': 'Nenhum servidor DHCP respondeu. O endereço não foi configurado.',
+  'pool-esgotado': 'O servidor DHCP não tem mais endereços livres no pool. O endereço não foi configurado.',
+  'pool-invalido': 'O pool do servidor DHCP não combina com a rede da interface. O endereço não foi configurado.',
+  'sem-link': 'Mídia desconectada.'
+};
+
+function renovar(t, sim, d) {
+  if (!d.dhcp) return ['Operação falhou: este adaptador não está habilitado para DHCP (está com endereço fixo).'];
+  if (!temLink(t, d.id, 'eth0')) return ['Operação falhou: mídia desconectada.'];
+  const c = sim.concessoes?.get(d.id);
+  if (!c?.ok) return ['Operação falhou: ' + (MOTIVO_DHCP[c?.motivo] ?? 'sem resposta do servidor DHCP.')];
+  return ['Concessão DHCP obtida.', '', ...ipconfig(t, sim, d, false).slice(2)];
+}
+
 function ipconfig(t, sim, d, tudo) {
   const linhas = ['Configuração de IP do Windows', ''];
   if (tudo) linhas.push(campo('Nome do Host', d.nome), '');
@@ -33,7 +49,10 @@ function ipconfig(t, sim, d, tudo) {
     const rotulo = rotuloDaPorta(d, i.id);
     linhas.push(`Adaptador Ethernet ${rotulo}:`, '');
     if (!temLink(t, d.id, i.id)) { linhas.push(campo('Estado da mídia', 'mídia desconectada'), ''); continue; }
-    if (tudo) linhas.push(campo('Endereço Físico', macDe(d.id, i.id).toUpperCase()), campo('DHCP Habilitado', 'Não'));
+    const conc = d.dhcp ? sim.concessoes?.get(d.id) : null;
+    if (tudo) linhas.push(campo('Endereço Físico', macDe(d.id, i.id).toUpperCase()), campo('DHCP Habilitado', d.dhcp ? 'Sim' : 'Não'));
+    if (tudo && conc?.ok) linhas.push(campo('Servidor DHCP', formatarIPv4(conc.servidor.ip)));
+    if (d.dhcp && conc && !conc.ok) linhas.push(`   ${MOTIVO_DHCP[conc.motivo]}`, '');
     const cfg = configDaInterface(d, i.id);
     linhas.push(campo('Endereço IPv4', cfg ? i.ip : '(não configurado)'));
     linhas.push(campo('Máscara de Sub-rede', cfg ? i.mascara : '(não configurado)'));
@@ -127,7 +146,7 @@ export function executar(sim, dispositivoId, linhaDigitada) {
   if (!partes.length) return { linhas: [], limpar: false };
   const cmd = partes[0].toLowerCase(), args = partes.slice(1).map(a => a.toLowerCase() === '/all' ? '/all' : a);
   switch (cmd) {
-    case 'ipconfig': return { linhas: args.length && args[0] !== '/all' ? ['Opção inválida. Use: ipconfig [/all]'] : ipconfig(t, sim, d, args[0] === '/all'), limpar: false };
+    case 'ipconfig': return { linhas: args[0]?.toLowerCase() === '/renew' && args.length === 1 ? renovar(t, sim, d) : args.length && args[0] !== '/all' ? ['Opção inválida. Use: ipconfig [/all | /renew]'] : ipconfig(t, sim, d, args[0] === '/all'), limpar: false };
     case 'ping': return { linhas: ping(t, sim, d, args), limpar: false };
     case 'tracert': return { linhas: tracert(t, sim, d, args), limpar: false };
     case 'arp': return { linhas: arp(t, sim, d, args), limpar: false };

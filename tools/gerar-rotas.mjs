@@ -44,7 +44,7 @@ const rotas = [
 const ids = new Set(rotas.map(m => m.id));
 const todas = [...existentes.filter(m => !ids.has(m.id)), ...rotas];
 const ordem = ['primeira-rede', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
-  'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas',
+  'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas', 'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
   'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'];
 const pos = m => (ordem.includes(m.id) ? ordem.indexOf(m.id) : ordem.length);
 const saida = todas.map((m, i) => ({ m, i })).sort((a, b) => pos(a.m) - pos(b.m) || a.i - b.i).map(x => x.m);

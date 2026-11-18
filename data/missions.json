@@ -820,7 +820,8 @@
               "mascara": ""
             }
           ],
-          "rotas": []
+          "rotas": [],
+          "pools": []
         }
       ],
       "cabos": [
@@ -939,7 +940,8 @@
               "mascara": "255.255.255.0",
               "via": "10.0.0.2"
             }
-          ]
+          ],
+          "pools": []
         },
         {
           "id": "r2",
@@ -959,7 +961,8 @@
               "mascara": "255.255.255.0"
             }
           ],
-          "rotas": []
+          "rotas": [],
+          "pools": []
         },
         {
           "id": "pc2",
@@ -1075,7 +1078,8 @@
               "mascara": "255.255.255.252"
             }
           ],
-          "rotas": []
+          "rotas": [],
+          "pools": []
         },
         {
           "id": "r2",
@@ -1101,7 +1105,8 @@
               "mascara": "255.255.255.0",
               "via": "203.0.113.1"
             }
-          ]
+          ],
+          "pools": []
         },
         {
           "id": "pc2",
@@ -1218,7 +1223,8 @@
               "mascara": "255.255.255.252"
             }
           ],
-          "rotas": []
+          "rotas": [],
+          "pools": []
         },
         {
           "id": "r2",
@@ -1238,7 +1244,8 @@
               "mascara": "255.255.255.0"
             }
           ],
-          "rotas": []
+          "rotas": [],
+          "pools": []
         },
         {
           "id": "pc2",
@@ -1288,6 +1295,569 @@
           "b": {
             "d": "pc2",
             "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "dhcp-sem-servidor",
+    "modulo": "missoes",
+    "titulo": "Ninguém recebe endereço",
+    "dificuldade": 1,
+    "xp": 120,
+    "habilidades": [
+      "servicos.diagnostico"
+    ],
+    "cenario": "Três computadores novos foram configurados para obter o endereço automaticamente (DHCP), mas nenhum consegue falar com os outros. O roteador já está com IP, mas não foi ligado como servidor DHCP.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      }
+    ],
+    "dicas": [
+      "Abra o terminal de um PC e rode ipconfig: sem endereço, ele não recebeu resposta de nenhum servidor DHCP. ipconfig /renew mostra o motivo.",
+      "Quem entrega endereços nesta rede é o roteador. Selecione o R1 e veja os campos de pool DHCP da interface Gi0.",
+      "Informe um pool dentro da rede 192.168.10.0/24, por exemplo do .100 ao .150, e use Aplicar."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 150,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "rotas": [],
+          "pools": []
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 400,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 680,
+          "y": 90,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 680,
+          "y": 190,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 680,
+          "y": 290,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "r1",
+            "p": "gi0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "dhcp-pool-curto",
+    "modulo": "missoes",
+    "titulo": "O pool que acabou",
+    "dificuldade": 2,
+    "xp": 160,
+    "habilidades": [
+      "servicos.diagnostico"
+    ],
+    "cenario": "O escritório recebeu um quarto computador. Os três primeiros funcionam, mas o último nunca consegue endereço. O servidor DHCP está ligado.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc4"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      },
+      {
+        "id": "o3",
+        "de": "pc3",
+        "para": "pc4"
+      }
+    ],
+    "dicas": [
+      "Rode ipconfig no PC4 e compare com o dos outros: ele não recebeu IP e a mensagem diz o porquê.",
+      "Cada computador usa um endereço do pool. O pool atual tem só 3 endereços para 4 computadores.",
+      "Aumente o último endereço do pool do R1 (por exemplo, de .102 para .110)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 150,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "rotas": [],
+          "pools": [
+            {
+              "porta": "gi0",
+              "inicio": "192.168.10.100",
+              "fim": "192.168.10.102"
+            }
+          ]
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 400,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 680,
+          "y": 90,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 680,
+          "y": 190,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 680,
+          "y": 290,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "PC4",
+          "x": 680,
+          "y": 390,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "r1",
+            "p": "gi0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa5"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "dhcp-duas-redes",
+    "modulo": "missoes",
+    "titulo": "DHCP para duas redes",
+    "dificuldade": 3,
+    "xp": 260,
+    "habilidades": [
+      "servicos.pratica"
+    ],
+    "cenario": "O roteador liga duas redes: 192.168.10.0/24 (PC1 e PC2) e 192.168.20.0/24 (PC3 e PC4). Todos os computadores pedem endereço automático, mas o roteador não tem nenhum pool. Configure o DHCP das duas redes para que todos se comuniquem, inclusive entre as redes.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc4"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o4",
+        "de": "pc2",
+        "para": "pc4"
+      }
+    ],
+    "dicas": [
+      "Cada interface do roteador atende a sua própria rede, então cada uma precisa do seu pool.",
+      "O pool precisa estar dentro da rede da interface: 192.168.10.x na Gi0 e 192.168.20.x na Gi1.",
+      "O gateway e a máscara são entregues automaticamente a partir do IP da interface; por isso a comunicação entre as redes funciona sem mais configuração."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 400,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.10.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.20.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": []
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 190,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 610,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 60,
+          "y": 100,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 60,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 740,
+          "y": 100,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "PC4",
+          "x": 740,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "r1",
+            "p": "gi0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c6",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa3"
           }
         }
       ]

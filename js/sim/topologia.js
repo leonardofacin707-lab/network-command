@@ -42,7 +42,7 @@ function novoDispositivo(t, tipo, pos) {
     interfaces: def.portas.filter(p => p.ip).map(p => ({ id: p.id, ip: '', mascara: '' }))
   };
   if (tipo === 'pc') d.gateway = '';
-  if (tipo === 'roteador') d.rotas = []; // rotas estáticas: [{ rede, mascara, via }]
+  if (tipo === 'roteador') { d.rotas = []; d.pools = []; } // rotas estáticas: [{ rede, mascara, via }]; pools DHCP: [{ porta, inicio, fim }]
   if (tipo === 'switch') d.portas = {}; // configuração das portas, só o que foge do padrão (access, VLAN 1)
   return d;
 }
@@ -149,6 +149,44 @@ export function removerRotaEstatica(t, id, indice) {
   return { topologia: trocar(t, id, x => ({ ...x, rotas: x.rotas.filter((_, i) => i !== indice) })) };
 }
 
+/** Máximo de endereços num pool DHCP do laboratório. */
+export const MAX_POOL = 254;
+
+/**
+ * Define (ou remove, com início e fim vazios) o pool DHCP de uma interface de roteador. A máscara e o gateway entregues aos
+ * clientes vêm da própria interface; o pool precisa estar dentro da sub-rede dela, fora do endereço de rede e de broadcast.
+ */
+export function configurarPoolDhcp(t, id, portaId, { inicio, fim }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores têm servidor DHCP nesta simulação.' };
+  const interf = d.interfaces.find(i => i.id === portaId);
+  if (!interf) return { erro: 'Interface não encontrada.' };
+  const iTxt = String(inicio ?? '').trim(), fTxt = String(fim ?? '').trim();
+  const semPool = x => ({ ...x, pools: (x.pools ?? []).filter(q => q.porta !== portaId) });
+  if (!iTxt && !fTxt) return { topologia: trocar(t, id, semPool) };
+  if (!iTxt || !fTxt) return { erro: 'Informe o primeiro e o último endereço do pool (ou limpe os dois).' };
+  const ip = lerIPv4(interf.ip), m = lerMascara(interf.mascara);
+  if (ip === null || m === null) return { erro: 'Configure primeiro o IP e a máscara da interface que vai atender o DHCP.' };
+  const iN = lerIPv4(iTxt), fN = lerIPv4(fTxt);
+  if (iN === null || fN === null) return { erro: 'Endereço do pool inválido. Use quatro números de 0 a 255 separados por ponto.' };
+  for (const n of [iN, fN]) {
+    if (!mesmaRede(n, ip, m)) return { erro: `${formatarIPv4(n)} não está na sub-rede da interface (${formatarIPv4(enderecoDeRede(ip, m))}).` };
+    const erro = validarEnderecoDeHost(n, m);
+    if (erro) return { erro };
+  }
+  if (iN > fN) return { erro: 'O primeiro endereço do pool não pode ser maior que o último.' };
+  if (fN - iN + 1 > MAX_POOL) return { erro: `O pool pode ter no máximo ${MAX_POOL} endereços.` };
+  const novo = { porta: portaId, inicio: formatarIPv4(iN), fim: formatarIPv4(fN) };
+  return { topologia: trocar(t, id, x => ({ ...semPool(x), pools: [...semPool(x).pools, novo] })) };
+}
+
+/** Liga ou desliga "obter endereço automaticamente (DHCP)" num computador. Os campos manuais ficam guardados. */
+export function configurarDhcpPc(t, id, ativo) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores podem ser clientes DHCP.' };
+  return { topologia: trocar(t, id, x => { const { dhcp, ...resto } = x; return ativo ? { ...resto, dhcp: true } : resto; }) };
+}
+
 export function configurarGateway(t, id, gateway) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'pc') return { erro: 'Só computadores têm gateway padrão.' };
@@ -206,6 +244,7 @@ export function normalizarTopologia(bruto) {
       })
     };
     if (b.tipo === 'pc') { const g = lerIPv4(b.gateway); d.gateway = g === null ? '' : formatarIPv4(g); }
+    if (b.tipo === 'pc' && b.dhcp === true) d.dhcp = true;
     if (b.tipo === 'roteador') {
       d.rotas = [];
       for (const r of Array.isArray(b.rotas) ? b.rotas : []) {
@@ -215,6 +254,13 @@ export function normalizarTopologia(bruto) {
         const rede = formatarIPv4(rN), mascara = formatarIPv4(mN);
         if (d.rotas.some(x => x.rede === rede && x.mascara === mascara)) continue;
         d.rotas.push({ rede, mascara, via: formatarIPv4(vN) });
+      }
+      d.pools = [];
+      for (const q of Array.isArray(b.pools) ? b.pools : []) {
+        if (!q || typeof q !== 'object' || !d.interfaces.some(i => i.id === q.porta) || d.pools.some(x => x.porta === q.porta)) continue;
+        const iN = lerIPv4(q.inicio), fN = lerIPv4(q.fim);
+        if (iN === null || fN === null || iN > fN || fN - iN + 1 > MAX_POOL) continue;
+        d.pools.push({ porta: q.porta, inicio: formatarIPv4(iN), fim: formatarIPv4(fN) });
       }
     }
     if (b.tipo === 'switch') {
