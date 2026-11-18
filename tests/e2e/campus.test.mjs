@@ -25,16 +25,16 @@ async function abrir(rota, opcoes) {
   return s;
 }
 
-test('lista do Campus: 4 missões próprias, separadas das de Missões, e o menu marca protótipo', async () => {
+test('lista do Campus: 6 missões próprias, separadas das de Missões, e o menu marca protótipo', async () => {
   const { pagina, erros, contexto } = await abrir('campus');
   assert.match(await pagina.locator('#app h2').first().innerText(), /Campus de Redes/);
-  assert.equal(await pagina.locator('.missao').count(), 4);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 4 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 6);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 6 concluídas/);
   assert.match(await pagina.locator('.menu a[data-rota="campus"]').innerText(), /protótipo|proto/i);
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Campus/);
   await pagina.goto(`${servidor.url}/index.html#/missoes`);
   await pagina.locator('.missao').first().waitFor();
-  assert.equal(await pagina.locator('.missao').count(), 5, 'a lista de Missões não ganhou as do campus');
+  assert.equal(await pagina.locator('.missao').count(), 7, 'a lista de Missões não ganhou as do campus');
   assert.deepEqual(erros, []);
   await contexto.close();
 });
@@ -114,5 +114,41 @@ test('celular: sem rolagem horizontal e tabela de portas do switch acessível', 
   }
   const sobra = await s.pagina.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert.ok(sobra <= 1, `rolagem horizontal ${sobra}px`);
+  await s.contexto.close();
+});
+
+test('prática: setores separados — objetivos de isolamento começam falhando e passam com VLANs; XP e habilidade registrados', async () => {
+  const s = await abrir('campus/setores-separados');
+  const { pagina, erros } = s;
+  await pagina.locator('#m-verificar').click();
+  const antes = await pagina.locator('#m-objetivos').innerText();
+  assert.match(antes, /PC1 não alcança PC3/);
+  assert.match(antes, /ainda se comunicam, mas deveriam estar isolados/);
+  assert.equal(await pagina.locator('#m-objetivos li.ok').count(), 2, 'a comunicação dentro dos setores já funcionava');
+  assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 2);
+  await s.aplicarSwitch('sw1', { '#cfg-vlan-fa1': '10', '#cfg-vlan-fa2': '10', '#cfg-vlan-fa3': '20', '#cfg-vlan-fa4': '20' });
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+150 XP/);
+  const e = await s.salvo();
+  assert.equal(e.missoes['setores-separados'].xp, 150);
+  // a árvore de habilidades passa a mostrar a prática de Ethernet e comutação
+  await pagina.locator('.menu a[data-rota="habilidades"]').click();
+  await pagina.locator('.menu a[data-rota="habilidades"][aria-current=page]').waitFor();
+  assert.match(await pagina.locator('[data-trilha="ethernet-comutacao"] .degraus li', { hasText: 'Prática' }).innerText(), /1 de 2 concluído[\s\S]*✓ Setores separados por VLAN/);
+  assert.deepEqual(erros, []);
+  await s.contexto.close();
+});
+
+test('prática: dois andares — VLANs sem trunk não bastam; com trunk nos dois lados conclui', async () => {
+  const s = await abrir('campus/dois-andares-mesmas-vlans');
+  const { pagina } = s;
+  await s.aplicarSwitch('sw1', { '#cfg-vlan-fa1': '10', '#cfg-vlan-fa2': '20' });
+  await s.aplicarSwitch('sw2', { '#cfg-vlan-fa1': '10', '#cfg-vlan-fa2': '20' });
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.ok').count(), 2, 'só os dois isolamentos passam sem o trunk');
+  await s.aplicarSwitch('sw1', { '#cfg-modo-fa8': 'trunk' });
+  await s.aplicarSwitch('sw2', { '#cfg-modo-fa8': 'trunk' });
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+220 XP/);
   await s.contexto.close();
 });

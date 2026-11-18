@@ -100,9 +100,9 @@ import { configurarPortaSwitch } from '../../js/sim/topologia.js';
 const porta = (t, sw, p, modo, vlan) => ok(configurarPortaSwitch(t, sw, p, { modo, vlan }));
 const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
-test('campus: 4 missões, separadas das missões comuns', () => {
-  assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 5);
+test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
+  assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 7);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -147,4 +147,60 @@ test('as habilidades marcadas em missões e projetos existem na árvore (trilha 
     for (const h of item.habilidades) { const [t, n] = h.split('.'); assert.ok(trilhas.has(t) && niveis.has(n) && n !== 'teoria', `${item.id}: ${h}`); }
   }
   assert.deepEqual(validarMissao({ ...bruto[0], habilidades: ['ip.diagnostico', 'lixo', 5, 'x.y'] }).habilidades, ['ip.diagnostico']);
+});
+
+// ---- Missões de prática (montar do zero) e objetivos de isolamento ----
+test('objetivo de isolamento (esperado: falha) passa só quando o ping NÃO é entregue', () => {
+  const x = m('setores-separados');
+  const inicial = verificarMissao(x, x.topologia).objetivos;
+  assert.deepEqual(inicial.map(o => o.ok), [true, true, false, false], 'tudo na VLAN 1: os setores ainda se enxergam');
+  assert.match(inicial[2].texto, /não alcança/);
+  assert.match(inicial[2].motivo, /isolados/);
+  assert.equal(validarMissao({ ...bruto.find(b => b.id === 'setores-separados') }).objetivos[2].esperado, 'falha');
+  assert.equal(validarMissao({ ...bruto[0], objetivos: [{ id: 'o1', de: 'pc1', para: 'pc2', esperado: 'lixo' }] }).objetivos[0].esperado, undefined);
+});
+
+test('prática: primeira rede — configurar os três PCs na mesma sub-rede resolve; erros pontuais não', () => {
+  const x = m('primeira-rede');
+  const cfg = (t, id, ip, mask = '/24') => ok(configurarInterface(t, id, 'eth0', { ip, mascara: mask }));
+  const certo = cfg(cfg(cfg(x.topologia, 'pc1', '192.168.1.10'), 'pc2', '192.168.1.20'), 'pc3', '192.168.1.30');
+  assert.equal(verificarMissao(x, certo).todosOk, true);
+  assert.equal(verificarMissao(x, cfg(cfg(cfg(x.topologia, 'pc1', '192.168.1.10'), 'pc2', '192.168.1.20'), 'pc3', '192.168.2.30')).todosOk, false, 'outra sub-rede');
+  assert.equal(verificarMissao(x, cfg(cfg(cfg(x.topologia, 'pc1', '192.168.1.10'), 'pc2', '192.168.1.20'), 'pc3', '192.168.1.20')).todosOk, false, 'IP repetido');
+  assert.equal(verificarMissao(x, cfg(cfg(x.topologia, 'pc1', '192.168.1.10'), 'pc2', '192.168.1.20')).todosOk, false, 'PC3 sem IP');
+});
+
+test('prática: duas redes, um roteador — exige IP nas duas interfaces e os dois gateways', () => {
+  const x = m('duas-redes-um-roteador');
+  const i = (t, id, p, ip) => ok(configurarInterface(t, id, p, { ip, mascara: '/24' }));
+  let t = i(i(i(i(x.topologia, 'pc1', 'eth0', '192.168.1.10'), 'pc2', 'eth0', '10.0.0.10'), 'r1', 'gi0', '192.168.1.1'), 'r1', 'gi1', '10.0.0.1');
+  assert.equal(verificarMissao(x, t).todosOk, false, 'falta o gateway dos PCs');
+  const sem2 = ok(configurarGateway(t, 'pc1', '192.168.1.1'));
+  assert.equal(verificarMissao(x, sem2).todosOk, false, 'falta o gateway do PC2');
+  t = ok(configurarGateway(ok(configurarGateway(t, 'pc1', '192.168.1.1')), 'pc2', '10.0.0.1'));
+  assert.equal(verificarMissao(x, t).todosOk, true);
+  const semGi1 = i(i(i(x.topologia, 'pc1', 'eth0', '192.168.1.10'), 'pc2', 'eth0', '10.0.0.10'), 'r1', 'gi0', '192.168.1.1');
+  const comGateways = ok(configurarGateway(ok(configurarGateway(semGi1, 'pc1', '192.168.1.1')), 'pc2', '10.0.0.1'));
+  assert.equal(verificarMissao(x, comGateways).todosOk, false, 'falta a interface gi1');
+});
+
+test('prática: setores separados — cada setor numa VLAN própria; trocar só uma porta quebra a comunicação interna', () => {
+  const x = m('setores-separados');
+  const certo = porta(porta(porta(porta(x.topologia, 'sw1', 'fa1', 'access', 10), 'sw1', 'fa2', 'access', 10), 'sw1', 'fa3', 'access', 20), 'sw1', 'fa4', 'access', 20);
+  assert.equal(verificarMissao(x, certo).todosOk, true);
+  const quebrado = porta(porta(x.topologia, 'sw1', 'fa1', 'access', 10), 'sw1', 'fa3', 'access', 20);
+  assert.equal(verificarMissao(x, quebrado).todosOk, false, 'cada setor ficou dividido entre duas VLANs');
+  const mesmaVlan = porta(porta(porta(porta(x.topologia, 'sw1', 'fa1', 'access', 10), 'sw1', 'fa2', 'access', 10), 'sw1', 'fa3', 'access', 10), 'sw1', 'fa4', 'access', 10);
+  assert.equal(verificarMissao(x, mesmaVlan).todosOk, false, 'todos na VLAN 10 continuam sem isolamento');
+});
+
+test('prática: dois andares — VLANs nos PCs mais trunk nos dois lados', () => {
+  const x = m('dois-andares-mesmas-vlans');
+  const vlans = t => porta(porta(porta(porta(t, 'sw1', 'fa1', 'access', 10), 'sw1', 'fa2', 'access', 20), 'sw2', 'fa1', 'access', 10), 'sw2', 'fa2', 'access', 20);
+  const trunk = t => porta(porta(t, 'sw1', 'fa8', 'trunk'), 'sw2', 'fa8', 'trunk');
+  assert.equal(verificarMissao(x, vlans(x.topologia)).todosOk, false, 'sem trunk os andares não se falam');
+  assert.equal(verificarMissao(x, trunk(x.topologia)).todosOk, false, 'trunk sem VLANs não isola');
+  assert.equal(verificarMissao(x, porta(vlans(trunk(x.topologia)), 'sw2', 'fa8', 'access', 1)).todosOk, false, 'trunk só de um lado');
+  const r = verificarMissao(x, vlans(trunk(x.topologia)));
+  assert.equal(r.todosOk, true, JSON.stringify(r.objetivos));
 });

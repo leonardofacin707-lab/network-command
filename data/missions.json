@@ -1,5 +1,131 @@
 [
   {
+    "id": "primeira-rede",
+    "modulo": "missoes",
+    "titulo": "Sua primeira rede local",
+    "dificuldade": 1,
+    "xp": 100,
+    "habilidades": [
+      "fundamentos.pratica",
+      "ip.pratica"
+    ],
+    "cenario": "Três computadores de um escritório novo já estão ligados ao mesmo switch, mas nenhum tem endereço IP. Configure a rede para que todos se comuniquem.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      },
+      {
+        "id": "o3",
+        "de": "pc3",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Computadores na mesma rede precisam de endereços da mesma sub-rede e com a mesma máscara. Cada um precisa de um endereço diferente.",
+      "Por exemplo: 192.168.1.10, 192.168.1.20 e 192.168.1.30, todos com máscara /24. Selecione cada PC e configure a interface eth0."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 130,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 200,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 450,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 700,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "cabo-esquecido",
     "titulo": "O cabo esquecido",
     "dificuldade": 1,
@@ -599,6 +725,310 @@
     ]
   },
   {
+    "id": "duas-redes-um-roteador",
+    "modulo": "missoes",
+    "titulo": "Duas redes, um roteador",
+    "dificuldade": 3,
+    "xp": 250,
+    "habilidades": [
+      "roteamento.pratica",
+      "ip.pratica"
+    ],
+    "cenario": "A matriz e a filial estão ligadas por um roteador novo, mas nada foi configurado: nem os computadores, nem o roteador. Planeje duas redes e deixe os dois PCs se comunicarem.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Cada lado do roteador é uma rede diferente: use uma sub-rede para cada interface (por exemplo 192.168.1.0/24 e 10.0.0.0/24).",
+      "A interface do roteador de cada lado precisa de um endereço da rede daquele lado. Esse endereço é o gateway dos computadores.",
+      "Configure o gateway padrão de cada PC com o endereço da interface do roteador que está ligada à rede dele."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 110,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 790,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 250,
+          "y": 260,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 650,
+          "y": 260,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 450,
+          "y": 400,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": ""
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": ""
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "sw1",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "sw2",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "setores-separados",
+    "modulo": "campus",
+    "titulo": "Setores separados por VLAN",
+    "dificuldade": 2,
+    "xp": 150,
+    "habilidades": [
+      "ethernet-comutacao.pratica"
+    ],
+    "cenario": "Vendas (PC1 e PC2) e financeiro (PC3 e PC4) dividem o mesmo switch e a mesma sub-rede, e hoje todos se enxergam. Separe os setores com VLANs, sem perder a comunicação dentro de cada setor.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc4"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc3",
+        "esperado": "falha"
+      },
+      {
+        "id": "o4",
+        "de": "pc2",
+        "para": "pc4",
+        "esperado": "falha"
+      }
+    ],
+    "dicas": [
+      "Cada setor precisa de uma VLAN própria. Selecione o SW1 e configure o modo e a VLAN de cada porta dos PCs.",
+      "Vendas na VLAN 10 e financeiro na VLAN 20, por exemplo. As duas portas de um mesmo setor devem ficar na mesma VLAN."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 130,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 110,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 330,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.2",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 570,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.3",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "PC4",
+          "x": 790,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.4",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "porta-na-vlan-errada",
     "titulo": "A porta na VLAN errada",
     "dificuldade": 1,
@@ -1064,6 +1494,185 @@
       "ethernet-comutacao.diagnostico",
       "roteamento.diagnostico"
     ]
+  },
+  {
+    "id": "dois-andares-mesmas-vlans",
+    "modulo": "campus",
+    "titulo": "Dois andares, as mesmas VLANs",
+    "dificuldade": 3,
+    "xp": 220,
+    "habilidades": [
+      "ethernet-comutacao.pratica"
+    ],
+    "cenario": "O térreo (SW1) e o primeiro andar (SW2) têm vendas e financeiro cada um. Os setores devem ficar isolados entre si, mas vendas do térreo precisa falar com vendas do andar de cima, e o mesmo vale para o financeiro. Tudo está na VLAN padrão.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc4"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc2",
+        "esperado": "falha"
+      },
+      {
+        "id": "o4",
+        "de": "pc3",
+        "para": "pc4",
+        "esperado": "falha"
+      }
+    ],
+    "dicas": [
+      "Vendas (PC1 e PC3) na VLAN 10 e financeiro (PC2 e PC4) na VLAN 20, nas portas dos PCs dos dois switches.",
+      "O cabo entre os switches precisa levar as duas VLANs ao mesmo tempo. Use o modo trunk nos dois lados.",
+      "Sem o trunk, os setores ficam isolados também entre os andares."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 220,
+          "y": 150,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 680,
+          "y": 150,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 110,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 330,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.2",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 570,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.3",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "PC4",
+          "x": 790,
+          "y": 360,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.4",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "sw1",
+            "p": "fa8"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa8"
+          }
+        }
+      ]
+    }
   },
   {
     "id": "campus-completo",

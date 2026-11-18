@@ -90,6 +90,13 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Os geradores são sementes de uma vez só: depois de gerados, a fonte da verdade é `data/questions.json` (alguns textos de alternativas foram reequilibrados à mão para a resposta certa não ser sempre a mais longa; o teste de preservação 'a resposta certa não se destaca pelo tamanho' continua valendo).
 - ⚠️ Conteúdo escrito por mim a partir do conteúdo do curso; **vale revisar** os enunciados contra o material do NetAcad antes de usar como material de estudo.
 
+### Missões de prática
+- ✅ 4 missões em que o jogador **monta** a rede (não só conserva): *Sua primeira rede local* (IPs de 3 PCs), *Duas redes, um roteador* (interfaces, sub-redes e gateways), *Setores separados por VLAN* e *Dois andares, as mesmas VLANs* (VLAN + trunk). Gerador: `tools/gerar-praticas.mjs` (idempotente, também ordena as missões por aprendizagem).
+- ✅ Novo tipo de objetivo: **isolamento** (`esperado: "falha"`): passa só se o ping NÃO for entregue. As missões de VLAN foram desenhadas para que o isolamento só passe pelo motivo certo (mesma sub-rede, então só a VLAN separa; as comunicações que devem funcionar continuam exigidas).
+- ✅ A árvore de habilidades passa a medir Prática de Fundamentos, IP, Ethernet e comutação e Roteamento (restam sem conteúdo prático: Serviços, Segurança e Troubleshooting).
+- Testes: unitários (cada missão começa quebrada, as soluções passam e variações erradas não) e e2e pela interface (IPs, roteador, VLAN, trunk).
+- 🧪 Continua sendo protótipo: a verificação é por ping (ida e volta); não avalia boas práticas (por exemplo, desperdício de endereços ou VLAN nativa).
+
 ### Problemas conhecidos (testes)
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 

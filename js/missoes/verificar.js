@@ -40,12 +40,16 @@ export function verificarMissao(missao, topologia) {
   const sim = criarSimulacao(topologia);
   const nome = id => dispositivo(topologia, id)?.nome ?? id;
   const objetivos = missao.objetivos.map(o => {
-    const texto = `${nome(o.de)} alcança ${nome(o.para)}`;
+    // esperado: 'falha' = objetivo de isolamento (ex.: setores em VLANs diferentes não devem se alcançar)
+    const isolar = o.esperado === 'falha';
+    const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${nome(o.para)}`;
     if (!dispositivo(topologia, o.de) || !dispositivo(topologia, o.para)) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
     const ip = ipDoDispositivo(topologia, o.para);
     if (ip === null) return { id: o.id, texto, ok: false, motivo: `${nome(o.para)} não tem IP configurado` };
     const r = sim.ping(o.de, ip);
-    return r.status === 'entregue' ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: MOTIVO[r.status] ?? 'sem resposta' };
+    const entregue = r.status === 'entregue';
+    if (isolar) return entregue ? { id: o.id, texto, ok: false, motivo: 'ainda se comunicam, mas deveriam estar isolados' } : { id: o.id, texto, ok: true, motivo: '' };
+    return entregue ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: MOTIVO[r.status] ?? 'sem resposta' };
   });
   return { objetivos, todosOk: objetivos.every(o => o.ok) };
 }
@@ -60,7 +64,7 @@ export function validarMissao(m) {
   const topologia = normalizarTopologia(m.topologia);
   if (!topologia.dispositivos.length) return null;
   const objetivos = (Array.isArray(m.objetivos) ? m.objetivos : []).filter(o => o && typeof o.id === 'string'
-    && dispositivo(topologia, o.de) && dispositivo(topologia, o.para));
+    && dispositivo(topologia, o.de) && dispositivo(topologia, o.para)).map(o => (o.esperado === 'falha' ? { ...o, esperado: 'falha' } : { id: o.id, de: o.de, para: o.para }));
   if (!objetivos.length) return null;
   const xp = Number.isInteger(m.xp) && m.xp > 0 && m.xp <= 1000 ? m.xp : 100;
   return {

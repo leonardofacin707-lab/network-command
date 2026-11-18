@@ -24,11 +24,12 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 5 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 7 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 5);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 5 concluídas/);
-  assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
+  assert.equal(await pagina.locator('.missao').count(), 7);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 7 concluídas/);
+  assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /Sua primeira rede local, Fácil, não iniciada/);
+  assert.match(await pagina.locator('.missao a').nth(1).getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
   assert.deepEqual(erros, []);
   await contexto.close();
@@ -154,8 +155,8 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.locator('#m-verificar').click();
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
-  assert.match(await s.pagina.locator('.missao').first().innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 5 concluídas/);
+  assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 7 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -185,4 +186,37 @@ test('layout no celular: sem rolagem horizontal da página e objetivos legíveis
   const sobra = await pagina.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert.ok(sobra <= 1, `rolagem horizontal de ${sobra}px`);
   await contexto.close();
+});
+
+test('prática: sua primeira rede local — configurar os 3 PCs pela interface conclui; o IP repetido é recusado pelo objetivo', async () => {
+  const s = await abrir('missoes/primeira-rede');
+  const { pagina, disp, erros } = s;
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 3);
+  assert.match(await pagina.locator('#m-objetivos').innerText(), /não tem IP configurado/);
+  await configurar(pagina, disp, 'pc1', { '#cfg-ip-eth0': '192.168.1.10', '#cfg-m-eth0': '/24' });
+  await configurar(pagina, disp, 'pc2', { '#cfg-ip-eth0': '192.168.1.20', '#cfg-m-eth0': '/24' });
+  await configurar(pagina, disp, 'pc3', { '#cfg-ip-eth0': '192.168.1.10', '#cfg-m-eth0': '/24' }); // repetido de propósito
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Ainda há objetivos/);
+  await configurar(pagina, disp, 'pc3', { '#cfg-ip-eth0': '192.168.1.30' });
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+100 XP/);
+  assert.equal((await s.salvo()).missoes['primeira-rede'].xp, 100);
+  assert.deepEqual(erros, []);
+  await s.contexto.close();
+});
+
+test('prática: duas redes, um roteador — IPs, interfaces e gateways pela interface conclui (250 XP)', async () => {
+  const s = await abrir('missoes/duas-redes-um-roteador');
+  const { pagina, disp, erros } = s;
+  await configurar(pagina, disp, 'r1', { '#cfg-ip-gi0': '192.168.1.1', '#cfg-m-gi0': '/24', '#cfg-ip-gi1': '10.0.0.1', '#cfg-m-gi1': '/24' });
+  await configurar(pagina, disp, 'pc1', { '#cfg-ip-eth0': '192.168.1.10', '#cfg-m-eth0': '/24', '#cfg-gw': '192.168.1.1' });
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Ainda há objetivos/);
+  await configurar(pagina, disp, 'pc2', { '#cfg-ip-eth0': '10.0.0.10', '#cfg-m-eth0': '/24', '#cfg-gw': '10.0.0.1' });
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+250 XP/);
+  assert.deepEqual(erros, []);
+  await s.contexto.close();
 });
