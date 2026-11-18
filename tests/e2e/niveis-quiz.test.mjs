@@ -1,4 +1,5 @@
-// Níveis 4 (Dentro do switch), 5 (Endereço IPv4) e 6 (Sub-redes) do quiz: liberação em sequência e jogada completa pela interface.
+// Níveis do quiz acrescentados depois da v0.1 (4 em diante): liberação em sequência e jogada completa pela interface.
+// A lista de níveis vem de data/questions.json, então o teste acompanha os níveis novos.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -11,6 +12,8 @@ before(async () => { servidor = await iniciarServidor(); navegador = await abrir
 after(async () => { await navegador?.close(); await servidor?.fechar(); });
 
 const perguntas = JSON.parse(readFileSync(new URL('../../data/questions.json', import.meta.url), 'utf8'));
+const NOVOS = [...new Set(perguntas.filter(q => q.nivel > 3).map(q => q.nivel))].sort((a, b) => a - b);
+const PROXIMO_EM_BREVE = Math.max(...NOVOS) + 1;
 const exato = t => new RegExp('^\\s*' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$');
 const ESTADO = { versao: 4, perfil: { nome: 'Leonardo', criadoEm: '2026-11-16T10:00:00.000Z' },
   quiz: { melhor: { 1: { pts: 900, estrelas: 3 }, 2: { pts: 900, estrelas: 3 }, 3: { pts: 900, estrelas: 3 } }, historico: [] }, conquistas: {} };
@@ -66,12 +69,12 @@ async function jogar(pagina, nivel) {
   return lerResultado(pagina);
 }
 
-test('os níveis abrem em sequência (5 só depois do 4, 6 só depois do 5); o nível 7 segue "em breve"', async () => {
+test('os níveis abrem em sequência (cada um só depois do anterior); o seguinte ao último jogável segue "em breve"', async () => {
   const { pagina, contexto } = await abrirMapa();
   assert.equal(await pagina.locator('.no[data-nivel="4"]').getAttribute('aria-disabled'), null, 'nível 4 liberado pelo 3');
   assert.equal(await pagina.locator('.no[data-nivel="5"]').getAttribute('aria-disabled'), 'true', 'nível 5 bloqueado');
   assert.equal(await pagina.locator('.no[data-nivel="6"]').getAttribute('aria-disabled'), 'true', 'nível 6 bloqueado');
-  assert.equal(await pagina.locator('.no[data-nivel="7"].st-embreve').count(), 1);
+  assert.equal(await pagina.locator(`.no[data-nivel="${PROXIMO_EM_BREVE}"].st-embreve`).count(), 1);
   for (const n of [5, 6]) {
     await pagina.locator(`.no[data-nivel="${n}"]`).click({ force: true, timeout: 2000 });
     assert.equal(await pagina.locator('.card').count(), 0, `nível ${n} não deve abrir`);
@@ -79,21 +82,19 @@ test('os níveis abrem em sequência (5 só depois do 4, 6 só depois do 5); o n
   await contexto.close();
 });
 
-test('jogada perfeita nos níveis 4, 5 e 6: 900 pontos, 3 estrelas, progresso salvo e nível 7 ainda fechado', async () => {
+test('jogada perfeita em todos os níveis novos: 900 pontos, 3 estrelas, progresso salvo e o próximo ainda "em breve"', async () => {
   const { pagina, erros, salvo, contexto } = await abrirMapa();
-  for (const nivel of [4, 5, 6]) {
+  for (const nivel of NOVOS) {
     const r = await jogar(pagina, nivel);
     assert.deepEqual(r, { pontos: '900 / 900', acertos: '9 de 9', melhor: '900', estrelas: '3 de 3 estrelas' }, `nível ${nivel}`);
   }
   await pagina.locator('[data-acao="mapa"]').first().click();
   await pagina.locator('.no').first().waitFor();
-  assert.equal((await lerHud(pagina)).estrelas, '18 / 18');
+  assert.equal((await lerHud(pagina)).estrelas, `${(3 + NOVOS.length) * 3} / ${(3 + NOVOS.length) * 3}`);
   const e = await salvo();
-  assert.equal(e.quiz.melhor[4].pts, 900);
-  assert.equal(e.quiz.melhor[5].pts, 900);
-  assert.equal(e.quiz.melhor[6].pts, 900);
-  assert.equal(e.quiz.historico.filter(h => h.q.startsWith('ethernet-') || h.q.startsWith('ipv4-') || h.q.startsWith('subnetting-')).length, 27);
-  assert.equal(await pagina.locator('.no[data-nivel="7"].st-embreve').count(), 1);
+  for (const nivel of NOVOS) assert.equal(e.quiz.melhor[nivel].pts, 900, `nível ${nivel}`);
+  assert.equal(e.quiz.historico.length, NOVOS.length * 9);
+  assert.equal(await pagina.locator(`.no[data-nivel="${PROXIMO_EM_BREVE}"].st-embreve`).count(), 1);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

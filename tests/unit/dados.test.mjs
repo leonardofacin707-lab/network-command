@@ -121,7 +121,7 @@ test('a resposta certa não se destaca pelo tamanho (achado 4 da auditoria)', ()
 
 test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem buracos', () => {
   const jogaveis = niveis.filter(n => n.desafios);
-  assert.deepEqual(jogaveis.map(n => n.id), [1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(jogaveis.map(n => n.id), [1, 2, 3, 4, 5, 6, 7]);
   const ids = niveis.map(n => n.id);
   // um nível "em breve" nunca fica antes de um jogável (senão o jogável nunca abriria)
   const primeiroEmBreve = niveis.findIndex(n => !n.desafios);
@@ -132,9 +132,9 @@ test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem
   }
 });
 
-test('níveis 4 a 6: tipos variados e respostas numéricas conferidas', () => {
+test('níveis 4 a 7: tipos variados e respostas numéricas conferidas', () => {
   const porId = new Map(perguntas.map(q => [q.id, q]));
-  for (const nivel of [4, 5, 6]) {
+  for (const nivel of [4, 5, 6, 7]) {
     const tipos = new Set(perguntas.filter(q => q.nivel === nivel).map(q => q.tipo));
     assert.equal(tipos.size, 5, `nível ${nivel} usa os 5 tipos`);
   }
@@ -178,4 +178,25 @@ test('níveis 5 e 6: as contas do quiz batem com o motor IPv4', async () => {
   assert.ok(ip.mesmaRede(ip.lerIPv4('192.168.1.10'), ip.lerIPv4(i9.alternativas[i9.correta]), m(24)));
   i9.alternativas.forEach((a, i) => { if (i !== i9.correta) assert.ok(!ip.mesmaRede(ip.lerIPv4('192.168.1.10'), ip.lerIPv4(a), m(24)), a); });
   for (const [p, m2] of [[8, '255.0.0.0'], [16, '255.255.0.0'], [24, '255.255.255.0'], [25, '255.255.255.128']]) assert.equal(quad(m(p)), m2);
+});
+
+test('nível 7 (IPv6): contas e formatos conferidos', () => {
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  assert.equal(porId.get('ipv6-001').resposta, 8 * 16);
+  assert.equal(porId.get('ipv6-007').resposta, 64);
+  // a forma abreviada correta expande para o endereço completo do enunciado (no máximo um "::")
+  const expandir = t => {
+    assert.ok(!t.includes(':::') && (t.match(/::/g) ?? []).length <= 1, `formato inválido: ${t}`);
+    const [a, b] = t.includes('::') ? t.split('::') : [t, null];
+    const A = a ? a.split(':') : [], B = b ? b.split(':') : [];
+    const meio = b === null ? [] : Array(8 - A.length - B.length).fill('0');
+    return [...A, ...meio, ...B].map(g => g.padStart(4, '0')).join(':');
+  };
+  const q4 = porId.get('ipv6-004');
+  const completo = q4.enunciado.match(/[0-9a-f:]{30,}/)[0];
+  assert.equal(expandir(q4.alternativas[q4.correta]), completo);
+  for (const [i, a] of q4.alternativas.entries()) if (i !== q4.correta) assert.ok(!/^[0-9a-f:]+$/.test(a) || (() => { try { return expandir(a) !== completo; } catch { return true; } })(), a);
+  // 48 + 16 + 64 = 128
+  assert.deepEqual(porId.get('ipv6-009').itens.map(i => Number(i.match(/\((\d+) bits\)/)[1])).reduce((x, y) => x + y), 128);
+  assert.deepEqual(porId.get('ipv6-009').itens.map(i => i.split(' (')[0]), ['Prefixo de roteamento global', 'ID da sub-rede', 'ID da interface']);
 });

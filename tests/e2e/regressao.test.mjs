@@ -2,13 +2,16 @@
 //   ALVO=legacy npm run test:e2e
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { iniciarServidor } from '../helpers/servidor.mjs';
 import { abrirNavegador, novaPagina } from '../helpers/navegador.mjs';
 import { abrirJogo, jogarNivel, lerHud, voltarAoMapa, larguraExcedente, nosSobrepostos } from '../helpers/jogador.mjs';
 
 const ehLegado = process.env.ALVO === 'legacy';
-// Na v0.1 só os níveis 1 a 3 são jogáveis (9 estrelas); a versão atual também tem os níveis 4 a 6 (18 estrelas).
-const ESTRELAS = ehLegado ? 9 : 18;
+// Na v0.1 só os níveis 1 a 3 são jogáveis (9 estrelas); a versão atual também tem os níveis acrescentados depois (data/levels.json).
+const NIVEIS = JSON.parse(readFileSync(new URL('../../data/levels.json', import.meta.url), 'utf8'));
+const JOGAVEIS = NIVEIS.filter(n => n.desafios).length;
+const ESTRELAS = ehLegado ? 9 : JOGAVEIS * 3;
 const ALVO = ehLegado ? '/legacy/index-v0.1.html' : '/index.html';
 let servidor, navegador;
 
@@ -31,7 +34,7 @@ test('jogada perfeita nos 3 níveis: pontos, estrelas, XP e cargo', async () => 
   }
   await voltarAoMapa(pagina);
   assert.deepEqual(await lerHud(pagina), { cargo: 'Técnico de redes', xp: '2.700', estrelas: `9 / ${ESTRELAS}` });
-  assert.equal(await pagina.locator('.no.st-embreve').count(), ehLegado ? 9 : 6, 'os demais níveis seguem como "em breve"');
+  assert.equal(await pagina.locator('.no.st-embreve').count(), ehLegado ? 9 : NIVEIS.length - JOGAVEIS, 'os demais níveis seguem como "em breve"');
   assert.deepEqual(erros, []);
   await contexto.close();
 });
