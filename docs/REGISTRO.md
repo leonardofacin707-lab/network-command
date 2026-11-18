@@ -45,7 +45,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ IPv4 (rede, broadcast, hosts úteis, classe), switch (domínio L2 com varredura), ARP com cache, roteador com rotas das redes conectadas, TTL (PC 128, roteador 255), caminho de volta separado do de ida, conflito de IP.
 - ✅ Terminal: `ipconfig [/all]`, `ping [-n N] destino`, `tracert`, `arp -a`, `hostname`, `help`, `cls`; histórico com setas ↑/↓. Saída no estilo do Windows em português.
 - 🧪 **Não simulado**: latência e perda aleatória, VLANs, rotas estáticas/dinâmicas, DHCP, NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
-- ✅ 60+ testes unitários do motor e 10 e2e do laboratório.
+- ✅ 49 testes unitários do motor (IPv4, topologia, motor, terminal, diagnóstico) e 10 e2e do laboratório.
 
 ## Fase 5 — Missões de troubleshooting 🧪
 
