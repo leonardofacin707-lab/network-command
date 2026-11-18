@@ -187,7 +187,24 @@
     "id": 9,
     "nome": "ARP e roteamento",
     "icone": "roteador",
-    "modulos": "Módulos 13 e 14"
+    "modulos": "Módulos 13 e 14",
+    "categoria": "roteamento",
+    "resumo": [
+      "ARP: como o host descobre o MAC dentro da rede",
+      "Gateway padrão e o MAC usado para sair da rede",
+      "Tabela de rotas, prefixo mais longo e TTL"
+    ],
+    "desafios": [
+      "arp-001",
+      "arp-002",
+      "arp-003",
+      "roteamento-001",
+      "roteamento-002",
+      "roteamento-003",
+      "roteamento-004",
+      "roteamento-005",
+      "roteamento-006"
+    ]
   },
   {
     "id": 10,

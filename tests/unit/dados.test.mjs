@@ -207,3 +207,22 @@ test('nível 8 (DHCP e NAT): ordem do DORA e porta do servidor', () => {
   assert.equal(porId.get('dhcp-004').resposta, 67);
   assert.equal(niveis.find(n => n.id === 8).desafios.length, 9);
 });
+
+test('nível 9 (ARP e roteamento): rota mais específica, TTL e direto/gateway conferidos com o motor IPv4', async () => {
+  const ip = await import('../../js/sim/ipv4.js');
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  assert.equal(niveis.find(n => n.id === 9).desafios.length, 9);
+  assert.equal(porId.get('roteamento-001').resposta, 64 - 3);
+  // prefixo mais longo entre as rotas do enunciado
+  const destino = ip.lerIPv4('10.1.1.5');
+  const rotas = ['10.0.0.0/8', '10.1.1.0/24', '0.0.0.0/0'].map(r => { const [rede, p] = r.split('/'); return { r, p: Number(p), rede: ip.lerIPv4(rede) }; });
+  const casam = rotas.filter(x => ip.enderecoDeRede(destino, ip.mascaraDePrefixo(x.p)) === x.rede);
+  assert.equal(casam.length, 3, 'as três rotas correspondem');
+  const q3 = porId.get('roteamento-003');
+  assert.match(q3.alternativas[q3.correta], new RegExp('^' + casam.sort((a, b) => b.p - a.p)[0].r.replace(/\./g, '\\.')));
+  // destinos na mesma rede do host /24 vão direto; os demais, ao gateway
+  const q4 = porId.get('roteamento-004');
+  const host = ip.lerIPv4('192.168.1.10'), m24 = ip.mascaraDePrefixo(24);
+  for (const it of q4.itens) assert.equal(ip.mesmaRede(host, ip.lerIPv4(it.texto), m24) ? 0 : 1, it.grupo, it.texto);
+  assert.deepEqual(porId.get('arp-002').itens.map(i => i[0]), ['A', 'B', 'A', 'A']);
+});
