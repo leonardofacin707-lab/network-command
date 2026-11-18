@@ -21,7 +21,7 @@ export function desenharMapa({ app, catalogo, store }) {
     </section>
     <section class="band">
       <div class="info">
-        ${prox ? proximoHTML(prox) : fimHTML()}
+        ${prox ? proximoHTML(prox) : fimHTML(niveis)}
         <div class="painel">
           <h2>Como jogar</h2>
           <ul>
@@ -59,11 +59,14 @@ function proximoHTML(n) {
   </div>`;
 }
 
-function fimHTML() {
+function fimHTML(niveis) {
+  const faltam = niveis.some(n => !n.desafios);
   return `<div class="painel">
-    <h2>Caminho liberado até aqui</h2>
-    <p>Você completou todos os níveis disponíveis. Os próximos dispositivos do caminho (do switch ao diagnóstico final) chegam nas próximas fases.</p>
-    <p>Enquanto isso, tente fazer 3 estrelas em todos os níveis.</p>
+    <h2>${faltam ? 'Caminho liberado até aqui' : 'Mapa completo'}</h2>
+    <p>${faltam
+      ? 'Você completou todos os níveis disponíveis. Os próximos dispositivos do caminho chegam nas próximas fases.'
+      : 'Você passou por todos os níveis do mapa.'}</p>
+    <p>${faltam ? 'Enquanto isso, tente' : 'Agora tente'} fazer 3 estrelas em todos os níveis e use o Laboratório, as Missões e o Campus para praticar.</p>
   </div>`;
 }
 

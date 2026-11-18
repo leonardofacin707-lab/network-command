@@ -261,3 +261,15 @@ test('nível 12 (chefão de diagnóstico): método em 6 etapas, camada do LED e 
   // cada camada aparece uma vez no "sintoma e camada"
   assert.deepEqual(porId.get('troubleshooting-003').itens.map(i => i.grupo), [0, 1, 2, 3]);
 });
+
+test('nível 13 (bônus: segurança): ícone existe, não renumera os anteriores e cobre a categoria seguranca', async () => {
+  const { ICONES } = await import('../../js/quiz/icones.js');
+  const n13 = niveis.find(n => n.id === 13);
+  assert.equal(n13.desafios.length, 9);
+  assert.ok(ICONES[n13.icone], 'ícone do nível 13');
+  for (const n of niveis) assert.ok(ICONES[n.icone], `ícone do nível ${n.id}`);
+  assert.ok(perguntas.filter(q => q.nivel === 13).every(q => q.categoria === 'seguranca' && q.habilidade === 'seguranca.teoria'));
+  assert.deepEqual(niveis.slice(0, 12).map(n => n.id), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], 'o chefão continua sendo o nível 12');
+  assert.equal(porIdPergunta('seguranca-007').resposta, 3);
+  function porIdPergunta(id) { return perguntas.find(q => q.id === id); }
+});

@@ -274,5 +274,28 @@
       "troubleshooting-008",
       "troubleshooting-009"
     ]
+  },
+  {
+    "id": 13,
+    "nome": "Bônus: segurança",
+    "icone": "escudo",
+    "modulos": "Bônus",
+    "categoria": "seguranca",
+    "resumo": [
+      "Malware, engenharia social e ataques à rede",
+      "Firewall, VPN, senhas e autenticação em duas etapas",
+      "Confidencialidade, integridade e disponibilidade"
+    ],
+    "desafios": [
+      "seguranca-001",
+      "seguranca-002",
+      "seguranca-003",
+      "seguranca-004",
+      "seguranca-005",
+      "seguranca-006",
+      "seguranca-007",
+      "seguranca-008",
+      "seguranca-009"
+    ]
   }
 ]

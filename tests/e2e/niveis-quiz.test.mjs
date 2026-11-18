@@ -94,6 +94,8 @@ test('jogada perfeita em todos os níveis novos: 900 pontos, 3 estrelas, progres
   await pagina.locator('[data-acao="mapa"]').first().click();
   await pagina.locator('.no').first().waitFor();
   assert.equal((await lerHud(pagina)).estrelas, `${(3 + NOVOS.length) * 3} / ${(3 + NOVOS.length) * 3}`);
+  // sem nenhum nível "em breve" e todos feitos, o painel do mapa mostra o fim do caminho
+  assert.match(await pagina.locator('.info .painel').first().innerText(), EM_BREVE_ESPERADO ? /Caminho liberado até aqui/ : /Mapa completo/);
   const e = await salvo();
   for (const nivel of NOVOS) assert.equal(e.quiz.melhor[nivel].pts, 900, `nível ${nivel}`);
   assert.equal(e.quiz.historico.length, NOVOS.length * 9);
