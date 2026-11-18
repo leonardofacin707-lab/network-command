@@ -102,11 +102,11 @@ export function criarEditor(raiz, opcoes) {
     }
     const ligado = vizinhos(topo, d.id).length > 0;
     return `<g class="disp tipo-${d.tipo}${sel === d.id ? ' sel' : ''}${origemCabo === d.id ? ' origem' : ''}" data-id="${d.id}" transform="translate(${d.x} ${d.y})"
-        role="button" tabindex="0" aria-label="${esc(d.nome)}, ${TIPO_ROTULO[d.tipo]}${ips.length ? ', ' + ips.join(', ') : ', sem IP'}${ligado ? '' : ', sem cabo'}">
+        role="button" tabindex="0" aria-label="${esc(d.nome)}${ips.length ? ' ' + ips.join(' ') : ''}, ${TIPO_ROTULO[d.tipo]}${ips.length ? '' : ', sem IP'}${ligado ? '' : ', sem cabo'}">
       <rect class="area" x="-48" y="-40" width="96" height="104" rx="10"/>
       <g class="icone">${ICONE[d.tipo]}</g>
       <text class="nome" y="${d.tipo === 'roteador' ? 46 : 42}">${esc(d.nome)}</text>
-      ${ips.map((ip, i) => `<text class="ip" y="${(d.tipo === 'roteador' ? 60 : 56) + i * 13}">${esc(ip)}</text>`).join('')}
+      ${ips.map((ip, i) => `<text class="ip" y="${(d.tipo === 'roteador' ? 60 : 56) + i * 13}">${esc(ip)}</text>`).join('\n      ')}
     </g>`;
   }
 

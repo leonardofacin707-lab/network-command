@@ -31,7 +31,7 @@ function montarLista(raiz, store, projetos) {
         const s = estado.empresa[p.id];
         const iniciado = s && (Object.keys(s.prefixos).length || Object.keys(s.equip).length);
         const sit = s?.concluida ? `Aprovado · +${s.xp} XP` : iniciado ? 'Em andamento' : 'Não iniciado';
-        return `<li class="missao ${s?.concluida ? 'feita' : iniciado ? 'andamento' : 'nova'}"><a href="#/empresa/${p.id}" aria-label="${esc(p.titulo)}, ${NIVEL[p.dificuldade]}, ${sit}">
+        return `<li class="missao ${s?.concluida ? 'feita' : iniciado ? 'andamento' : 'nova'}"><a href="#/empresa/${p.id}">
           <b>${esc(p.titulo)}</b><span class="meta">${NIVEL[p.dificuldade]} · ${p.xp} XP · orçamento R$ ${brl(p.orcamento)}</span><span class="situacao">${sit}</span></a></li>`;
       }).join('')}</ul></div></section>`;
   };

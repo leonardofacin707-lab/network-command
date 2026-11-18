@@ -209,7 +209,7 @@ test('topologia salva corrompida não derruba a página', async () => {
 test('dispositivos são operáveis por teclado e têm nome acessível', async () => {
   const { pagina, disp, contexto } = await abrirLab();
   await pagina.locator('[data-acao="ex-lan"]').click();
-  assert.match(await disp('pc1').getAttribute('aria-label'), /PC1, computador, 192\.168\.1\.10/);
+  assert.match(await disp('pc1').getAttribute('aria-label'), /PC1 192\.168\.1\.10, computador/);
   assert.match(await disp('sw1').getAttribute('aria-label'), /SW1, switch, sem IP/);
   await disp('pc2').focus();
   await pagina.keyboard.press('Enter');

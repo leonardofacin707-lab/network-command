@@ -42,7 +42,7 @@ function noHTML(n, st, m) {
   const travado = st === 'bloqueado' || st === 'embreve';
   const rodape = st === 'embreve' ? 'em breve' : st === 'bloqueado' ? 'bloqueado' : estrelasTexto(m ? m.estrelas : 0);
   return `<button class="no st-${st}" data-nivel="${n.id}" ${travado ? 'aria-disabled="true"' : ''}
-            aria-label="Nível ${n.id}: ${esc(n.nome)} (${rodape})">
+            aria-label="Nível ${n.id} ${esc(n.nome)} ${rodape}">
     <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[n.icone]}</svg><span class="num">${n.id}</span></span>
     <span class="nome">${esc(n.nome)}</span>
     <span class="est">${rodape}</span>

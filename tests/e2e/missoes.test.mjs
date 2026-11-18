@@ -28,8 +28,9 @@ test('lista: 21 missões, todas não iniciadas, com acesso por teclado e nome ac
   const { pagina, erros, contexto } = await abrir();
   assert.equal(await pagina.locator('.missao').count(), 21);
   assert.match(await pagina.locator('#app').innerText(), /0 de 21 concluídas/);
-  assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /Sua primeira rede local, Fácil, não iniciada/);
-  assert.match(await pagina.locator('.missao a').nth(1).getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
+  assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
+  assert.match(await pagina.locator('.missao a').nth(1).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
+  assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
   assert.deepEqual(erros, []);
   await contexto.close();

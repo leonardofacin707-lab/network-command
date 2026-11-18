@@ -32,7 +32,7 @@ function montarLista(raiz, store, desafios) {
         const s = estado.datacenter[d.id];
         const iniciado = s && Object.keys(s.unidades).length;
         const sit = s?.concluida ? `Aprovado · +${s.xp} XP` : iniciado ? 'Em andamento' : 'Não iniciado';
-        return `<li class="missao ${s?.concluida ? 'feita' : iniciado ? 'andamento' : 'nova'}"><a href="#/datacenter/${d.id}" aria-label="${esc(d.titulo)}, ${NIVEL[d.dificuldade]}, ${sit}">
+        return `<li class="missao ${s?.concluida ? 'feita' : iniciado ? 'andamento' : 'nova'}"><a href="#/datacenter/${d.id}">
           <b>${esc(d.titulo)}</b><span class="meta">${NIVEL[d.dificuldade]} · ${d.xp} XP · meta ${pctTxt(d.sla)}</span><span class="situacao">${sit}</span></a></li>`;
       }).join('')}</ul></div></section>`;
   };

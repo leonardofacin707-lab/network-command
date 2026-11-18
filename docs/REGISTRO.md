@@ -138,6 +138,12 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - 🔧 Lista "Prática" do dashboard tinha recuo extra.
 - 🔧 Painel do roteador (rotas estáticas e filtro de pacotes): as tabelas estouravam a largura (botão "Remover" cortado, colunas esmagadas no celular); agora cada rota/regra é um cartão de uma linha com os botões ao lado ou abaixo, sem rolagem horizontal.
 
+### Auditoria de acessibilidade (axe-core)
+- ✅ Rodei o axe-core (instalado **fora** do projeto, só para auditar; não é dependência) em 13 telas (dashboard, quiz, laboratório, missões, campus, empresa, data center, árvore, conquistas, perfil e três missões com dispositivo selecionado), em 1280 px e 390 px, com as regras padrão.
+- 🔧 Único tipo de problema achado: **nome acessível que não contém o texto visível** (WCAG 2.5.3). Corrigido: os cartões de missão/projeto/data center passaram a usar o próprio texto como nome (sem `aria-label`); os nós do mapa do quiz e os dispositivos do laboratório começam pelo texto visível (por exemplo, "PC1 192.168.1.10, computador").
+- ✅ Resultado final: 0 violações. Contraste: sem violações; os itens "incompletos" do axe são ícones sem texto e textos em SVG sobre retângulos sobrepostos (o axe não consegue calcular o fundo).
+- 🧪 Não substitui um teste com leitor de tela de verdade nem uma auditoria manual completa.
+
 ### Problemas conhecidos (testes)
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 

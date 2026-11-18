@@ -35,7 +35,7 @@ function montarLista(raiz, store, missoes, cfg) {
       <ul class="lista-missoes">${missoes.map(m => {
         const s = estado.missoes[m.id];
         const estado_ = s?.concluida ? 'feita' : s && JSON.stringify(s.topologia) !== JSON.stringify(m.topologia) ? 'andamento' : 'nova';
-        return `<li class="missao ${estado_}"><a href="#/${cfg.id}/${m.id}" aria-label="${esc(m.titulo)}, ${NIVEL[m.dificuldade]}, ${s?.concluida ? 'concluída' : estado_ === 'andamento' ? 'em andamento' : 'não iniciada'}">
+        return `<li class="missao ${estado_}"><a href="#/${cfg.id}/${m.id}">
           <b>${esc(m.titulo)}</b>
           <span class="meta">${NIVEL[m.dificuldade]} · ${m.xp} XP</span>
           <span class="situacao">${s?.concluida ? `Concluída · +${s.xp} XP` : estado_ === 'andamento' ? 'Em andamento' : 'Não iniciada'}</span>
