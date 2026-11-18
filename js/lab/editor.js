@@ -2,7 +2,7 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns } from '../sim/topologia.js';
 import { criarSimulacao } from '../sim/motor.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
@@ -141,13 +141,21 @@ export function criarEditor(raiz, opcoes) {
       <label for="cfg-nome">Nome</label><input id="cfg-nome" class="campo" name="nome" maxlength="15" value="${esc(d.nome)}" autocomplete="off">
       ${d.tipo === 'pc' ? `<div class="iface-dhcp"><label class="opcao"><input type="checkbox" id="cfg-dhcp" name="dhcp"${d.dhcp ? ' checked' : ''}> Obter endereço automaticamente (DHCP)</label>
         ${d.dhcp ? infoConcessao(d) : '<p class="motivo">Desmarcado: use os endereços fixos abaixo.</p>'}</div>` : ''}
-      ${d.interfaces.map(i => `<fieldset class="iface"${d.dhcp ? ' disabled' : ''}><legend>${esc(rotuloDaPorta(d, i.id))}</legend>
+      ${d.interfaces.map(i => `<fieldset class="iface"${d.tipo === 'pc' ? ' data-fixo' : ''}${d.dhcp ? ' disabled' : ''}><legend>${esc(rotuloDaPorta(d, i.id))}</legend>
         <label for="cfg-ip-${i.id}">Endereço IPv4</label><input id="cfg-ip-${i.id}" class="campo" name="ip-${i.id}" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.10" value="${esc(i.ip)}">
         <label for="cfg-m-${i.id}">Máscara</label><input id="cfg-m-${i.id}" class="campo" name="m-${i.id}" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24" value="${esc(i.mascara)}">
         ${d.tipo === 'roteador' ? `<label for="cfg-pool-ini-${i.id}">Pool DHCP: primeiro endereço</label><input id="cfg-pool-ini-${i.id}" class="campo" name="pool-ini-${i.id}" inputmode="decimal" autocomplete="off" placeholder="vazio = sem DHCP nesta interface" value="${esc(poolDe(d, i.id)?.inicio ?? '')}">
         <label for="cfg-pool-fim-${i.id}">Pool DHCP: último endereço</label><input id="cfg-pool-fim-${i.id}" class="campo" name="pool-fim-${i.id}" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.200" value="${esc(poolDe(d, i.id)?.fim ?? '')}">` : ''}
       </fieldset>`).join('')}
-      ${d.tipo === 'pc' ? `<fieldset class="iface"${d.dhcp ? ' disabled' : ''}><legend>Gateway</legend><label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}"></fieldset>` : ''}
+      ${d.tipo === 'pc' ? `<fieldset class="iface" data-fixo${d.dhcp ? ' disabled' : ''}><legend>Gateway</legend><label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}"></fieldset>` : ''}
+      ${d.tipo === 'pc' ? `<fieldset class="iface" id="dns-pc"><legend>DNS</legend>
+        <label for="cfg-dns">Servidor DNS (IP)</label><input id="cfg-dns" class="campo" name="dns" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.50" value="${esc(d.dns ?? '')}">
+        <p class="motivo">O DHCP simplificado não entrega o servidor DNS: informe-o aqui, mesmo com DHCP ligado.</p>
+        <h4>Este computador como servidor DNS</h4>
+        ${(d.registros ?? []).length ? `<ol class="regras" aria-label="Registros DNS de ${esc(d.nome)}">${d.registros.map((r, i) => `<li class="regra"><span class="regra-txt">${esc(r.nome)} <b>→</b> ${esc(r.ip)}</span>
+          <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-registro="${i}" aria-label="Remover o registro ${esc(r.nome)}">Remover</button></span></li>`).join('')}</ol>` : '<p>Sem registros: este computador não responde consultas DNS.</p>'}
+        <label for="cfg-reg-nome">Novo registro: nome</label><input id="cfg-reg-nome" class="campo" name="reg-nome" autocomplete="off" spellcheck="false" placeholder="ex.: www.loja.local">
+        <label for="cfg-reg-ip">Novo registro: endereço IP</label><input id="cfg-reg-ip" class="campo" name="reg-ip" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.60"></fieldset>` : ''}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="rotas-estaticas"><legend>Rotas estáticas</legend>
         ${(d.rotas ?? []).length ? `<ol class="regras" aria-label="Rotas estáticas de ${esc(d.nome)}">${d.rotas.map((r, i) => `<li class="regra"><span class="regra-txt">${esc(redePrefixo(r.rede, r.mascara))} <b>via</b> ${esc(r.via)}</span>
           <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-rota="${i}" aria-label="Remover a rota para ${esc(r.rede)}">Remover</button></span></li>`).join('')}</ol>` : '<p>Nenhuma rota estática. O roteador só conhece as redes ligadas diretamente a ele.</p>'}
@@ -302,6 +310,8 @@ export function criarEditor(raiz, opcoes) {
       aplicar({ topologia: topologiaVazia() }, 'Área de trabalho limpa.');
       $('#lab-limpar').innerHTML = '<button class="btn-sec" data-acao="limpar">Limpar tudo</button>';
       renderTerm();
+    } else if (b.dataset.removerRegistro !== undefined) {
+      aplicar(removerRegistroDns(topo, sel, Number(b.dataset.removerRegistro)), 'Registro removido.');
     } else if (b.dataset.removerFiltro !== undefined) {
       aplicar(removerFiltro(topo, sel, Number(b.dataset.removerFiltro)), 'Regra removida.');
     } else if (b.dataset.moverFiltro !== undefined) {
@@ -319,7 +329,7 @@ export function criarEditor(raiz, opcoes) {
 
   raiz.addEventListener('change', e => {
     if (e.target.id !== 'cfg-dhcp') return;
-    for (const fs of raiz.querySelectorAll('#form-cfg fieldset.iface:not(#rotas-estaticas)')) fs.disabled = e.target.checked;
+    for (const fs of raiz.querySelectorAll('#form-cfg fieldset[data-fixo]')) fs.disabled = e.target.checked;
   }, { signal });
 
   raiz.addEventListener('submit', e => {
@@ -336,6 +346,11 @@ export function criarEditor(raiz, opcoes) {
       }
       if (alvoCfg.tipo === 'roteador' && f.get('filtro-acao')) {
         passos.push(t => adicionarFiltro(t, sel, { acao: f.get('filtro-acao'), origem: f.get('filtro-o'), origemM: f.get('filtro-om'), destino: f.get('filtro-d'), destinoM: f.get('filtro-dm') }));
+      }
+      if (alvoCfg.tipo === 'pc') {
+        passos.push(t => configurarDnsPc(t, sel, f.get('dns')));
+        const nomeReg = String(f.get('reg-nome') ?? '').trim(), ipReg = String(f.get('reg-ip') ?? '').trim();
+        if (nomeReg || ipReg) passos.push(t => adicionarRegistroDns(t, sel, { nome: nomeReg, ip: ipReg }));
       }
       if (alvoCfg.tipo === 'roteador') for (const i of alvoCfg.interfaces) passos.push(t => configurarPoolDhcp(t, sel, i.id, { inicio: f.get(`pool-ini-${i.id}`), fim: f.get(`pool-fim-${i.id}`) }));
       if (dispositivo(topo, sel).tipo === 'roteador') {

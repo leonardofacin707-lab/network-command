@@ -149,6 +149,44 @@ export function removerRotaEstatica(t, id, indice) {
   return { topologia: trocar(t, id, x => ({ ...x, rotas: x.rotas.filter((_, i) => i !== indice) })) };
 }
 
+/** Máximo de registros A (nome → IP) no serviço DNS de um computador. */
+export const MAX_REGISTROS_DNS = 12;
+const NOME_DNS = /^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?){0,3}$/;
+
+/** Define (ou limpa, se vazio) o servidor DNS configurado num computador cliente. */
+export function configurarDnsPc(t, id, dns) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores têm servidor DNS configurado.' };
+  const txt = String(dns ?? '').trim();
+  if (!txt) return { topologia: trocar(t, id, x => { const { dns: _, ...resto } = x; return resto; }) };
+  const n = lerIPv4(txt);
+  if (n === null) return { erro: 'Servidor DNS inválido. Use quatro números de 0 a 255 separados por ponto.' };
+  return { topologia: trocar(t, id, x => ({ ...x, dns: formatarIPv4(n) })) };
+}
+
+/** Acrescenta um registro A (nome → IP) ao serviço DNS de um computador, que passa a funcionar como servidor DNS. */
+export function adicionarRegistroDns(t, id, { nome, ip }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores podem ser servidores DNS nesta simulação.' };
+  const nomeL = String(nome ?? '').trim().toLowerCase();
+  if (!NOME_DNS.test(nomeL)) return { erro: 'Nome inválido. Use letras, números e hífen, separados por pontos (ex.: www.loja.local).' };
+  const ipN = lerIPv4(String(ip ?? '').trim());
+  if (ipN === null) return { erro: 'Endereço do registro inválido. Use quatro números de 0 a 255 separados por ponto.' };
+  const regs = d.registros ?? [];
+  if (regs.some(r => r.nome === nomeL)) return { erro: 'Já existe um registro com esse nome. Remova o antigo para trocar o endereço.' };
+  if (regs.length >= MAX_REGISTROS_DNS) return { erro: `Limite de ${MAX_REGISTROS_DNS} registros por servidor.` };
+  return { topologia: trocar(t, id, x => ({ ...x, registros: [...regs, { nome: nomeL, ip: formatarIPv4(ipN) }] })) };
+}
+
+export function removerRegistroDns(t, id, indice) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc' || !Number.isInteger(indice) || indice < 0 || indice >= (d.registros ?? []).length) return { erro: 'Registro não encontrado.' };
+  return { topologia: trocar(t, id, x => {
+    const regs = x.registros.filter((_, i) => i !== indice), { registros: _, ...resto } = x;
+    return regs.length ? { ...resto, registros: regs } : resto;
+  }) };
+}
+
 /** Máximo de regras de filtro por roteador. */
 export const MAX_FILTROS = 12;
 
@@ -289,6 +327,18 @@ export function normalizarTopologia(bruto) {
     };
     if (b.tipo === 'pc') { const g = lerIPv4(b.gateway); d.gateway = g === null ? '' : formatarIPv4(g); }
     if (b.tipo === 'pc' && b.dhcp === true) d.dhcp = true;
+    if (b.tipo === 'pc') {
+      const dnsN = lerIPv4(b.dns);
+      if (dnsN !== null) d.dns = formatarIPv4(dnsN);
+      const regs = [];
+      for (const r of Array.isArray(b.registros) ? b.registros : []) {
+        if (regs.length >= MAX_REGISTROS_DNS || !r || typeof r !== 'object' || typeof r.nome !== 'string') continue;
+        const nomeR = r.nome.trim().toLowerCase(), ipN = lerIPv4(r.ip);
+        if (!NOME_DNS.test(nomeR) || ipN === null || regs.some(x => x.nome === nomeR)) continue;
+        regs.push({ nome: nomeR, ip: formatarIPv4(ipN) });
+      }
+      if (regs.length) d.registros = regs;
+    }
     if (b.tipo === 'roteador') {
       d.rotas = [];
       for (const r of Array.isArray(b.rotas) ? b.rotas : []) {

@@ -10,6 +10,13 @@ export function calcularXp(base, dicas) {
   return Math.round(base * Math.max(XP_MINIMO, 1 - PENALIDADE_DICA * dicas));
 }
 
+const MOTIVO_DNS = {
+  'sem-dns': 'o computador não tem servidor DNS configurado',
+  'dns-inalcancavel': 'o servidor DNS configurado não responde',
+  'dns-sem-servico': 'o endereço configurado como DNS não é um servidor DNS',
+  'nome-inexistente': 'o servidor DNS não conhece esse nome'
+};
+
 const MOTIVO = {
   'sem-ip': 'a origem não tem IP configurado',
   'sem-link': 'a origem está sem cabo',
@@ -43,10 +50,18 @@ export function verificarMissao(missao, topologia) {
   const objetivos = missao.objetivos.map(o => {
     // esperado: 'falha' = objetivo de isolamento (ex.: setores em VLANs diferentes não devem se alcançar)
     const isolar = o.esperado === 'falha';
-    const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${nome(o.para)}`;
-    if (!dispositivo(topologia, o.de) || !dispositivo(topologia, o.para)) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
-    const ip = ipDoDispositivo(sim.topologia, o.para); // com as concessões DHCP
-    if (ip === null) return { id: o.id, texto, ok: false, motivo: `${nome(o.para)} não tem IP configurado` };
+    const porNome = typeof o.nome === 'string'; // objetivo "de alcança o nome X": resolve pelo DNS e depois faz o ping
+    const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${porNome ? `${o.nome} (pelo nome)` : nome(o.para)}`;
+    if (!dispositivo(topologia, o.de) || (!porNome && !dispositivo(topologia, o.para))) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
+    let ip;
+    if (porNome) {
+      const res = sim.resolver(o.de, o.nome);
+      if (!res.ok) return isolar ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: MOTIVO_DNS[res.motivo] };
+      ip = res.ip;
+    } else {
+      ip = ipDoDispositivo(sim.topologia, o.para); // com as concessões DHCP
+      if (ip === null) return { id: o.id, texto, ok: false, motivo: `${nome(o.para)} não tem IP configurado` };
+    }
     const r = sim.ping(o.de, ip);
     const entregue = r.status === 'entregue';
     if (isolar) return entregue ? { id: o.id, texto, ok: false, motivo: 'ainda se comunicam, mas deveriam estar isolados' } : { id: o.id, texto, ok: true, motivo: '' };
@@ -64,8 +79,12 @@ export function validarMissao(m) {
   if (typeof m.titulo !== 'string' || typeof m.cenario !== 'string') return null;
   const topologia = normalizarTopologia(m.topologia);
   if (!topologia.dispositivos.length) return null;
+  const nomeValido = n => typeof n === 'string' && /^[a-z0-9]([a-z0-9.-]{0,60}[a-z0-9])?$/.test(n);
   const objetivos = (Array.isArray(m.objetivos) ? m.objetivos : []).filter(o => o && typeof o.id === 'string'
-    && dispositivo(topologia, o.de) && dispositivo(topologia, o.para)).map(o => (o.esperado === 'falha' ? { ...o, esperado: 'falha' } : { id: o.id, de: o.de, para: o.para }));
+    && dispositivo(topologia, o.de) && (dispositivo(topologia, o.para) || nomeValido(o.nome))).map(o => {
+    const base = nomeValido(o.nome) && !dispositivo(topologia, o.para) ? { id: o.id, de: o.de, nome: o.nome } : { id: o.id, de: o.de, para: o.para };
+    return o.esperado === 'falha' ? { ...base, esperado: 'falha' } : base;
+  });
   if (!objetivos.length) return null;
   const xp = Number.isInteger(m.xp) && m.xp > 0 && m.xp <= 1000 ? m.xp : 100;
   return {

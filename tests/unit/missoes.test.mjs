@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro } from '../../js/sim/topologia.js';
+import { conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 18);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 21);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -322,4 +322,45 @@ test('dois sites, quatro defeitos: só consertando os quatro todos os objetivos 
   const combinacoes = [[pool], [rota], [filtro], [gwSrv], [pool, rota, filtro], [pool, rota, gwSrv], [pool, filtro, gwSrv], [rota, filtro, gwSrv]];
   for (const c of combinacoes) assert.equal(verificarMissao(x, c.reduce((t, f) => f(t), t0)).todosOk, false, `faltando um defeito (${c.length} correções)`);
   assert.equal(verificarMissao(x, [pool, rota, filtro, gwSrv].reduce((t, f) => f(t), t0)).todosOk, true);
+});
+
+// ---- Missões de DNS ----
+test('objetivo por nome: texto e motivos de falha vêm do DNS', () => {
+  const x = m('dns-ping-no-nome');
+  const r = verificarMissao(x, x.topologia);
+  assert.equal(r.objetivos[0].texto, 'Cliente1 alcança www.loja.local (pelo nome)');
+  assert.equal(r.objetivos[0].motivo, 'o computador não tem servidor DNS configurado');
+  assert.equal(verificarMissao(x, ok(configurarDnsPc(x.topologia, 'pc1', '192.168.1.50'))).todosOk, true);
+  assert.equal(verificarMissao(x, ok(configurarDnsPc(x.topologia, 'pc1', '192.168.1.99'))).objetivos[0].motivo, 'o servidor DNS configurado não responde');
+  assert.equal(verificarMissao(x, ok(configurarDnsPc(x.topologia, 'pc1', '192.168.1.60'))).objetivos[0].motivo, 'o endereço configurado como DNS não é um servidor DNS');
+});
+
+test('registro errado: o nome resolve mas o ping falha; trocar o registro resolve', () => {
+  const x = m('dns-registro-errado');
+  const antes = verificarMissao(x, x.topologia);
+  assert.equal(antes.todosOk, false);
+  assert.equal(antes.objetivos[0].motivo, 'ninguém respondeu na rede local');
+  const certo = ok(adicionarRegistroDns(ok(removerRegistroDns(x.topologia, 'pc2', 0)), 'pc2', { nome: 'www.loja.local', ip: '192.168.1.60' }));
+  assert.equal(verificarMissao(x, certo).todosOk, true);
+  assert.equal(verificarMissao(x, ok(adicionarRegistroDns(x.topologia, 'pc2', { nome: 'outro.loja.local', ip: '192.168.1.60' }))).todosOk, false, 'registro novo não troca o errado');
+});
+
+test('DNS da empresa: precisa dos dois registros e do DNS nos dois clientes', () => {
+  const x = m('dns-da-empresa');
+  const reg = (t, nome, ip) => ok(adicionarRegistroDns(t, 'pc3', { nome, ip }));
+  const dns = (t, id) => ok(configurarDnsPc(t, id, '192.168.1.50'));
+  const registros = reg(reg(x.topologia, 'intranet.empresa.local', '192.168.1.60'), 'arquivos.empresa.local', '192.168.1.70');
+  assert.equal(verificarMissao(x, x.topologia).objetivos.every(o => !o.ok), true);
+  assert.equal(verificarMissao(x, dns(dns(x.topologia, 'pc1'), 'pc2')).todosOk, false, 'só clientes');
+  assert.equal(verificarMissao(x, registros).todosOk, false, 'só registros');
+  assert.deepEqual(verificarMissao(x, dns(registros, 'pc1')).objetivos.map(o => o.ok), [true, false, true, false], 'só o cliente 1');
+  assert.equal(verificarMissao(x, dns(dns(registros, 'pc1'), 'pc2')).todosOk, true);
+  assert.equal(verificarMissao(x, dns(dns(reg(x.topologia, 'intranet.empresa.local', '192.168.1.60'), 'pc1'), 'pc2')).todosOk, false, 'falta o registro de arquivos');
+});
+
+test('validarMissao aceita objetivo por nome e descarta nome inválido', () => {
+  const base = JSON.parse(JSON.stringify(m('dns-ping-no-nome')));
+  base.objetivos = [{ id: 'a', de: 'pc1', nome: 'www.loja.local' }, { id: 'b', de: 'pc1', nome: 'x y' }, { id: 'c', de: 'pc1' }, { id: 'd', de: 'pc9', nome: 'a.b' }];
+  const v = validarMissao(base);
+  assert.deepEqual(v.objetivos, [{ id: 'a', de: 'pc1', nome: 'www.loja.local' }]);
 });

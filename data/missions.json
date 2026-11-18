@@ -2371,6 +2371,434 @@
     }
   },
   {
+    "id": "dns-ping-no-nome",
+    "modulo": "missoes",
+    "titulo": "Ping no IP funciona, no nome não",
+    "dificuldade": 1,
+    "xp": 140,
+    "habilidades": [
+      "servicos.diagnostico"
+    ],
+    "cenario": "O servidor Web (192.168.1.60) responde ao ping pelo endereço, mas o Cliente1 não consegue abrir o site pelo nome www.loja.local. O servidor de nomes da empresa (Dns, 192.168.1.50) já tem o registro.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "nome": "www.loja.local"
+      }
+    ],
+    "dicas": [
+      "No terminal do Cliente1, compare: ping 192.168.1.60 funciona, ping www.loja.local não. Então o problema está na resolução do nome. Use nslookup www.loja.local.",
+      "O nslookup diz que não há servidor DNS configurado neste computador.",
+      "Selecione o Cliente1 e preencha o servidor DNS com o IP do computador Dns (192.168.1.50)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 420,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 120,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Dns",
+          "x": 740,
+          "y": 70,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.50",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "registros": [
+            {
+              "nome": "www.loja.local",
+              "ip": "192.168.1.60"
+            }
+          ]
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Web",
+          "x": 740,
+          "y": 200,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.60",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "dns-registro-errado",
+    "modulo": "missoes",
+    "titulo": "O nome aponta para o lugar errado",
+    "dificuldade": 2,
+    "xp": 180,
+    "habilidades": [
+      "servicos.diagnostico"
+    ],
+    "cenario": "O Cliente1 já usa o servidor DNS certo e o nome www.loja.local resolve, mas o site não abre. O servidor Web foi trocado de endereço e o registro DNS não foi atualizado.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "nome": "www.loja.local"
+      }
+    ],
+    "dicas": [
+      "Use nslookup www.loja.local e depois ping no endereço que ele mostrou. O nome resolve, mas esse endereço não responde.",
+      "O servidor Web é o computador de nome Web. Confira o endereço dele e compare com o registro no computador Dns.",
+      "No computador Dns, remova o registro www.loja.local e crie outro apontando para o endereço certo do Web (192.168.1.60)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 420,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 120,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "dns": "192.168.1.50"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Dns",
+          "x": 740,
+          "y": 70,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.50",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "registros": [
+            {
+              "nome": "www.loja.local",
+              "ip": "192.168.1.61"
+            }
+          ]
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Web",
+          "x": 740,
+          "y": 200,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.60",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "dns-da-empresa",
+    "modulo": "missoes",
+    "titulo": "Monte o DNS da empresa",
+    "dificuldade": 3,
+    "xp": 260,
+    "habilidades": [
+      "servicos.pratica"
+    ],
+    "cenario": "A empresa tem dois clientes, um servidor Web (192.168.1.60), um servidor de arquivos (192.168.1.70) e um computador Dns (192.168.1.50) ainda sem nenhum registro. Faça os dois clientes acessarem intranet.empresa.local (o Web) e arquivos.empresa.local (o Arquivos) pelo nome.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "nome": "intranet.empresa.local"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "nome": "intranet.empresa.local"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "nome": "arquivos.empresa.local"
+      },
+      {
+        "id": "o4",
+        "de": "pc2",
+        "nome": "arquivos.empresa.local"
+      }
+    ],
+    "dicas": [
+      "Dois passos: o servidor DNS precisa conhecer os nomes (registros) e os clientes precisam saber quem é o servidor DNS.",
+      "No computador Dns, crie dois registros: intranet.empresa.local → 192.168.1.60 e arquivos.empresa.local → 192.168.1.70.",
+      "Nos dois clientes, preencha o servidor DNS com 192.168.1.50. Depois teste com nslookup."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 420,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 120,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 120,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Dns",
+          "x": 740,
+          "y": 70,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.50",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Web",
+          "x": 740,
+          "y": 200,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.60",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc5",
+          "tipo": "pc",
+          "nome": "Arquivos",
+          "x": 740,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.70",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc5",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa5"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "filial-fora-do-ar",
     "modulo": "missoes",
     "titulo": "Filial fora do ar: três defeitos",

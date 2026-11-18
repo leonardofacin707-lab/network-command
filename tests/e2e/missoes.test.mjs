@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 18 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 21 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 18);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 18 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 21);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 21 concluídas/);
   assert.match(await pagina.locator('.missao a').first().getAttribute('aria-label'), /Sua primeira rede local, Fácil, não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(1).getAttribute('aria-label'), /O cabo esquecido, Fácil, não iniciada/);
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
@@ -156,7 +156,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 18 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 21 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -327,6 +327,50 @@ test('filtro de pacotes pela interface: validação, mover regra para cima e con
   assert.match(await pagina.locator('#filtros-pacotes .regra').nth(2).innerText(), /negar de qualquer\s+para 192\.168\.2\.10\/32/);
   await pagina.locator('[data-remover-filtro="2"]').click();
   assert.equal(await pagina.locator('#filtros-pacotes .regra').count(), 2);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('DNS pela interface: registros no servidor, DNS nos clientes, nslookup e conclusão (260 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/dns-da-empresa');
+  const aplicar = async () => { await pagina.locator('#form-cfg button[type=submit]').click(); };
+  // cliente sem DNS: nslookup explica
+  await disp('pc1').click();
+  await pagina.fill('#term-entrada', 'nslookup intranet.empresa.local');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Nenhum servidor DNS está configurado/);
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 4);
+  // servidor: registros (um inválido primeiro)
+  await disp('pc3').click();
+  assert.match(await pagina.locator('#dns-pc').innerText(), /não responde consultas DNS/);
+  await pagina.fill('#cfg-reg-nome', 'intranet empresa'); await pagina.fill('#cfg-reg-ip', '192.168.1.60');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Nome inválido/);
+  await pagina.fill('#cfg-reg-nome', 'intranet.empresa.local'); await pagina.fill('#cfg-reg-ip', '192.168.1.60');
+  await aplicar();
+  await pagina.fill('#cfg-reg-nome', 'arquivos.empresa.local'); await pagina.fill('#cfg-reg-ip', '192.168.1.70');
+  await aplicar();
+  assert.equal(await pagina.locator('#dns-pc .regra').count(), 2);
+  assert.match(await pagina.locator('#dns-pc .regra').first().innerText(), /intranet\.empresa\.local\s+→\s+192\.168\.1\.60/);
+  // clientes
+  for (const id of ['pc1', 'pc2']) { await disp(id).click(); await pagina.fill('#cfg-dns', '192.168.1.50'); await aplicar(); assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/); }
+  await disp('pc1').click();
+  await pagina.fill('#term-entrada', 'nslookup intranet.empresa.local');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Nome:\s+intranet\.empresa\.local\s+Address:\s+192\.168\.1\.60/);
+  await pagina.fill('#term-entrada', 'ping -n 1 arquivos.empresa.local');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Disparando contra arquivos\.empresa\.local \[192\.168\.1\.70\][\s\S]*Recebidos = 1/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+260 XP/);
+  const e = await salvo();
+  assert.equal(e.missoes['dns-da-empresa'].concluida, true);
+  assert.equal(e.missoes['dns-da-empresa'].topologia.dispositivos.find(d => d.id === 'pc1').dns, '192.168.1.50');
+  // remover um registro
+  await disp('pc3').click();
+  await pagina.locator('[data-remover-registro="0"]').click();
+  assert.equal(await pagina.locator('#dns-pc .regra').count(), 1);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

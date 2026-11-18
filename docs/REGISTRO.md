@@ -44,7 +44,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 
 - ✅ IPv4 (rede, broadcast, hosts úteis, classe), switch (domínio L2 com varredura), ARP com cache, roteador com rotas das redes conectadas, TTL (PC 128, roteador 255), caminho de volta separado do de ida, conflito de IP.
 - ✅ Terminal: `ipconfig [/all]`, `ping [-n N] destino`, `tracert`, `arp -a`, `hostname`, `help`, `cls`; histórico com setas ↑/↓. Saída no estilo do Windows em português.
-- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (rotas estáticas, DHCP e filtro de pacotes simplificados entraram depois, ver abaixo), NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
+- 🧪 **Não simulado** (na Fase 4; VLANs entraram depois, ver Campus): latência e perda aleatória, roteamento dinâmico (rotas estáticas, DHCP, filtro de pacotes e DNS simplificados entraram depois, ver abaixo), NAT, firewall, DNS. Mensagens de "inacessível" de roteadores são simplificadas.
 - ✅ 49 testes unitários do motor (IPv4, topologia, motor, terminal, diagnóstico) e 10 e2e do laboratório.
 
 ## Fase 5 — Missões de troubleshooting 🧪
@@ -124,6 +124,14 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Teste unitário prova que **cada defeito importa**: com qualquer um deles sem corrigir a missão não conclui (todas as combinações de "todos menos um").
 - Treinam várias habilidades ao mesmo tempo (Troubleshooting, Roteamento, Serviços e Segurança), então contam em mais de uma trilha da árvore.
 
+### DNS simplificado (protótipo)
+- ✅ Motor: o computador cliente ganha o campo "servidor DNS" (`dns`) e um computador pode ser **servidor DNS** ao receber registros A (`registros: [{ nome, ip }]`, até 12; nomes em minúsculas, com pontos, validados). `sim.resolver(origem, nome)`: o cliente precisa alcançar o servidor por ping (ida e volta), o computador que tem esse IP precisa ter registros e o nome precisa existir. Motivos: sem DNS configurado, servidor inalcançável, endereço que não é servidor DNS, nome inexistente.
+- ✅ Terminal: `nslookup nome` (servidor, nome e endereço ou o motivo da falha), `ping` e `tracert` por nome (primeiro IP literal, depois o nome de um dispositivo do laboratório como atalho, e só então o DNS) e `ipconfig /all` mostra o servidor DNS.
+- ✅ Missões: objetivos podem ser "X alcança o nome Y" (`nome` no lugar de `para`): resolve pelo DNS e dá ping no endereço obtido; o motivo da falha diz qual etapa quebrou. Três missões novas (agora 21): *Ping no IP funciona, no nome não*, *O nome aponta para o lugar errado* (diagnóstico) e *Monte o DNS da empresa* (prática). Gerador `tools/gerar-dns.mjs`.
+- ✅ Laboratório: fieldset "DNS" no PC (servidor DNS + registros do próprio computador).
+- ✅ Testes: `tests/unit/dns.test.mjs` (7), 4 testes em `missoes.test.mjs` e um e2e pela interface.
+- 🧪 Simplificações assumidas: só registros A (sem AAAA/MX/CNAME), **sem cache, TTL, recursão, encaminhadores ou zonas**, um único servidor DNS por cliente, e o DHCP simplificado **não** entrega o servidor DNS (é configurado à mão). Só um computador pode ser servidor DNS (não há dispositivo "servidor").
+
 ### Revisão visual (capturas desktop e celular)
 - 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
 - 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
@@ -134,5 +142,5 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.
 
 ## Próximos passos
-- Fases 7 e 8: expansão de conteúdo e recursos avançados (NAT, subinterfaces, roteamento dinâmico, DNS, ACL por interface com portas) — ⏳. VLAN, rotas estáticas, DHCP e filtro de pacotes já foram feitos (ver Campus, Rotas estáticas, DHCP e Filtro de pacotes).
+- Fases 7 e 8: expansão de conteúdo e recursos avançados (NAT, subinterfaces, roteamento dinâmico, DNS com cache/zonas, ACL por interface com portas) — ⏳. VLAN, rotas estáticas, DHCP, filtro de pacotes e DNS simplificado já foram feitos (ver Campus, Rotas estáticas, DHCP, Filtro de pacotes e DNS).
 - Quiz: os 12 níveis originais estão completos (9 desafios cada). Todas as 8 trilhas têm teoria. Faltam, para a Fase 7: mais desafios por nível/dificuldade, desafios cronometrados e conteúdo de Prática/Diagnóstico para Fundamentos, IP e Serviços.

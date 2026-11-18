@@ -2,7 +2,7 @@
 // Modela: domínio de broadcast através de switches (com VLANs: portas access e trunk), resolução ARP, encaminhamento por
 // roteadores (rotas conectadas e estáticas, com prefixo mais longo; uma interface física por VLAN), TTL e a resposta de volta.
 // DHCP simplificado: o roteador dá concessões fixas (sem tempo de lease nem DORA mensagem a mensagem).
-// Filtro de pacotes simplificado nos roteadores (regras em ordem, sem estado). NÃO modela: latência, perda aleatória,
+// DNS simplificado (cliente consulta um PC com registros A). Filtro de pacotes simplificado nos roteadores (regras em ordem, sem estado). NÃO modela: latência, perda aleatória,
 // subinterfaces (router-on-a-stick), STP, roteamento dinâmico, NAT, firewall com estado.
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
@@ -273,6 +273,22 @@ export function criarSimulacao(original) {
       aprender(volta.aprendizado);
       if (volta.status !== 'entregue') return { status: 'timeout', saltos: ida.saltos, caminho: ida.caminho, ida, volta };
       return { status: 'entregue', ttl: volta.ttl, de: ipDest, saltos: ida.saltos, caminho: ida.caminho, destino: ida.destino, ida, volta };
+    },
+    /**
+     * DNS (simplificado): o cliente consulta o servidor configurado (um computador com registros). Precisa alcançá-lo por ping
+     * (ida e volta). Devolve { ok:true, ip, servidor:{ d, ip } } ou { ok:false, motivo }:
+     * 'sem-dns' | 'dns-inalcancavel' | 'dns-sem-servico' | 'nome-inexistente'.
+     */
+    resolver(origemId, nome) {
+      const o = dispositivo(t, origemId);
+      const dnsN = lerIPv4(o?.dns);
+      if (!o || o.tipo !== 'pc' || dnsN === null) return { ok: false, motivo: 'sem-dns' };
+      const r = this.ping(origemId, dnsN);
+      if (r.status !== 'entregue') return { ok: false, motivo: 'dns-inalcancavel', servidor: { ip: dnsN } };
+      const srv = dispositivo(t, r.destino.d), servidor = { d: srv.id, ip: dnsN };
+      if (srv.tipo !== 'pc' || !srv.registros?.length) return { ok: false, motivo: 'dns-sem-servico', servidor };
+      const reg = srv.registros.find(x => x.nome === String(nome).trim().toLowerCase());
+      return reg ? { ok: true, ip: lerIPv4(reg.ip), servidor } : { ok: false, motivo: 'nome-inexistente', servidor };
     },
     rastrear: (origemId, ipDest) => { const r = enviarPacote(t, origemId, ipDest); aprender(r.aprendizado); return r; },
     tabelaArp: id => [...(arp.get(id) ?? [])].map(([ip, mac]) => ({ ip, mac })).sort((a, b) => a.ip - b.ip)

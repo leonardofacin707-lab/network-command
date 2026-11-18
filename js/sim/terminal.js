@@ -1,5 +1,5 @@
 // Terminal simulado (estilo Prompt de Comando do Windows, em português). Puro: recebe texto, devolve linhas.
-// Comandos: ipconfig [/all], ping [-n N] destino, tracert destino, arp -a, hostname, help, cls.
+// Comandos: ipconfig [/all|/renew], ping [-n N] destino, tracert destino, nslookup nome, arp -a, hostname, help, cls.
 // Simplificações assumidas: sem latência (sempre "tempo<1ms") e nomes de host resolvidos só entre os dispositivos do laboratório.
 import { lerIPv4, formatarIPv4 } from './ipv4.js';
 import { configDaInterface, conflitosDeIp, macDe, temLink, interfacesConfiguradas } from './motor.js';
@@ -11,6 +11,7 @@ const AJUDA = [
   '  ipconfig /renew     pede um endereço ao servidor DHCP (se o DHCP estiver ligado)',
   '  ping [-n N] destino  testa a conexão com um IP ou nome de dispositivo',
   '  tracert destino     mostra os roteadores no caminho até o destino',
+  '  nslookup nome       consulta o servidor DNS configurado neste computador',
   '  arp -a              mostra os endereços MAC já descobertos',
   '  hostname            mostra o nome desta máquina',
   '  cls                 limpa a tela',
@@ -19,12 +20,33 @@ const AJUDA = [
 
 const campo = (rotulo, valor) => `   ${rotulo} ${'. '.repeat(Math.max(0, Math.floor((38 - rotulo.length) / 2)))}: ${valor}`;
 
-function resolverDestino(t, texto) {
+/** Endereço literal; nome de dispositivo do laboratório (atalho); ou nome DNS consultado no servidor configurado no PC. */
+function resolverDestino(t, sim, d, texto) {
   const n = lerIPv4(texto);
   if (n !== null) return { ip: n, nome: null };
-  const d = t.dispositivos.find(x => x.nome.toLowerCase() === texto.toLowerCase());
-  const primeiro = d && interfacesConfiguradas(d)[0];
-  return primeiro ? { ip: primeiro.ip, nome: d.nome } : null;
+  const disp = t.dispositivos.find(x => x.nome.toLowerCase() === texto.toLowerCase());
+  const primeiro = disp && interfacesConfiguradas(disp)[0];
+  if (primeiro) return { ip: primeiro.ip, nome: disp.nome };
+  const r = sim.resolver(d.id, texto);
+  return r.ok ? { ip: r.ip, nome: texto.toLowerCase() } : null;
+}
+
+const MOTIVO_DNS = {
+  'sem-dns': '*** Nenhum servidor DNS está configurado neste computador.',
+  'dns-inalcancavel': '*** O servidor DNS configurado não respondeu (sem comunicação com ele).',
+  'dns-sem-servico': '*** O computador que tem esse endereço não é um servidor DNS (não responde consultas).'
+};
+
+function nslookup(t, sim, d, args) {
+  if (args.length !== 1) return ['Uso: nslookup nome'];
+  const nome = args[0].toLowerCase();
+  const r = sim.resolver(d.id, nome);
+  if (r.motivo === 'sem-dns' || r.motivo === 'dns-inalcancavel' || r.motivo === 'dns-sem-servico') {
+    return [r.servidor ? `Servidor:  ${formatarIPv4(r.servidor.ip)}` : 'Servidor:  (nenhum)', MOTIVO_DNS[r.motivo], ''];
+  }
+  const cab = [`Servidor:  ${dispositivo(t, r.servidor.d).nome}`, `Address:  ${formatarIPv4(r.servidor.ip)}`, ''];
+  if (!r.ok) return [...cab, `*** O servidor ${dispositivo(t, r.servidor.d).nome} não encontrou ${nome}: Non-existent domain`, ''];
+  return [...cab, `Nome:    ${nome}`, `Address:  ${formatarIPv4(r.ip)}`, ''];
 }
 
 export const MOTIVO_DHCP = {
@@ -57,6 +79,7 @@ function ipconfig(t, sim, d, tudo) {
     linhas.push(campo('Endereço IPv4', cfg ? i.ip : '(não configurado)'));
     linhas.push(campo('Máscara de Sub-rede', cfg ? i.mascara : '(não configurado)'));
     linhas.push(campo('Gateway Padrão', d.gateway || ''));
+    if (tudo) linhas.push(campo('Servidores DNS', d.dns || ''));
     if (cfg && conflitosDeIp(t).some(c => (c.a.d === d.id && c.a.p === i.id) || (c.b.d === d.id && c.b.p === i.id))) {
       linhas.push('', '   Aviso: este endereço IPv4 está em conflito com outro dispositivo da rede.');
     }
@@ -87,7 +110,7 @@ function ping(t, sim, d, args) {
     quantidade = v; resto.splice(iN, 2);
   }
   if (resto.length !== 1) return ['Uso: ping [-n N] destino'];
-  const alvo = resolverDestino(t, resto[0]);
+  const alvo = resolverDestino(t, sim, d, resto[0]);
   if (!alvo) return [`A solicitação de ping não pôde encontrar o host ${resto[0]}. Verifique o nome e tente novamente.`];
   const ipTxt = formatarIPv4(alvo.ip);
   const linhas = [`Disparando contra ${alvo.nome ? `${alvo.nome} [${ipTxt}]` : ipTxt} com 32 bytes de dados:`];
@@ -108,7 +131,7 @@ const salto = (n, ip, extra = '') => `${String(n).padStart(3)}    <1 ms    <1 ms
 
 function tracert(t, sim, d, args) {
   if (args.length !== 1) return ['Uso: tracert destino'];
-  const alvo = resolverDestino(t, args[0]);
+  const alvo = resolverDestino(t, sim, d, args[0]);
   if (!alvo) return [`Não foi possível resolver o nome do sistema de destino ${args[0]}.`];
   const ipTxt = formatarIPv4(alvo.ip);
   const r = sim.rastrear(d.id, alvo.ip);
@@ -151,6 +174,7 @@ export function executar(sim, dispositivoId, linhaDigitada) {
     case 'ipconfig': return { linhas: args[0]?.toLowerCase() === '/renew' && args.length === 1 ? renovar(t, sim, d) : args.length && args[0] !== '/all' ? ['Opção inválida. Use: ipconfig [/all | /renew]'] : ipconfig(t, sim, d, args[0] === '/all'), limpar: false };
     case 'ping': return { linhas: ping(t, sim, d, args), limpar: false };
     case 'tracert': return { linhas: tracert(t, sim, d, args), limpar: false };
+    case 'nslookup': return { linhas: nslookup(t, sim, d, args), limpar: false };
     case 'arp': return { linhas: arp(t, sim, d, args), limpar: false };
     case 'hostname': return { linhas: [d.nome], limpar: false };
     case 'cls': return { linhas: [], limpar: true };
