@@ -1,0 +1,16 @@
+{
+  "name": "network-command",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Plataforma gamificada de aprendizagem de redes de computadores (JavaScript puro).",
+  "scripts": {
+    "serve": "node tests/helpers/servidor.mjs",
+    "test": "node --test tests/unit/ && node --test --test-concurrency=1 tests/e2e/",
+    "test:unit": "node --test tests/unit/",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.1"
+  }
+}

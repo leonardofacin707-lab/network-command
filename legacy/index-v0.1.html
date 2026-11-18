@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jornada do Pacote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE  jogo educativo, animado mas limpo: o jogador é um pacote atravessando a rede
+   IDEA   a topologia de rede do Packet Tracer: cada nível é um dispositivo ligado por cabo
+   PICTURE o mapa de níveis desenhado como topologia, com um pacote viajando até o próximo destino
+   COLOUR azul de cabo de rede (campo dominante), branco, amarelo do pacote como destaque, verde de link ativo
+   TYPE   Chakra Petch (títulos, cara de painel de equipamento) + Inter (texto)
+   LAYOUT faixa azul com título, placar e mapa; abaixo, o próximo destino. No celular o mapa vira 2 colunas */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0d1117);--ink:light-dark(#0f1424,#eef1f8);--suave:light-dark(#545c72,#a3abc2);--painel:light-dark(#ffffff,#161c2c);--linha:light-dark(#d5dbe8,#2b3452);--mapa:light-dark(#1546c9,#103599);--mapa2:light-dark(#0f3aa8,#0b2a7a);--sinal:#ffcc00;--ok:#13995a;--erro:#d93d42;--okbg:light-dark(#e3f6ec,#0f2a1e);--errobg:light-dark(#fdeaea,#2e1517)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Chakra Petch",Inter,sans-serif;line-height:1.08;letter-spacing:-.01em;margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+.band{padding-block:clamp(20px,3vw,40px);padding-inline:max(5vw,16px)}
+.topo{background:var(--mapa);color:#fff;padding-bottom:0}
+.topo .linha1{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.topo h1{font-size:clamp(32px,5vw,48px)}
+.topo p{margin:4px 0 0;color:#dbe5ff;max-width:60ch}
+.hud{display:flex;flex-wrap:wrap;gap:8px}
+.hud div{background:var(--mapa2);border-radius:10px;padding:8px 14px;min-width:6.5em}
+.hud small{display:block;color:#b9c9f5;font-size:13px}
+.hud b{font-family:"Chakra Petch",sans-serif;font-size:20px;white-space:nowrap}
+.mapa{background:var(--mapa);color:#fff;padding:12px max(5vw,16px) 36px}
+.trilha{position:relative;max-width:1100px;margin:0 auto}
+.trilha>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.cabo{fill:none;stroke-width:5;stroke-linecap:round}
+.cabo.ok{stroke:#fff}
+.cabo.ativo{stroke:var(--sinal);stroke-dasharray:10 9}
+.cabo.off{stroke:rgba(255,255,255,.22)}
+.pacote rect{fill:var(--sinal);stroke:#5a4700;stroke-width:1.5}
+.pacote path{fill:none;stroke:#5a4700;stroke-width:1.5}
+.no{position:absolute;transform:translate(-50%,-32px);width:136px;background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;text-align:center}
+.no .ico{width:64px;height:64px;border-radius:50%;background:#fff;color:var(--mapa);display:grid;place-items:center;box-shadow:0 4px 0 var(--mapa2);position:relative;transition:transform .15s}
+.no .ico svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.no .num{position:absolute;top:-6px;right:-8px;background:var(--mapa2);color:#fff;border:2px solid #fff;border-radius:99px;font:700 13px/1 "Chakra Petch",sans-serif;padding:4px 7px}
+.no .nome{font:600 15px/1.2 "Chakra Petch",sans-serif;background:var(--mapa);padding:2px 6px;border-radius:6px}
+.no .est{font-size:15px;letter-spacing:2px;color:var(--sinal);min-height:1.2em;background:var(--mapa);padding:0 4px;border-radius:6px}
+.no.st-feito .ico{box-shadow:0 0 0 4px var(--sinal),0 6px 0 var(--mapa2)}
+.no.st-aberto .ico{box-shadow:0 0 0 4px var(--sinal),0 6px 0 var(--mapa2);animation:pulso 1.6s ease-in-out infinite}
+.no.st-bloqueado .ico,.no.st-embreve .ico{background:rgba(255,255,255,.16);color:rgba(255,255,255,.75);box-shadow:none}
+.no.st-embreve .ico{border:2px dashed rgba(255,255,255,.5)}
+.no.st-bloqueado .est,.no.st-embreve .est{color:#c6d3f7;font-size:13px;letter-spacing:0}
+.no:not([aria-disabled]):hover .ico{transform:translateY(-3px)}
+.no:focus-visible{outline:none}
+.no:focus-visible .ico{outline:3px solid var(--sinal);outline-offset:4px}
+@keyframes pulso{50%{transform:scale(1.07)}}
+.wrap{max-width:1100px;margin:0 auto}
+.info{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;max-width:1100px;margin:0 auto}
+.painel{background:var(--painel);border:1px solid var(--linha);border-radius:14px;padding:clamp(18px,3vw,28px)}
+.painel h2{font-size:clamp(24px,3vw,32px);margin-bottom:6px}
+.painel p{margin:6px 0;color:var(--suave)}
+.painel ul{margin:8px 0 0;padding-left:20px}
+.painel li{margin:4px 0}
+.mods{display:inline-block;font-size:14px;font-weight:600;color:var(--mapa);background:light-dark(#e6edff,#1a2547);border-radius:6px;padding:2px 8px;margin-bottom:8px}
+.btn{background:var(--mapa);color:#fff;border:0;border-radius:10px;padding:12px 22px;min-height:44px;font-weight:600}
+.btn:hover{background:var(--mapa2)}
+.btn-sec{background:none;border:1px solid var(--linha);border-radius:10px;padding:10px 16px;min-height:44px;font-weight:600}
+.btn-sec:hover{border-color:var(--mapa)}
+.btn:focus-visible,.btn-sec:focus-visible,.op:focus-visible,.chip:focus-visible,.grupo:focus-visible{outline:3px solid var(--sinal);outline-offset:2px}
+.acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.jogo{max-width:780px;margin:0 auto}
+.barra{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;margin-bottom:16px}
+.barra b{font-family:"Chakra Petch",sans-serif;font-size:17px}
+.prog{height:8px;border-radius:9px;background:var(--linha);margin-top:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--mapa);transition:width .3s}
+.pts{font:700 18px "Chakra Petch",sans-serif;white-space:nowrap}
+.card h2{font-size:clamp(22px,3.4vw,30px);margin:4px 0 18px}
+.tipo{margin:0;font-size:14px;font-weight:600;color:var(--suave)}
+.ops{display:grid;gap:10px}
+.op{display:block;width:100%;text-align:left;background:var(--painel);border:2px solid var(--linha);border-radius:12px;padding:13px 16px;min-height:48px}
+.op:hover:not(:disabled){border-color:var(--mapa)}
+.op.certa{border-color:var(--ok);background:var(--okbg)}
+.op.errada{border-color:var(--erro);background:var(--errobg)}
+.op:disabled{cursor:default}
+.colunas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
+.chip{background:var(--painel);border:2px solid var(--linha);border-radius:10px;padding:10px 14px;min-height:44px;text-align:left}
+.chip:hover:not(:disabled){border-color:var(--mapa)}
+.chip.sel{border-color:var(--mapa);background:light-dark(#e6edff,#1a2547)}
+.chip.ok{border-color:var(--ok);background:var(--okbg);cursor:default}
+.chip.ok.sem{opacity:.55}
+.colunas .chip{width:100%}
+.grupos{display:grid;grid-template-columns:repeat(auto-fit,minmax(10em,1fr));gap:10px;margin-top:14px}
+.grupo{background:light-dark(#f2f5fc,#121827);border:2px dashed var(--linha);border-radius:12px;padding:10px;min-height:96px;text-align:left;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.grupo>b{font-family:"Chakra Petch",sans-serif;font-size:16px}
+.grupo .chip{font-size:14px;padding:6px 10px;min-height:0}
+.pronto .grupo{cursor:default}
+.dica{font-size:14px;color:var(--suave);margin:0 0 10px}
+.fila{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:6px;counter-reset:f}
+.fila li{counter-increment:f;display:flex;gap:10px;align-items:center;border:2px solid var(--linha);border-radius:10px;padding:8px 12px;min-height:44px}
+.fila li::before{content:counter(f);font:700 15px "Chakra Petch",sans-serif;color:var(--mapa);min-width:1.4em}
+.fila li.ok{border-color:var(--ok);background:var(--okbg)}
+.fila li.vazio{border-style:dashed;color:var(--suave)}
+.numero{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.numero input{font:600 18px Inter,sans-serif;width:10em;padding:10px 12px;border:2px solid var(--linha);border-radius:10px;background:var(--painel);color:var(--ink)}
+.numero input:focus{outline:3px solid var(--sinal);outline-offset:1px}
+.erro-txt{color:var(--erro);font-weight:600;margin:10px 0 0}
+.fb{margin-top:18px;border-radius:12px;padding:16px 18px;border:2px solid}
+.fb.bom{border-color:var(--ok);background:var(--okbg)}
+.fb.ruim{border-color:var(--erro);background:var(--errobg)}
+.fb b{font-family:"Chakra Petch",sans-serif;font-size:19px}
+.fb p{margin:6px 0 0}
+.treme{animation:treme .35s}
+@keyframes treme{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.resultado{text-align:center}
+.resultado .grandes{font-size:clamp(44px,9vw,72px);color:var(--sinal);letter-spacing:6px;line-height:1;margin:10px 0;text-shadow:0 2px 0 #b38f00}
+.resultado .grandes .apagada{color:var(--linha);text-shadow:none}
+.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(9em,1fr));gap:10px;margin:16px 0}
+.resumo div{border:1px solid var(--linha);border-radius:10px;padding:10px}
+.resumo small{display:block;color:var(--suave);font-size:13px}
+.resumo b{font:700 22px "Chakra Petch",sans-serif}
+.resultado .acoes{justify-content:center}
+.cargo-novo{background:var(--sinal);color:#2b2200;border-radius:10px;padding:10px 14px;font-weight:600;margin:12px 0 0}
+footer{padding:20px max(5vw,16px) 28px;color:var(--suave);font-size:14px;text-align:center;border-top:1px solid var(--linha);margin-top:20px}
+@media(max-width:720px){.info{grid-template-columns:minmax(0,1fr)}.colunas{gap:8px}.colunas .chip{font-size:14px;padding:8px 10px}}
+@media(max-width:480px){.no{width:118px}.no .nome{font-size:14px}.barra{grid-template-columns:auto minmax(0,1fr)}.barra .pts{grid-column:1/-1;justify-self:end;margin-top:-8px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="topo band">
+  <div class="linha1">
+    <div>
+      <h1>Jornada do Pacote</h1>
+      <p>Você é um pacote de dados atravessando a rede. Cada nível é um dispositivo no caminho, do básico ao avançado.</p>
+    </div>
+    <div class="hud" id="hud" aria-live="polite"></div>
+  </div>
+</header>
+<main id="app"></main>
+<footer>
+  Projeto de portfólio de Leonardo Facin, feito em JavaScript puro (sem frameworks).<br>
+  Trilha baseada nos tópicos do curso Conceitos Básicos de Redes (Cisco Networking Academy); perguntas e explicações originais.
+</footer>
+<script>
+{
+/* =========================================================
+   Jornada do Pacote — jogo educativo de redes
+   Estrutura:
+   1) Utilitários
+   2) Dados: níveis, desafios e cargos
+   3) Progresso salvo (localStorage)
+   4) Tela do mapa
+   5) Tela de desafio (motor + 5 tipos de desafio)
+   6) Tela de resultado
+   7) Inicialização
+   ========================================================= */
+
+// ---------- 1) Utilitários ----------
+const $ = sel => document.querySelector(sel);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Embaralha uma cópia do array (algoritmo de Fisher-Yates)
+function embaralhar(lista) {
+  const a = [...lista];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Faz um elemento "tremer" quando o jogador erra
+function tremer(el) {
+  if (!el) return;
+  el.classList.remove('treme');
+  void el.offsetWidth; // reinicia a animação
+  el.classList.add('treme');
+}
+
+// ---------- 2) Dados ----------
+// Ícones simples em SVG (traço), um para cada nível
+const ICONES = {
+  pc: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>',
+  wifi: '<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.2" r="1"/>',
+  camadas: '<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 12.5 10 5 10-5"/><path d="m2 17 10 5 10-5"/>',
+  switch: '<rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M6 12h.01M9 12h.01M12 12h.01M15 12h.01M18 12h.01"/>',
+  ip: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+  subrede: '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/>',
+  ipv6: '<path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/><path d="M8 12h8M12 8v8"/>',
+  dhcp: '<circle cx="8" cy="15" r="5"/><path d="M11.5 11.5 21 2M17 6l3 3M14 9l2 2"/>',
+  roteador: '<circle cx="12" cy="12" r="9"/><path d="M12 6v12M6 12h12M10 8l2-2 2 2M10 16l2 2 2-2M8 10l-2 2 2 2M16 10l2 2-2 2"/>',
+  portas: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h3v4H7zM14 10h3v4h-3z"/>',
+  globo: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  ferramenta: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>'
+};
+
+// Nomes de exibição dos tipos de desafio
+const ROTULO = { quiz: 'Pergunta', ligar: 'Ligue os pares', classificar: 'Classifique', ordenar: 'Coloque em ordem', numero: 'Calcule' };
+
+// Cargos: o jogador "sobe na carreira" conforme ganha XP
+const CARGOS = [
+  [0, 'Estagiário de TI'],
+  [900, 'Técnico de suporte'],
+  [2400, 'Técnico de redes'],
+  [4500, 'Analista de redes'],
+  [7000, 'Especialista em redes'],
+  [9500, 'Arquiteto de redes']
+];
+
+// Níveis do jogo. Níveis sem "desafios" aparecem no mapa como "em breve".
+const NIVEIS = [
+  {
+    id: 1, nome: 'Mundo conectado', icone: 'pc', modulos: 'Módulos 1 a 3',
+    resumo: ['Tipos de rede e quem "é dono" da Internet', 'Largura de banda, taxa de transferência e latência', 'Wi-Fi, Bluetooth, NFC, GPS e dados móveis'],
+    desafios: [
+      { tipo: 'quiz', pergunta: 'Quem é o dono da Internet?',
+        opcoes: ['Ninguém: ela é um conjunto de redes interligadas que seguem padrões comuns', 'O governo dos Estados Unidos', 'As grandes operadoras de telefonia', 'A empresa que fabrica os roteadores'], certa: 0,
+        explica: 'A Internet é uma "rede de redes". Milhares de redes independentes cooperam porque seguem os mesmos padrões, e nenhuma pessoa ou empresa controla tudo.' },
+      { tipo: 'classificar', pergunta: 'Que tipo de rede é cada caso?',
+        grupos: ['Doméstica pequena', 'SOHO', 'Média ou grande', 'Mundial'],
+        itens: [['Notebook e celulares de uma família ligados ao roteador de casa', 0], ['Escritório em casa que acessa a rede da empresa', 1], ['Universidade com milhares de hosts em vários campi', 2], ['Bilhões de dispositivos interligados no planeta', 3]],
+        explica: 'SOHO significa pequeno escritório ou escritório doméstico. Redes médias e grandes têm muitos locais e centenas ou milhares de hosts. A Internet é a rede mundial.' },
+      { tipo: 'numero', pergunta: 'Quantos Mbps existem em 1 Gbps?', resposta: 1000, unidade: 'Mbps',
+        dica: 'Cada prefixo (K, M, G, T) multiplica por mil.',
+        explica: '1 Gbps = 1.000 Mbps = 1.000.000 Kbps = 1.000.000.000 bps. Em redes, os prefixos de velocidade usam potências de 10.' },
+      { tipo: 'quiz', pergunta: 'Seu plano de internet é de 300 Mbps, mas o teste de velocidade mostra 210 Mbps. Esses 210 Mbps são a…',
+        opcoes: ['Taxa de transferência (throughput)', 'Largura de banda', 'Latência', 'Frequência do sinal'], certa: 0,
+        explica: 'Largura de banda é a capacidade teórica do meio. A taxa de transferência é o que realmente passa, e cai por causa do volume de dados, do tipo de tráfego e da latência no caminho.' },
+      { tipo: 'quiz', pergunta: 'Como se chama o tempo que os dados levam para ir de um ponto a outro da rede?',
+        opcoes: ['Latência', 'Largura de banda', 'Taxa de transferência', 'Encapsulamento'], certa: 0,
+        explica: 'Latência é o atraso da viagem. Quanto mais dispositivos e distância entre origem e destino, maior tende a ser a latência.' },
+      { tipo: 'ligar', pergunta: 'Ligue cada tecnologia sem fio à situação em que ela é usada.',
+        pares: [['Bluetooth', 'Fone sem fio conectado ao celular'], ['NFC', 'Pagar encostando o celular na maquininha'], ['GPS', 'Descobrir sua posição por satélite'], ['Wi-Fi', 'Acessar a internet pelo roteador de casa'], ['Dados móveis (4G/5G)', 'Navegar na rua, longe de qualquer roteador']],
+        explica: 'Bluetooth é de curto alcance e baixo consumo. O NFC exige que os aparelhos fiquem quase encostados. O GPS só recebe sinais de satélites. O Wi-Fi depende de um access point por perto, e os dados móveis usam as torres da operadora.' },
+      { tipo: 'classificar', pergunta: 'Classifique cada dado pessoal.',
+        grupos: ['Voluntário', 'Observado', 'Inferido'],
+        itens: [['Foto que você postou na rede social', 0], ['Histórico de localização do celular', 1], ['Score de crédito calculado a partir dos seus hábitos', 2], ['Seu perfil com nome e cidade', 0], ['Lista de páginas que você visitou', 1]],
+        explica: 'Dados voluntários você cria e compartilha. Dados observados são registrados a partir do que você faz. Dados inferidos são conclusões tiradas analisando os outros dados.' },
+      { tipo: 'quiz', pergunta: 'Você quer conectar o celular a uma rede Wi-Fi que não aparece na lista. Qual é o motivo mais provável?',
+        opcoes: ['O broadcast do SSID está desativado, então é preciso adicionar a rede manualmente', 'O celular está sem dados móveis', 'O Bluetooth está ligado', 'A rede só aceita cabo'], certa: 0,
+        explica: 'Com o SSID oculto, a rede não aparece na lista. Você adiciona manualmente digitando o SSID, o tipo de segurança e a senha exatamente como estão no roteador.' },
+      { tipo: 'quiz', pergunta: 'No Wi-Fi público de uma lanchonete, qual atitude é a mais segura?',
+        opcoes: ['Usar uma VPN e nunca enviar senhas sem criptografia', 'Desligar o Bluetooth e pronto', 'Usar o modo avião com o Wi-Fi ligado', 'Escolher a rede com o sinal mais forte'], certa: 0,
+        explica: 'Em redes que você não controla, alguém pode capturar o tráfego. A VPN cria um túnel criptografado, e login ou senha nunca devem trafegar em texto puro.' }
+    ]
+  },
+  {
+    id: 2, nome: 'Rede doméstica', icone: 'wifi', modulos: 'Módulos 2, 4 e 6',
+    resumo: ['Dispositivos finais, intermediários e meios físicos', 'Portas do roteador doméstico, SSID e frequências', 'Cabos e formas de conexão com o provedor'],
+    desafios: [
+      { tipo: 'classificar', pergunta: 'Separe os componentes da infraestrutura de rede.',
+        grupos: ['Dispositivo final', 'Dispositivo intermediário', 'Meio físico'],
+        itens: [['Notebook', 0], ['Impressora de rede', 0], ['Câmera de segurança IP', 0], ['Switch', 1], ['Roteador', 1], ['Access point sem fio', 1], ['Cabo de par trançado', 2], ['Ondas de rádio do Wi-Fi', 2]],
+        explica: 'O dispositivo final (host) é a origem ou o destino da mensagem. Os intermediários conectam e encaminham o tráfego. O meio físico é o caminho por onde o sinal viaja: cobre, fibra ou ar.' },
+      { tipo: 'quiz', pergunta: 'O que define se um computador é cliente ou servidor?',
+        opcoes: ['O software instalado nele', 'O tamanho do disco', 'A marca do processador', 'Estar ligado por cabo ou por Wi-Fi'], certa: 0,
+        explica: 'Um host vira servidor quando roda software de servidor (web, e-mail, arquivos). O mesmo computador pode ser cliente e servidor ao mesmo tempo.' },
+      { tipo: 'quiz', pergunta: 'Qual é uma DESVANTAGEM da rede ponto a ponto (P2P)?',
+        opcoes: ['Não tem administração centralizada e é menos segura', 'É cara de montar', 'Exige um servidor dedicado', 'É difícil de configurar'], certa: 0,
+        explica: 'A P2P é barata e simples, mas não escala bem, não tem gestão central, é menos segura e o desempenho cai quando todos são cliente e servidor ao mesmo tempo.' },
+      { tipo: 'ligar', pergunta: 'Ligue cada equipamento à parte certa do roteador doméstico.',
+        pares: [['Modem do provedor', 'Porta Internet (WAN)'], ['PC de mesa com cabo', 'Porta LAN (switch interno)'], ['Celular', 'Access point sem fio interno']],
+        explica: 'A porta Internet liga o roteador a outra rede, a do provedor. As portas LAN e o Wi-Fi ficam na mesma rede local da casa.' },
+      { tipo: 'quiz', pergunta: 'Os aparelhos ligados nas portas LAN e os conectados ao Wi-Fi do mesmo roteador estão…',
+        opcoes: ['Na mesma rede local; só a porta Internet fica em outra rede', 'Em redes separadas, uma com fio e outra sem fio', 'Cada um em uma rede diferente', 'Na rede do provedor'], certa: 0,
+        explica: 'Por padrão, o roteador doméstico junta portas LAN e Wi-Fi na mesma LAN. A porta Internet é a única que fica em outra rede.' },
+      { tipo: 'ligar', pergunta: 'Ligue cada cabo ao uso mais comum dele.',
+        pares: [['Par trançado Cat5e', 'Ligar o PC ao switch na rede local'], ['Coaxial', 'Levar internet e TV a cabo até o modem'], ['Fibra óptica', 'Longas distâncias em alta velocidade, sem interferência elétrica']],
+        explica: 'O par trançado (4 pares trançados contra interferência) é o mais comum nas LANs. O coaxial vem das operadoras de TV a cabo. A fibra usa pulsos de luz e alcança grandes distâncias.' },
+      { tipo: 'quiz', pergunta: 'O fone Bluetooth está atrapalhando o Wi-Fi do notebook. Para qual faixa vale mudar o Wi-Fi?',
+        opcoes: ['5 GHz, porque o Bluetooth usa 2,4 GHz', '2,4 GHz, porque é mais rápida', '900 MHz', 'Tanto faz, o Bluetooth não usa rádio'], certa: 0,
+        explica: 'Wi-Fi doméstico usa as faixas não licenciadas de 2,4 GHz e 5 GHz. O Bluetooth divide a faixa de 2,4 GHz, então os 5 GHz evitam essa disputa.' },
+      { tipo: 'ligar', pergunta: 'Ligue cada tipo de conexão com o provedor (ISP) à característica dela.',
+        pares: [['Cabo', 'Usa o mesmo coaxial da TV a cabo'], ['DSL', 'Usa a linha telefônica'], ['Satélite', 'Precisa de visada livre até o céu'], ['Celular', 'Usa as torres da operadora'], ['Discada', 'Barata, mas com banda muito pequena']],
+        explica: 'A escolha depende do lugar onde você está e dos provedores disponíveis. Em áreas sem cabo ou DSL, satélite e celular resolvem. Nas cidades, a fibra até a casa é cada vez mais comum.' },
+      { tipo: 'quiz', pergunta: 'Qual destes NÃO é um critério para escolher o meio físico da rede?',
+        opcoes: ['A cor da capa do cabo', 'A distância máxima que o sinal alcança', 'O ambiente onde será instalado', 'O custo do meio e da instalação'], certa: 0,
+        explica: 'Os critérios são distância, ambiente, quantidade e velocidade dos dados, e custo. A cor da capa só ajuda na organização.' }
+    ]
+  },
+  {
+    id: 3, nome: 'Camadas', icone: 'camadas', modulos: 'Módulo 5',
+    resumo: ['Protocolos e suas regras', 'Modelo OSI (7 camadas) e TCP/IP (4 camadas)', 'Padrões abertos e RFCs'],
+    desafios: [
+      { tipo: 'quiz', pergunta: 'Em redes, um protocolo é…',
+        opcoes: ['Um conjunto de regras que emissor e receptor seguem para se entender', 'Um tipo de cabo', 'Um programa antivírus', 'O endereço de um site'], certa: 0,
+        explica: 'Assim como uma conversa precisa de idioma, ritmo e confirmação, os computadores precisam de regras comuns: formato, tamanho, temporização, codificação e forma de entrega.' },
+      { tipo: 'ligar', pergunta: 'Ligue cada característica de protocolo ao que ela define.',
+        pares: [['Formato', 'A estrutura que a mensagem precisa seguir'], ['Tamanho', 'Mensagens longas são divididas em partes menores'], ['Temporização', 'A velocidade e o momento em que cada host pode transmitir'], ['Codificação', 'Como a informação vira sinais no meio físico']],
+        explica: 'Essas regras garantem que a mensagem chegue e seja entendida. A temporização, por exemplo, evita que todos transmitam ao mesmo tempo.' },
+      { tipo: 'ordenar', pergunta: 'Monte o modelo OSI, da camada 7 (topo) até a camada 1.',
+        itens: ['Aplicação', 'Apresentação', 'Sessão', 'Transporte', 'Rede', 'Enlace de dados', 'Física'],
+        explica: 'Do topo para a base: 7 Aplicação, 6 Apresentação, 5 Sessão, 4 Transporte, 3 Rede, 2 Enlace de dados, 1 Física.' },
+      { tipo: 'ordenar', pergunta: 'Agora o modelo TCP/IP, do topo para a base.',
+        itens: ['Aplicação', 'Transporte', 'Internet', 'Acesso à rede'],
+        explica: 'O TCP/IP tem 4 camadas. É o modelo de protocolos que a Internet usa de verdade.' },
+      { tipo: 'classificar', pergunta: 'Em qual camada do TCP/IP cai cada camada do OSI?',
+        grupos: ['Aplicação', 'Transporte', 'Internet', 'Acesso à rede'],
+        itens: [['OSI 7 · Aplicação', 0], ['OSI 6 · Apresentação', 0], ['OSI 5 · Sessão', 0], ['OSI 4 · Transporte', 1], ['OSI 3 · Rede', 2], ['OSI 2 · Enlace de dados', 3], ['OSI 1 · Física', 3]],
+        explica: 'As camadas 5, 6 e 7 do OSI viram a Aplicação do TCP/IP. Transporte e Rede (Internet) batem direto. Enlace e Física juntas formam o Acesso à rede.' },
+      { tipo: 'ligar', pergunta: 'Ligue cada função à camada OSI responsável por ela.',
+        pares: [['Escolhe o melhor caminho usando endereços IP', '3 · Rede'], ['Troca quadros entre dispositivos no mesmo meio', '2 · Enlace de dados'], ['Segmenta, transfere e remonta os dados', '4 · Transporte'], ['Transmite bits como sinais elétricos, luz ou rádio', '1 · Física'], ['Dá uma representação comum aos dados', '6 · Apresentação']],
+        explica: 'Uma dica para lembrar: a camada 3 trabalha com IP (pacotes), a 2 com MAC (quadros), a 4 com portas (segmentos) e a 1 com bits.' },
+      { tipo: 'quiz', pergunta: 'Onde fica registrada a evolução de um padrão da Internet?',
+        opcoes: ['Em documentos numerados chamados RFC (Request for Comments)', 'No manual de cada roteador', 'Em um arquivo dentro do navegador', 'Na tabela de roteamento'], certa: 0,
+        explica: 'Cada proposta de padrão passa por discussão e testes, e tudo fica registrado em RFCs numeradas, mantidas por organizações como a IETF.' },
+      { tipo: 'quiz', pergunta: 'Qual é uma vantagem de usar um modelo em camadas?',
+        opcoes: ['Mudar uma camada não obriga a mudar as outras', 'Elimina a necessidade de cabos', 'Deixa a rede imune a vírus', 'Dispensa endereços IP'], certa: 0,
+        explica: 'As camadas separam responsabilidades. Isso facilita projetar protocolos, permite que produtos de fabricantes diferentes funcionem juntos e cria uma linguagem comum para descrever a rede.' },
+      { tipo: 'quiz', pergunta: 'Por que um celular de uma marca consegue abrir um site hospedado no servidor de outra marca?',
+        opcoes: ['Porque ambos seguem os mesmos padrões abertos de protocolo', 'Porque as marcas fizeram um acordo particular', 'Porque o site foi feito para aquele celular', 'Porque a operadora converte tudo'], certa: 0,
+        explica: 'Padrões abertos garantem que qualquer dispositivo que implemente as mesmas regras consiga se comunicar, não importa o fabricante.' }
+    ]
+  },
+  { id: 4, nome: 'Dentro do switch', icone: 'switch', modulos: 'Módulo 7' },
+  { id: 5, nome: 'Endereço IPv4', icone: 'ip', modulos: 'Módulos 8 e 9' },
+  { id: 6, nome: 'Sub-redes', icone: 'subrede', modulos: 'Módulo 9' },
+  { id: 7, nome: 'IPv6', icone: 'ipv6', modulos: 'Módulo 10' },
+  { id: 8, nome: 'DHCP e NAT', icone: 'dhcp', modulos: 'Módulos 11 e 12' },
+  { id: 9, nome: 'ARP e roteamento', icone: 'roteador', modulos: 'Módulos 13 e 14' },
+  { id: 10, nome: 'TCP, UDP e portas', icone: 'portas', modulos: 'Módulo 15' },
+  { id: 11, nome: 'Serviços', icone: 'globo', modulos: 'Módulo 16' },
+  { id: 12, nome: 'Chefão: diagnóstico', icone: 'ferramenta', modulos: 'Módulo 17' }
+];
+
+// ---------- 3) Progresso salvo ----------
+const CHAVE = 'jornada-do-pacote-v1';
+let progresso = { melhor: {} }; // melhor[id] = { pts, estrelas }
+
+function carregar() {
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE));
+    if (salvo && salvo.melhor) progresso = salvo;
+  } catch (e) { /* navegador sem localStorage: o jogo funciona sem salvar */ }
+}
+function salvar() {
+  try { localStorage.setItem(CHAVE, JSON.stringify(progresso)); } catch (e) { }
+}
+
+const xpTotal = () => Object.values(progresso.melhor).reduce((s, m) => s + m.pts, 0);
+const estrelasTotal = () => Object.values(progresso.melhor).reduce((s, m) => s + m.estrelas, 0);
+const cargoDe = xp => CARGOS.filter(c => xp >= c[0]).pop()[1];
+const jogaveis = NIVEIS.filter(n => n.desafios);
+
+// Estado de cada nível no mapa
+function status(nivel) {
+  if (!nivel.desafios) return 'embreve';
+  const m = progresso.melhor[nivel.id];
+  if (m && m.estrelas > 0) return 'feito';
+  const anterior = NIVEIS[nivel.id - 2];
+  if (!anterior || (progresso.melhor[anterior.id]?.estrelas > 0)) return 'aberto';
+  return 'bloqueado';
+}
+
+function desenharHud() {
+  const xp = xpTotal();
+  $('#hud').innerHTML = `
+    <div><small>Cargo</small><b>${cargoDe(xp)}</b></div>
+    <div><small>XP</small><b>${xp.toLocaleString('pt-BR')}</b></div>
+    <div><small>Estrelas</small><b>${estrelasTotal()} / ${jogaveis.length * 3}</b></div>`;
+}
+
+const estrelasTexto = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+
+// ---------- 4) Tela do mapa ----------
+let observador = null;
+
+function telaMapa() {
+  run = null;
+  desenharHud();
+  const prox = NIVEIS.find(n => status(n) === 'aberto');
+  app.innerHTML = `
+    <section class="mapa" aria-label="Mapa de níveis">
+      <div class="trilha" id="trilha">
+        <svg id="cabos" aria-hidden="true"></svg>
+        ${NIVEIS.map(noHTML).join('')}
+      </div>
+    </section>
+    <section class="band">
+      <div class="info">
+        ${prox ? proximoHTML(prox) : fimHTML()}
+        <div class="painel">
+          <h2>Como jogar</h2>
+          <ul>
+            <li>Acerte de primeira para ganhar 100 pontos. Com erros, o desafio vale menos.</li>
+            <li>Faça pelo menos 1 estrela para liberar o próximo dispositivo do caminho.</li>
+            <li>Rejogue quando quiser: fica salvo o seu melhor resultado.</li>
+            <li>Depois de cada resposta, leia a explicação. É ali que o conteúdo fixa.</li>
+          </ul>
+        </div>
+      </div>
+    </section>`;
+  if (observador) observador.disconnect();
+  observador = new ResizeObserver(posicionarMapa);
+  observador.observe($('#trilha'));
+}
+
+function noHTML(n) {
+  const st = status(n);
+  const travado = st === 'bloqueado' || st === 'embreve';
+  const m = progresso.melhor[n.id];
+  const rodape = st === 'embreve' ? 'em breve' : st === 'bloqueado' ? 'bloqueado' : estrelasTexto(m ? m.estrelas : 0);
+  return `<button class="no st-${st}" data-nivel="${n.id}" ${travado ? 'aria-disabled="true"' : ''}
+            aria-label="Nível ${n.id}: ${esc(n.nome)} (${rodape})">
+    <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[n.icone]}</svg><span class="num">${n.id}</span></span>
+    <span class="nome">${esc(n.nome)}</span>
+    <span class="est">${rodape}</span>
+  </button>`;
+}
+
+function proximoHTML(n) {
+  return `<div class="painel">
+    <span class="mods">${esc(n.modulos)}</span>
+    <h2>Próximo destino: ${esc(n.nome)}</h2>
+    <p>Nível ${n.id} · ${n.desafios.length} desafios. O que você vai praticar:</p>
+    <ul>${n.resumo.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+    <div class="acoes"><button class="btn" data-acao="jogar" data-nivel="${n.id}">Jogar nível ${n.id}</button></div>
+  </div>`;
+}
+
+function fimHTML() {
+  return `<div class="painel">
+    <h2>Caminho liberado até aqui</h2>
+    <p>Você completou todos os níveis disponíveis. Os próximos dispositivos do caminho (do switch ao diagnóstico final) chegam nas próximas fases.</p>
+    <p>Enquanto isso, tente fazer 3 estrelas em todos os níveis.</p>
+  </div>`;
+}
+
+// Distribui os níveis em "zigue-zague" e desenha os cabos entre eles
+function posicionarMapa() {
+  const trilha = $('#trilha');
+  if (!trilha) return;
+  const W = trilha.clientWidth;
+  const colunas = W < 480 ? 2 : W < 780 ? 3 : 4;
+  const alturaLinha = W < 480 ? 156 : 170;
+  const linhas = Math.ceil(NIVEIS.length / colunas);
+  trilha.style.height = linhas * alturaLinha + 'px';
+
+  const pontos = NIVEIS.map((n, i) => {
+    const linha = Math.floor(i / colunas);
+    let col = i % colunas;
+    if (linha % 2 === 1) col = colunas - 1 - col; // linhas ímpares voltam da direita para a esquerda
+    return { x: (col + 0.5) * W / colunas, y: linha * alturaLinha + 48 };
+  });
+
+  trilha.querySelectorAll('.no').forEach((botao, i) => {
+    botao.style.left = pontos[i].x + 'px';
+    botao.style.top = pontos[i].y + 'px';
+  });
+
+  let svg = '';
+  for (let i = 1; i < pontos.length; i++) {
+    const a = pontos[i - 1], b = pontos[i];
+    const anteriorFeito = status(NIVEIS[i - 1]) === 'feito';
+    const classe = !anteriorFeito ? 'off' : status(NIVEIS[i]) === 'feito' ? 'ok' : 'ativo';
+    svg += `<path class="cabo ${classe}" d="M${a.x} ${a.y} L${b.x} ${b.y}"/>`;
+  }
+  // O pacote viaja pelo cabo que leva ao próximo nível aberto
+  const iProx = NIVEIS.findIndex(n => status(n) === 'aberto');
+  if (iProx > 0 && !reduzMovimento) {
+    const a = pontos[iProx - 1], b = pontos[iProx];
+    svg += `<g class="pacote"><rect x="-10" y="-7" width="20" height="14" rx="2"/><path d="M-10 -7 L0 1 L10 -7"/>
+      <animateMotion dur="2.4s" repeatCount="indefinite" path="M${a.x} ${a.y} L${b.x} ${b.y}"/></g>`;
+  }
+  $('#cabos').innerHTML = svg;
+}
+
+// ---------- 5) Tela de desafio ----------
+let run = null; // partida atual: { nivel, i, pts, acertos, erros, fim, est }
+
+function jogar(id) {
+  const nivel = NIVEIS[id - 1];
+  if (!nivel || !nivel.desafios) return;
+  if (observador) observador.disconnect();
+  run = { nivel, i: 0, pts: 0, acertos: 0 };
+  telaDesafio();
+}
+
+// Pontuação por desafio: de primeira 100, com 1 erro 60, com mais erros 30
+const pontosPorErros = erros => erros === 0 ? 100 : erros === 1 ? 60 : 30;
+
+function telaDesafio() {
+  const d = run.nivel.desafios[run.i];
+  const total = run.nivel.desafios.length;
+  run.erros = 0;
+  run.fim = false;
+  run.est = {};
+  app.innerHTML = `
+    <section class="band"><div class="jogo">
+      <div class="barra">
+        <button class="btn-sec" data-acao="mapa">← Mapa</button>
+        <div><b>Nível ${run.nivel.id} · ${esc(run.nivel.nome)}</b>
+          <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${run.i}"><i style="width:${run.i / total * 100}%"></i></div></div>
+        <span class="pts">${run.pts} pts</span>
+      </div>
+      <article class="painel card">
+        <p class="tipo">${ROTULO[d.tipo]} · ${run.i + 1} de ${total}</p>
+        <h2>${esc(d.pergunta)}</h2>
+        <div id="area"></div>
+        <div id="feedback" aria-live="polite"></div>
+      </article>
+    </div></section>`;
+  RENDER[d.tipo](d);
+  window.scrollTo({ top: 0 });
+}
+
+// Cada tipo de desafio tem uma função que desenha a área de resposta
+const RENDER = {
+  quiz(d) {
+    run.est.ordem = embaralhar(d.opcoes.map((_, i) => i));
+    $('#area').innerHTML = `<div class="ops">${run.est.ordem.map(i =>
+      `<button class="op" data-op="${i}">${esc(d.opcoes[i])}</button>`).join('')}</div>`;
+  },
+
+  numero(d) {
+    $('#area').innerHTML = `<form class="numero" id="form-num">
+        <input id="resp-num" type="number" inputmode="decimal" step="any" aria-label="Sua resposta" required>
+        <span>${esc(d.unidade || '')}</span>
+        <button class="btn" type="submit">Verificar</button>
+      </form><p class="erro-txt" id="msg-num" aria-live="polite"></p>`;
+    $('#resp-num').focus();
+  },
+
+  ligar(d) {
+    run.est.feitos = 0;
+    run.est.esq = null;
+    run.est.dir = null;
+    const direita = embaralhar(d.pares.map((_, i) => i));
+    $('#area').innerHTML = `<p class="dica">Toque em um item da esquerda e depois no par dele à direita.</p>
+      <div class="colunas">
+        <div class="ops">${d.pares.map((p, i) => `<button class="chip" data-esq="${i}">${esc(p[0])}</button>`).join('')}</div>
+        <div class="ops">${direita.map(i => `<button class="chip" data-dir="${i}">${esc(d.pares[i][1])}</button>`).join('')}</div>
+      </div>`;
+  },
+
+  classificar(d) {
+    run.est.sel = null;
+    run.est.feitos = 0;
+    const ordem = embaralhar(d.itens.map((_, i) => i));
+    $('#area').innerHTML = `<p class="dica">Toque em um item e depois no grupo certo.</p>
+      <div class="chips" id="pool">${ordem.map(i => `<button class="chip" data-item="${i}">${esc(d.itens[i][0])}</button>`).join('')}</div>
+      <div class="grupos">${d.grupos.map((g, gi) => `<div class="grupo" role="button" tabindex="0" data-grupo="${gi}"><b>${esc(g)}</b></div>`).join('')}</div>`;
+  },
+
+  ordenar(d) {
+    run.est.pos = 0;
+    $('#area').innerHTML = `<p class="dica">Toque nos itens na ordem certa.</p>
+      <ol class="fila" id="fila">${d.itens.map(() => '<li class="vazio">…</li>').join('')}</ol>
+      <div class="chips">${embaralhar(d.itens).map(t => `<button class="chip" data-ord="${esc(t)}">${esc(t)}</button>`).join('')}</div>`;
+  }
+};
+
+// Respostas: tratadas por delegação de eventos (um único "ouvinte" para a tela toda)
+function cliqueDesafio(alvo) {
+  if (!run || run.fim) return;
+  const d = run.nivel.desafios[run.i];
+
+  if (d.tipo === 'quiz' && alvo.dataset.op !== undefined) {
+    const escolhida = Number(alvo.dataset.op);
+    document.querySelectorAll('.op').forEach(b => {
+      b.disabled = true;
+      if (Number(b.dataset.op) === d.certa) b.classList.add('certa');
+    });
+    if (escolhida === d.certa) finalizar(true, 100);
+    else { alvo.classList.add('errada'); finalizar(false, 0); }
+  }
+
+  if (d.tipo === 'ligar' && (alvo.dataset.esq !== undefined || alvo.dataset.dir !== undefined)) {
+    if (alvo.classList.contains('ok')) return;
+    const lado = alvo.dataset.esq !== undefined ? 'esq' : 'dir';
+    document.querySelectorAll(`[data-${lado}]`).forEach(b => b.classList.remove('sel'));
+    alvo.classList.add('sel');
+    run.est[lado] = alvo;
+    const { esq, dir } = run.est;
+    if (esq && dir) {
+      if (esq.dataset.esq === dir.dataset.dir) {
+        [esq, dir].forEach(b => { b.classList.remove('sel'); b.classList.add('ok'); b.disabled = true; });
+        run.est.feitos++;
+        if (run.est.feitos === d.pares.length) finalizar(true, pontosPorErros(run.erros));
+      } else {
+        run.erros++;
+        tremer(dir);
+        dir.classList.remove('sel');
+      }
+      run.est.esq = run.est.esq && run.est.esq.classList.contains('ok') ? null : run.est.esq;
+      run.est.dir = null;
+    }
+  }
+
+  if (d.tipo === 'classificar') {
+    if (alvo.dataset.item !== undefined && !alvo.classList.contains('ok')) {
+      document.querySelectorAll('#pool .chip').forEach(b => b.classList.remove('sel'));
+      alvo.classList.add('sel');
+      run.est.sel = alvo;
+    } else if (alvo.dataset.grupo !== undefined && run.est.sel) {
+      const item = d.itens[Number(run.est.sel.dataset.item)];
+      if (item[1] === Number(alvo.dataset.grupo)) {
+        run.est.sel.classList.remove('sel');
+        run.est.sel.classList.add('ok');
+        run.est.sel.disabled = true;
+        alvo.appendChild(run.est.sel);
+        run.est.sel = null;
+        run.est.feitos++;
+        if (run.est.feitos === d.itens.length) {
+          $('#area').classList.add('pronto');
+          finalizar(true, pontosPorErros(run.erros));
+        }
+      } else {
+        run.erros++;
+        tremer(alvo);
+      }
+    }
+  }
+
+  if (d.tipo === 'ordenar' && alvo.dataset.ord !== undefined && !alvo.disabled) {
+    if (alvo.dataset.ord === d.itens[run.est.pos]) {
+      const li = $('#fila').children[run.est.pos];
+      li.textContent = d.itens[run.est.pos];
+      li.className = 'ok';
+      alvo.disabled = true;
+      alvo.classList.add('ok', 'sem');
+      run.est.pos++;
+      if (run.est.pos === d.itens.length) finalizar(true, pontosPorErros(run.erros));
+    } else {
+      run.erros++;
+      tremer(alvo);
+    }
+  }
+}
+
+function enviarNumero() {
+  if (!run || run.fim) return;
+  const d = run.nivel.desafios[run.i];
+  const valor = Number(String($('#resp-num').value).replace(',', '.'));
+  if (valor === d.resposta) {
+    $('#resp-num').disabled = true;
+    finalizar(true, pontosPorErros(run.erros));
+  } else if (run.erros === 0) {
+    run.erros++;
+    tremer($('#resp-num'));
+    $('#msg-num').textContent = 'Ainda não. Dica: ' + d.dica;
+  } else {
+    $('#resp-num').disabled = true;
+    $('#msg-num').textContent = `A resposta era ${d.resposta.toLocaleString('pt-BR')} ${d.unidade || ''}.`;
+    finalizar(false, 0);
+  }
+}
+
+// Mostra o resultado do desafio e a explicação
+function finalizar(acertou, pts) {
+  const d = run.nivel.desafios[run.i];
+  run.fim = true;
+  run.pts += pts;
+  if (pts > 0) run.acertos++;
+  const ultimo = run.i === run.nivel.desafios.length - 1;
+  const titulo = !acertou ? 'Não foi dessa vez' : run.erros === 0 ? 'Perfeito!' : run.erros === 1 ? 'Certo, com um tropeço' : 'Concluído';
+  document.querySelector('.pts').textContent = run.pts + ' pts';
+  $('#feedback').innerHTML = `<div class="fb ${acertou ? 'bom' : 'ruim'}">
+    <b>${titulo}</b> <span>+${pts} pts</span>
+    <p>${esc(d.explica)}</p>
+    <div class="acoes"><button class="btn" data-acao="proximo">${ultimo ? 'Ver resultado' : 'Continuar'}</button></div>
+  </div>`;
+  document.querySelector('[data-acao="proximo"]').focus({ preventScroll: true });
+  $('#feedback').scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'nearest' });
+}
+
+// ---------- 6) Tela de resultado ----------
+function telaResultado() {
+  const n = run.nivel;
+  const maximo = n.desafios.length * 100;
+  const pct = run.pts / maximo;
+  const estrelas = pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.4 ? 1 : 0;
+  const cargoAntes = cargoDe(xpTotal());
+  const antes = progresso.melhor[n.id];
+  const recorde = !antes || run.pts > antes.pts;
+  if (recorde) progresso.melhor[n.id] = { pts: run.pts, estrelas: Math.max(estrelas, antes ? antes.estrelas : 0) };
+  salvar();
+  const cargoDepois = cargoDe(xpTotal());
+  desenharHud();
+  const prox = NIVEIS[n.id];
+  const liberou = estrelas > 0 && prox && prox.desafios;
+
+  app.innerHTML = `<section class="band"><div class="jogo">
+    <article class="painel resultado">
+      <span class="mods">Nível ${n.id} · ${esc(n.nome)}</span>
+      <div class="grandes" aria-label="${estrelas} de 3 estrelas">${'★'.repeat(estrelas)}<span class="apagada">${'★'.repeat(3 - estrelas)}</span></div>
+      <h2>${estrelas === 3 ? 'Nível dominado!' : estrelas > 0 ? 'Nível concluído' : 'Quase lá'}</h2>
+      <p>${estrelas > 0 ? 'O pacote seguiu viagem pela rede.' : 'Faça pelo menos 40% dos pontos para ganhar 1 estrela e liberar o próximo nível.'}</p>
+      <div class="resumo">
+        <div><small>Pontos</small><b>${run.pts} / ${maximo}</b></div>
+        <div><small>Acertos</small><b>${run.acertos} de ${n.desafios.length}</b></div>
+        <div><small>Melhor resultado</small><b>${progresso.melhor[n.id] ? progresso.melhor[n.id].pts : 0}</b></div>
+      </div>
+      ${recorde && antes ? '<p><b>Novo recorde neste nível!</b></p>' : ''}
+      ${cargoDepois !== cargoAntes ? `<p class="cargo-novo">Promoção! Seu novo cargo: ${cargoDepois}</p>` : ''}
+      <div class="acoes">
+        ${liberou ? `<button class="btn" data-acao="jogar" data-nivel="${prox.id}">Próximo nível</button>` : ''}
+        <button class="${liberou ? 'btn-sec' : 'btn'}" data-acao="jogar" data-nivel="${n.id}">Jogar de novo</button>
+        <button class="btn-sec" data-acao="mapa">Voltar ao mapa</button>
+      </div>
+    </article>
+  </div></section>`;
+  window.scrollTo({ top: 0 });
+}
+
+// ---------- 7) Inicialização ----------
+document.addEventListener('click', e => {
+  const alvo = e.target.closest('button, [data-grupo]');
+  if (!alvo) return;
+  if (alvo.classList.contains('no')) {
+    if (!alvo.hasAttribute('aria-disabled')) jogar(Number(alvo.dataset.nivel));
+    return;
+  }
+  const acao = alvo.dataset.acao;
+  if (acao === 'mapa') return telaMapa();
+  if (acao === 'jogar') return jogar(Number(alvo.dataset.nivel));
+  if (acao === 'proximo') {
+    run.i++;
+    return run.i < run.nivel.desafios.length ? telaDesafio() : telaResultado();
+  }
+  cliqueDesafio(alvo);
+});
+
+// Grupos de classificação também respondem ao teclado (Enter ou Espaço)
+document.addEventListener('keydown', e => {
+  const g = e.target.closest && e.target.closest('[data-grupo]');
+  if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); cliqueDesafio(g); }
+});
+
+document.addEventListener('submit', e => {
+  if (e.target.id === 'form-num') { e.preventDefault(); enviarNumero(); }
+});
+
+function iniciar(dados) {
+  if (dados && dados.progresso && dados.progresso.melhor) progresso = dados.progresso;
+  else carregar();
+  telaMapa();
+}
+
+window.claude?.hot?.snapshot?.(() => ({ progresso }));
+if (window.claude?.hot?.ready) window.claude.hot.ready(iniciar);
+else iniciar(window.claude?.hot?.data ?? {});
+}
+</script>
+</body>
+</html>
