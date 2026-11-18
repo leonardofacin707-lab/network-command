@@ -1,0 +1,74 @@
+{
+  "camadas": [
+    {
+      "id": "acesso",
+      "nome": "Switches de acesso (topo do rack)",
+      "disp": 0.999,
+      "custo": 3000,
+      "descricao": "Ligam os servidores. Cada switch tem 48 portas."
+    },
+    {
+      "id": "agregacao",
+      "nome": "Switches de agregação",
+      "disp": 0.9995,
+      "custo": 8000,
+      "descricao": "Reúnem os switches de acesso."
+    },
+    {
+      "id": "nucleo",
+      "nome": "Roteadores de núcleo",
+      "disp": 0.9999,
+      "custo": 20000,
+      "descricao": "Interligam o data center e a saída para fora."
+    },
+    {
+      "id": "energia",
+      "nome": "Fontes de energia (nobreak + gerador)",
+      "disp": 0.999,
+      "custo": 5000,
+      "descricao": "Alimentam todo o salão."
+    },
+    {
+      "id": "internet",
+      "nome": "Links de Internet",
+      "disp": 0.998,
+      "custo": 4000,
+      "descricao": "Contratos com provedores diferentes."
+    }
+  ],
+  "desafios": [
+    {
+      "id": "loja-virtual",
+      "titulo": "Loja virtual",
+      "dificuldade": 1,
+      "xp": 150,
+      "sla": 0.999,
+      "servidores": 20,
+      "camadaAcesso": "acesso",
+      "orcamento": 56000,
+      "cenario": "Uma loja virtual hospeda 20 servidores. O contrato com os clientes promete 99,9% de disponibilidade (cerca de 8,8 horas fora do ar por ano). Descubra onde a rede é mais frágil e onde vale a pena duplicar."
+    },
+    {
+      "id": "sistema-bancario",
+      "titulo": "Sistema bancário interno",
+      "dificuldade": 2,
+      "xp": 200,
+      "sla": 0.9999,
+      "servidores": 30,
+      "camadaAcesso": "acesso",
+      "orcamento": 85000,
+      "cenario": "Um banco regional precisa de 99,99% (cerca de 52 minutos por ano) para 30 servidores. Uma única camada frágil já derruba a meta inteira."
+    },
+    {
+      "id": "pronto-socorro",
+      "titulo": "Sistema de pronto-socorro",
+      "dificuldade": 3,
+      "xp": 250,
+      "sla": 0.999995,
+      "servidores": 40,
+      "camadaAcesso": "acesso",
+      "orcamento": 90000,
+      "cenario": "O sistema de atendimento de um pronto-socorro não pode parar: a meta é 99,9995% (cerca de 2,6 minutos por ano) para 40 servidores, sem estourar o orçamento. Aqui até uma terceira unidade em uma camada pode compensar."
+    }
+  ]
+}

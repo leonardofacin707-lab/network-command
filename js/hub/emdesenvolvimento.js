@@ -2,7 +2,6 @@ import { esc } from '../core/ui.js';
 
 /** Páginas dos módulos ainda não construídos: dizem com clareza que não existem e o que está planejado. */
 const PLANOS = {
-  datacenter: { titulo: 'Data Center', fase: 'Fase 6', texto: 'Cenário de redes de data center: redundância, disponibilidade e capacidade.' },
   campus: { titulo: 'Campus de Redes', fase: 'Fase 6', texto: 'Cenário de rede de campus com vários prédios, VLANs e roteamento.' },
 };
 

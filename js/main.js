@@ -17,22 +17,25 @@ import missoesModulo from './missoes/index.js';
 import { carregarMissoes } from './missoes/catalogo.js';
 import empresaModulo from './empresa/index.js';
 import { carregarEmpresa } from './empresa/catalogo.js';
+import datacenterModulo from './datacenter/index.js';
+import { carregarDatacenter } from './datacenter/catalogo.js';
 import { emDesenvolvimento } from './hub/emdesenvolvimento.js';
 
 async function iniciar() {
   const app = $('#app');
   const shell = montarShell();
-  let catalogo, missoes, empresa;
+  let catalogo, missoes, empresa, datacenter;
   try {
     catalogo = await carregarCatalogo();
     missoes = await carregarMissoes();
     empresa = await carregarEmpresa();
+    datacenter = await carregarDatacenter();
     catalogo = { ...catalogo, missoes };
   } catch (erro) {
     app.innerHTML = `<section class="band"><div class="painel"><h2>Não foi possível carregar os dados</h2><p>${String(erro.message)}</p></div></section>`;
     throw erro;
   }
-  const referencia = criarReferencia(catalogo, IDS_CONQUISTAS, missoes.map(m => m.id), empresa.projetos.map(p => p.id));
+  const referencia = criarReferencia(catalogo, IDS_CONQUISTAS, missoes.map(m => m.id), empresa.projetos.map(p => p.id), datacenter.desafios.map(d => d.id));
 
   // No ambiente de pré-visualização do Claude, o estado vem do gancho "hot"; no navegador comum, do localStorage.
   const hot = window.claude?.hot;
@@ -59,11 +62,11 @@ async function iniciar() {
   const rotas = {
     dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
     laboratorio, empresa: empresaModulo,
-    datacenter: emDesenvolvimento('datacenter'), campus: emDesenvolvimento('campus'), missoes: missoesModulo
+    datacenter: datacenterModulo, campus: emDesenvolvimento('campus'), missoes: missoesModulo
   };
   criarRoteador({
     raiz: app, rotas, padrao: 'dashboard',
-    ctx: { catalogo, referencia, store, missoes, empresa },
+    ctx: { catalogo, referencia, store, missoes, empresa, datacenter },
     aoTrocar: id => shell.marcarAtual(id)
   }).iniciar();
 }

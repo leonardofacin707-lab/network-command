@@ -20,7 +20,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - ✅ Menu honesto: (na Fase 2) Laboratório, Empresa, Data Center, Campus de Redes e Missões mostravam o selo "em dev." e uma página que diz que o módulo ainda não existe. Árvore de Habilidades está marcada como protótipo.
 - ✅ Dashboard: progressão (cargo, XP, nível do jogador, 300 XP por nível), continuar de onde parou, domínio por trilha, pontos de atenção, atividade recente, conquistas. Tudo calculado do estado real; estados vazios são explícitos.
 - ✅ Quiz ampliado: histórico de respostas (últimas 300), revisão de erros (não dá XP), desempenho por assunto.
-- ✅ Conquistas: 9 na Fase 2 (11 depois da Fase 5), cada uma é uma regra verificável (ver `js/hub/conquistas-regras.js`), concedidas na mudança de estado, com aviso na tela.
+- ✅ Conquistas: 9 na Fase 2 (13 hoje), cada uma é uma regra verificável (ver `js/hub/conquistas-regras.js`), concedidas na mudança de estado, com aviso na tela.
 - ✅ Perfil: nome de exibição validado, backup (exportar/importar com validação) e zerar progresso com confirmação em duas etapas.
 - 🧪 Árvore de habilidades: 8 trilhas × 3 níveis de domínio. Só a Teoria de Fundamentos é medida; Prática e Diagnóstico aparecem trancados até existir o laboratório.
 - ✅ Estado salvo v3 (migra v1 e v2). Validação descarta registros inválidos.
@@ -65,8 +65,14 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - 🧪 É planejamento, não simulação: o tráfego não passa pelo motor, não há falhas nem crescimento ao longo do tempo, e a moeda do jogo (créditos) ainda não existe (o orçamento é um número do cenário, em R$ fictícios).
 - Endurecimento: conclusão de missão/projeto sem XP ou data válidos no arquivo salvo deixa de valer (antes ficava "concluída" com 0 XP).
 
-### Data Center e Campus de Redes ⏳
-- Continuam **não iniciados** (aparecem como "em desenvolvimento" no menu).
+### Data Center 🧪
+- ✅ 3 desafios (loja virtual 99,9%, sistema bancário 99,99%, pronto-socorro 99,9995%). O jogador escolhe de 0 a 4 unidades de cada camada (acesso, agregação, núcleo, energia, links de Internet).
+- ✅ Regras reais em `js/datacenter/disponibilidade.js`: unidades de uma camada em paralelo (1 − (1 − a)^n), camadas em série (produto), parada anual em minutos, portas de acesso (48 por switch; com 2+ switches cada servidor usa 2 portas) e orçamento.
+- ✅ Testes: contas conferidas (4 noves = 52,56 min/ano), busca exaustiva garante solução dentro do orçamento com folga pequena, "tudo no máximo" estoura o orçamento, uma unidade por camada nunca cumpre a meta. Nova conquista *Alta disponibilidade*.
+- 🧪 É cálculo, não simulação: disponibilidades fictícias, falhas independentes (sem falha de causa comum), sem banda/capacidade de links, sem falhas ao vivo.
+
+### Campus de Redes ⏳
+- Continua **não iniciado** ("em desenvolvimento" no menu). Depende de VLANs e roteamento entre VLANs, que o motor ainda não simula.
 
 ## Próximos passos
 - Fases 7 e 8: expansão de conteúdo e recursos avançados (VLAN, rotas estáticas, DHCP, NAT) — ⏳.

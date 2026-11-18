@@ -15,6 +15,7 @@ export const estadoInicial = () => ({
   conquistas: {},
   lab: { topologia: topologiaVazia() },   // laboratório livre
   missoes: {},                            // { [id]: { topologia, concluida, em, xp, dicas } }
+  datacenter: {},                         // { [desafioId]: { unidades: {camada: n}, concluida, em, xp } }
   empresa: {}                             // { [projetoId]: { prefixos: {setor: n}, equip: {item: qtd}, concluida, em, xp } }
 });
 
@@ -93,6 +94,22 @@ export function limparEmpresa(bruto, conhecidos) {
   return limpo;
 }
 
+/** Desafios do Data Center: só ids conhecidos; unidades por camada são inteiros de 0 a 8. */
+export function limparDatacenter(bruto, conhecidos) {
+  const limpo = {};
+  if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) return limpo;
+  for (const [id, p] of Object.entries(bruto)) {
+    if (!conhecidos.has(id) || !p || typeof p !== 'object') continue;
+    const unidades = {};
+    if (p.unidades && typeof p.unidades === 'object' && !Array.isArray(p.unidades)) {
+      for (const [k, v] of Object.entries(p.unidades)) if (CHAVE_ID.test(k) && inteiro(v, 0, 8) && Object.keys(unidades).length < 30) unidades[k] = v;
+    }
+    const concluida = p.concluida === true && inteiro(p.xp, 1, 1000) && dataValida(p.em);
+    limpo[id] = { unidades, concluida, em: concluida ? p.em : null, xp: concluida ? p.xp : 0 };
+  }
+  return limpo;
+}
+
 /** Converte qualquer coisa lida do disco (v1, v2, v3 ou lixo) em um estado v3 válido. */
 export function normalizar(bruto, ref) {
   const base = estadoInicial();
@@ -109,6 +126,7 @@ export function normalizar(bruto, ref) {
     base.lab = { topologia: normalizarTopologia(bruto.lab?.topologia) };
     base.missoes = limparMissoes(bruto.missoes, ref.missoes ?? new Set());
     base.empresa = limparEmpresa(bruto.empresa, ref.empresa ?? new Set());
+    base.datacenter = limparDatacenter(bruto.datacenter, ref.datacenter ?? new Set());
   }
   return base;
 }
