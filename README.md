@@ -18,7 +18,7 @@ Também funciona com a extensão Live Server do VS Code ou com GitHub Pages.
 
 ```bash
 npm install                     # só instala o playwright-core (testes no navegador)
-npm run test:unit               # regras puras: pontuação, liberação, estado salvo, dados
+npm run test:unit               # regras puras e motor de simulação: pontuação, estado salvo, IPv4, ARP, ping, missões
 CHROME_PATH=/caminho/do/chrome npm run test:e2e   # navegador real: um robô joga pela interface
 ALVO=legacy npm run test:e2e    # mesmos testes contra a v0.1 congelada (legacy/)
 ```

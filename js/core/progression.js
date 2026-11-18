@@ -1,5 +1,5 @@
 // Progressão compartilhada: XP, cargo e estrelas. Funções puras sobre o mapa "melhor" do quiz.
-// Futuramente outros módulos (laboratório, missões) somarão XP aqui.
+// O XP total soma o quiz e as missões concluídas.
 export const CARGOS = [
   [0, 'Estagiário de TI'],
   [900, 'Técnico de suporte'],
@@ -11,6 +11,10 @@ export const CARGOS = [
 
 export const xpTotal = melhor => Object.values(melhor).reduce((soma, m) => soma + m.pts, 0);
 export const estrelasTotal = melhor => Object.values(melhor).reduce((soma, m) => soma + m.estrelas, 0);
+/** XP ganho em missões concluídas (cada missão concluída soma o XP gravado nela uma única vez). */
+export const xpMissoes = missoes => Object.values(missoes ?? {}).reduce((soma, m) => soma + (m.concluida ? m.xp : 0), 0);
+/** XP total do jogador: quiz + missões. É o que alimenta cargo, nível e HUD. */
+export const xpDoEstado = estado => xpTotal(estado.quiz.melhor) + xpMissoes(estado.missoes);
 export const cargoDe = xp => CARGOS.filter(c => xp >= c[0]).pop()[1];
 
 export const XP_POR_NIVEL = 300;

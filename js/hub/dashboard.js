@@ -1,5 +1,5 @@
 import { esc, dataHora } from '../core/ui.js';
-import { xpTotal, cargoDe, nivelDoJogador, estrelasTotal } from '../core/progression.js';
+import { xpDoEstado, cargoDe, nivelDoJogador, estrelasTotal } from '../core/progression.js';
 import { statusDoNivel } from '../quiz/unlock.js';
 import { listaRevisao, estatisticas, foiPerfeita } from '../quiz/historico.js';
 import { dominioPorHabilidade, desempenhoPorAssunto, pontosFracos } from './dominio.js';
@@ -10,7 +10,7 @@ export default {
   montar(raiz, { catalogo, store }) {
     const estado = store.obter();
     const { melhor, historico } = estado.quiz;
-    const xp = xpTotal(melhor);
+    const xp = xpDoEstado(estado);
     const nivel = nivelDoJogador(xp);
     const proximo = catalogo.niveis.find(n => statusDoNivel(n, catalogo.niveis, melhor) === 'aberto');
     const dominio = dominioPorHabilidade(historico, catalogo.perguntas);

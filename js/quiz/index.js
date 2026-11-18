@@ -24,6 +24,8 @@ export default {
       run => { abas.hidden = false; telaResultado(ctx, run); },
       resposta => store.alterar(e => ({ ...e, quiz: { ...e.quiz, historico: registrarResposta(e.quiz.historico, resposta) } })));
 
+    // Mantém a aba destacada igual à tela exibida (o botão "Mapa" troca a tela sem trocar a rota).
+    const marcarAba = href => abas.querySelectorAll('.aba').forEach(a => (a.getAttribute('href') === href ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     const abrirMapa = () => { sessao.encerrar(); abas.hidden = false; desenharMapa(ctx); };
     const jogar = nivel => { abas.hidden = true; sessao.iniciar(nivel); };
     const jogarId = id => jogar(catalogo.niveis.find(n => n.id === id));
@@ -41,7 +43,7 @@ export default {
         return;
       }
       const acao = alvo.dataset.acao;
-      if (acao === 'mapa') { limparHash('conhecimento'); return abrirMapa(); }
+      if (acao === 'mapa') { limparHash('conhecimento'); marcarAba('#/conhecimento'); return abrirMapa(); }
       if (acao === 'jogar') return jogarId(Number(alvo.dataset.nivel));
       if (acao === 'revisar') return revisar();
       if (acao === 'proximo') return sessao.proximo();

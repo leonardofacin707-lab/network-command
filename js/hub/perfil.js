@@ -1,5 +1,5 @@
 import { esc, dataHora } from '../core/ui.js';
-import { xpTotal, cargoDe, nivelDoJogador } from '../core/progression.js';
+import { xpDoEstado, cargoDe, nivelDoJogador } from '../core/progression.js';
 import { normalizar, apagar, estadoInicial, MAX_NOME } from '../core/storage.js';
 import { estatisticas } from '../quiz/historico.js';
 import { CONQUISTAS } from './conquistas-regras.js';
@@ -24,7 +24,7 @@ export default {
 
     function desenhar(mensagem = '') {
       const estado = store.obter();
-      const xp = xpTotal(estado.quiz.melhor);
+      const xp = xpDoEstado(estado);
       const nivel = nivelDoJogador(xp);
       const est = estatisticas(estado.quiz.historico);
       raiz.innerHTML = `<section class="band"><div class="wrap">
@@ -55,7 +55,7 @@ export default {
             <p>Exporte um arquivo para guardar ou levar o progresso para outro navegador.</p>
             <div class="acoes"><button class="btn-sec" id="exportar">Exportar progresso</button></div>
             <p><label for="importar">Importar progresso</label><br><input id="importar" type="file" accept="application/json,.json"></p>
-            <div id="importacao" aria-live="polite">${pendente ? `<p>Arquivo lido: <b>${pendente.quiz.historico.length}</b> respostas e <b>${xpTotal(pendente.quiz.melhor).toLocaleString('pt-BR')}</b> XP. Isso <b>substitui</b> o progresso atual.</p>
+            <div id="importacao" aria-live="polite">${pendente ? `<p>Arquivo lido: <b>${pendente.quiz.historico.length}</b> respostas e <b>${xpDoEstado(pendente).toLocaleString('pt-BR')}</b> XP. Isso <b>substitui</b> o progresso atual.</p>
               <div class="acoes"><button class="btn" id="confirmar-import">Substituir meu progresso</button><button class="btn-sec" id="cancelar-import">Cancelar</button></div>` : ''}</div>
           </article>
           <article class="painel">

@@ -1,11 +1,11 @@
 import { $ } from '../core/ui.js';
-import { xpTotal, estrelasTotal, cargoDe, nivelDoJogador } from '../core/progression.js';
+import { xpDoEstado, estrelasTotal, cargoDe, nivelDoJogador } from '../core/progression.js';
 
 /** Placar global (topo da página): reage a qualquer mudança do estado. */
 export function iniciarHud(store, catalogo) {
   const desenhar = estado => {
     const melhor = estado.quiz.melhor;
-    const xp = xpTotal(melhor);
+    const xp = xpDoEstado(estado);
     $('#hud').innerHTML = `
       <div><small>Cargo</small><b>${cargoDe(xp)}</b></div>
       <div><small>XP</small><b>${xp.toLocaleString('pt-BR')}</b></div>

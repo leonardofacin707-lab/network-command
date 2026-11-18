@@ -48,7 +48,7 @@ test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando ou avi
     await irPara(pagina, rota);
     assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), rota, rota);
     const texto = await pagina.locator('#app').innerText();
-    if (['empresa', 'datacenter', 'campus', 'missoes'].includes(rota)) {
+    if (['empresa', 'datacenter', 'campus'].includes(rota)) {
       assert.match(texto, /ainda não existe/i, `${rota} deve avisar que não existe`);
       assert.match(await pagina.locator(`.menu a[data-rota="${rota}"]`).innerText(), /em dev/i);
     } else {
@@ -71,7 +71,7 @@ test('dashboard vazio mostra convite, sem números inventados', async () => {
   assert.match(texto, /Bem-vindo/);
   assert.match(texto, /0 de 9 estrelas|0 XP/);
   assert.match(texto, /Sem atividade ainda/);
-  assert.match(texto, /0 de 9 desbloqueadas/);
+  assert.match(texto, /0 de 11 desbloqueadas/);
   await contexto.close();
 });
 
@@ -110,7 +110,8 @@ test('revisão: lista o desafio errado, refazer acertando tira da lista', async 
   const { pagina, erros, contexto } = await abrir('conhecimento');
   await jogarNivel(pagina, 1, { falhas: { 0: 'errar' } });
   await pagina.goto(servidor.url + '/index.html#/conhecimento/revisao');
-  await pagina.locator('#app h2').first().waitFor();
+  await pagina.locator('.aba[aria-current=page]', { hasText: 'Revisão' }).waitFor();
+  await pagina.locator('[data-acao="revisar"]').waitFor();
   assert.match(await pagina.locator('#app').innerText(), /1 desafio teve erro/);
   assert.match(await pagina.locator('#app').innerText(), /Quem é o dono da Internet/);
   await pagina.locator('[data-acao="revisar"]').click();
@@ -153,9 +154,9 @@ test('histórico e desempenho por assunto mostram os registros', async () => {
   await contexto.close();
 });
 
-test('conquistas: 9 cartões; as ganhas mostram data, as outras dizem como ganhar', async () => {
+test('conquistas: 11 cartões; as ganhas mostram data, as outras dizem como ganhar', async () => {
   const { pagina, contexto } = await abrirComEstado('conquistas', { ...ESTADO, conquistas: {} });
-  assert.equal(await pagina.locator('.conquista').count(), 9);
+  assert.equal(await pagina.locator('.conquista').count(), 11);
   assert.ok(await pagina.locator('.conquista.ganha').count() >= 2, 'primeiro passo e identificado');
   assert.match(await pagina.locator('[data-conquista="nivel-dominado"]').innerText(), /Bloqueada/);
   assert.match(await pagina.locator('[data-conquista="primeiro-passo"]').innerText(), /Desbloqueada em/);
@@ -262,7 +263,7 @@ test('menu no celular: abre com o botão, fecha ao escolher uma página ou com E
 
 test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async () => {
   for (const largura of [360, 768, 1280]) {
-    for (const rota of ROTAS_MENU) {
+    for (const rota of [...ROTAS_MENU, 'missoes/gateway-errado']) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 800 });
       const excesso = await pagina.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(excesso <= 0, `${rota} em ${largura}px excede ${excesso}px`);
@@ -272,7 +273,7 @@ test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async (
 });
 
 test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async () => {
-  const rotas = [...ROTAS_MENU, 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos'];
+  const rotas = [...ROTAS_MENU, 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado'];
   for (const largura of [1280, 390]) {
     for (const rota of rotas) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 900 });

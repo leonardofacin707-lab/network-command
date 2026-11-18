@@ -5,7 +5,6 @@ const PLANOS = {
   empresa: { titulo: 'Empresa', fase: 'Fase 6', texto: 'Gerenciamento da infraestrutura de uma empresa: orçamento, equipamentos, falhas e crescimento da rede.' },
   datacenter: { titulo: 'Data Center', fase: 'Fase 6', texto: 'Cenário de redes de data center: redundância, disponibilidade e capacidade.' },
   campus: { titulo: 'Campus de Redes', fase: 'Fase 6', texto: 'Cenário de rede de campus com vários prédios, VLANs e roteamento.' },
-  missoes: { titulo: 'Missões', fase: 'Fase 5', texto: 'Desafios de troubleshooting no laboratório: diagnosticar e corrigir problemas de rede em cenários guiados.' }
 };
 
 export const emDesenvolvimento = id => ({

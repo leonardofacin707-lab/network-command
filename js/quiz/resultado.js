@@ -1,5 +1,5 @@
 import { esc } from '../core/ui.js';
-import { xpTotal, cargoDe } from '../core/progression.js';
+import { xpDoEstado, cargoDe } from '../core/progression.js';
 import { maximoDoNivel, estrelasPorPontos, registrarResultado } from './scoring.js';
 import { statusDoNivel } from './unlock.js';
 
@@ -10,11 +10,11 @@ export function telaResultado({ app, catalogo, store }, run) {
   const maximo = maximoDoNivel(n.desafios.length);
   const estrelas = estrelasPorPontos(run.pts, maximo);
   const antes = store.obter().quiz.melhor;
-  const cargoAntes = cargoDe(xpTotal(antes));
+  const cargoAntes = cargoDe(xpDoEstado(store.obter()));
   const r = registrarResultado(antes, n.id, run.pts, estrelas);
   if (r.recorde) store.alterar(e => ({ ...e, quiz: { ...e.quiz, melhor: r.melhor } }));
   const melhor = store.obter().quiz.melhor;
-  const cargoDepois = cargoDe(xpTotal(melhor));
+  const cargoDepois = cargoDe(xpDoEstado(store.obter()));
   const prox = catalogo.niveis[catalogo.niveis.indexOf(n) + 1];
   // O botão depende do estado do próximo nível (não só desta partida): quem já liberou antes continua vendo o atalho.
   const liberou = prox && ['aberto', 'feito'].includes(statusDoNivel(prox, catalogo.niveis, melhor));

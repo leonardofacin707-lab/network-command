@@ -1,0 +1,586 @@
+[
+  {
+    "id": "cabo-esquecido",
+    "titulo": "O cabo esquecido",
+    "dificuldade": 1,
+    "xp": 100,
+    "cenario": "O PC3 foi instalado hoje na sala de reuniões, mas ninguém consegue acessá-lo. Os endereços IP já estão configurados corretamente.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Antes de olhar para os endereços, confira o nível físico: todo computador precisa estar ligado ao switch.",
+      "Selecione o PC3 e veja a lista de cabos dele. Depois use \"Conectar cabo\" para ligá-lo ao SW1."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 130,
+          "interfaces": []
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 200,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 450,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 700,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.30",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ip-duplicado",
+    "titulo": "Dois computadores, um endereço",
+    "dificuldade": 1,
+    "xp": 100,
+    "cenario": "A rede da contabilidade está instável: às vezes o PC2 responde, às vezes não. O suporte suspeita que dois computadores foram configurados na mão com o mesmo endereço.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc2"
+      }
+    ],
+    "dicas": [
+      "Compare o endereço IP de cada computador. O laboratório também mostra avisos abaixo da área de trabalho.",
+      "Dois computadores não podem ter o mesmo IP na mesma rede. Troque o de um deles por outro endereço livre de 192.168.1.0/24."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 130,
+          "interfaces": []
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 200,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 450,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 700,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mascara-errada",
+    "titulo": "A máscara que não combina",
+    "dificuldade": 2,
+    "xp": 150,
+    "cenario": "O PC1 \"vê\" o PC2, mas o PC2 não consegue responder. O técnico anterior alterou a máscara de sub-rede de um deles.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "O ping que chega ao destino mas não volta indica que um dos lados não enxerga o outro como vizinho. Use ipconfig nos dois e compare.",
+      "Calcule a sub-rede de cada computador com o seu endereço e a sua máscara. Elas precisam ser a mesma rede."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 450,
+          "y": 130,
+          "interfaces": []
+        },
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 250,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 650,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.200",
+              "mascara": "255.255.255.128"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gateway-errado",
+    "titulo": "O caminho para a outra rede",
+    "dificuldade": 2,
+    "xp": 200,
+    "cenario": "A filial (10.0.0.0/24) e a matriz (192.168.1.0/24) estão ligadas por um roteador, mas o PC1 não consegue falar com a filial. A matriz inteira usa o gateway configurado no PC1.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Dentro da própria rede o PC1 funciona; o problema aparece só ao sair dela. Quem leva o tráfego para fora é o gateway padrão.",
+      "Veja qual IP o roteador usa na rede do PC1 e compare com o gateway configurado no PC1."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 110,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.254"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 790,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 250,
+          "y": 260,
+          "interfaces": []
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 650,
+          "y": 260,
+          "interfaces": []
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 450,
+          "y": 400,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "sw1",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "sw2",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi1"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "interface-sem-ip",
+    "titulo": "O roteador pela metade",
+    "dificuldade": 3,
+    "xp": 250,
+    "cenario": "O roteador novo foi instalado e ligado às duas redes, mas só uma delas funciona. Os dois computadores já estão corretos.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Os computadores estão certos. Olhe as duas interfaces do roteador, uma de cada vez.",
+      "O gateway do PC2 aponta para um endereço que o roteador precisa ter na interface ligada à rede do PC2."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 110,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 790,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 250,
+          "y": 260,
+          "interfaces": []
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 650,
+          "y": 260,
+          "interfaces": []
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 450,
+          "y": 400,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": ""
+            }
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "sw1",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "sw2",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi1"
+          }
+        }
+      ]
+    }
+  }
+]

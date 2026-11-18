@@ -35,3 +35,19 @@
 .term-linha .campo{flex:1;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:500;margin:0}
 .term-prompt{color:var(--suave);font-family:ui-monospace,Menlo,Consolas,monospace;margin:0!important;white-space:nowrap}
 @media(max-width:1000px){.lab-corpo{grid-template-columns:minmax(0,1fr)}}
+
+/* Missões */
+.lista-missoes{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.missao a{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--linha);border-radius:12px;background:var(--painel);color:var(--ink);text-decoration:none;height:100%}
+.missao a:hover,.missao a:focus-visible{border-color:var(--ciano)}
+.missao .meta,.missao-topo .meta{color:var(--suave);font-size:14px}
+.missao .situacao{font-size:14px;color:var(--suave)}
+.missao.feita{border-color:transparent}.missao.feita .situacao{color:var(--ok)}
+.missao.andamento .situacao{color:var(--aviso)}
+.missao-topo{margin-bottom:16px}
+.objetivos{list-style:none;margin:8px 0 14px;padding:0;display:grid;gap:6px}
+.objetivos .ok{color:var(--ok)}.objetivos .falha{color:var(--erro)}.objetivos .pend{color:var(--suave)}
+.objetivos .motivo{color:var(--suave)}
+.dicas{margin:12px 0 0;padding-left:22px;display:grid;gap:6px}
+.m-msg{min-height:1.5em;margin:10px 0 0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

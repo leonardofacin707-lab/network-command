@@ -1,5 +1,5 @@
 // Conquistas: cada uma é uma regra verificável sobre o estado real. Nada é concedido "de enfeite".
-import { xpTotal } from '../core/progression.js';
+import { xpDoEstado } from '../core/progression.js';
 import { foiPerfeita } from '../quiz/historico.js';
 
 export const CONQUISTAS = [
@@ -16,7 +16,7 @@ export const CONQUISTAS = [
   { id: 'trilha-completa', nome: 'Trilha completa', descricao: 'Ter pelo menos 1 estrela em todos os níveis disponíveis.',
     teste: ({ estado, catalogo }) => catalogo.jogaveis.every(n => estado.quiz.melhor[n.id]?.estrelas > 0) },
   { id: 'tecnico-de-redes', nome: 'Técnico de redes', descricao: 'Chegar a 2.400 XP e ser promovido.',
-    teste: ({ estado }) => xpTotal(estado.quiz.melhor) >= 2400 },
+    teste: ({ estado }) => xpDoEstado(estado) >= 2400 },
   { id: 'aprendeu-com-o-erro', nome: 'Aprendeu com o erro', descricao: 'Errar um desafio e depois acertá-lo de primeira.',
     teste: ({ estado }) => {
       const vistos = new Map(); // id -> já errou?
@@ -26,6 +26,10 @@ export const CONQUISTAS = [
       }
       return false;
     } },
+  { id: 'primeira-missao', nome: 'Primeiro chamado', descricao: 'Concluir a sua primeira missão de troubleshooting.',
+    teste: ({ estado }) => Object.values(estado.missoes).some(m => m.concluida) },
+  { id: 'todas-as-missoes', nome: 'Rede sem defeitos', descricao: 'Concluir todas as missões disponíveis.',
+    teste: ({ estado, catalogo }) => (catalogo.missoes ?? []).length > 0 && catalogo.missoes.every(m => estado.missoes[m.id]?.concluida) },
   { id: 'identificado', nome: 'Identificado', descricao: 'Escolher o seu nome de exibição no perfil.',
     teste: ({ estado }) => estado.perfil.nome.length > 0 }
 ];

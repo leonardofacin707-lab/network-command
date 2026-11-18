@@ -126,3 +126,31 @@ test('conquistas têm ids únicos e textos', () => {
   assert.equal(new Set(IDS_CONQUISTAS).size, CONQUISTAS.length);
   for (const c of CONQUISTAS) assert.ok(c.nome && c.descricao && typeof c.teste === 'function');
 });
+
+test('conquistas de missão dependem de missões realmente concluídas', () => {
+  const catalogo = { limites: {}, jogaveis: [{ id: 1 }], missoes: [{ id: 'a' }, { id: 'b' }] };
+  const feita = { topologia: { dispositivos: [], cabos: [] }, concluida: true, em: '2026-11-18T10:00:00.000Z', xp: 100, dicas: 0 };
+  const aberta = { ...feita, concluida: false, em: null, xp: 0 };
+  let e = estadoInicial();
+  assert.deepEqual(avaliar(e, catalogo), []);
+  e.missoes = { a: aberta };
+  assert.deepEqual(avaliar(e, catalogo), [], 'missão só iniciada não conta');
+  e.missoes = { a: feita, b: aberta };
+  assert.deepEqual(avaliar(e, catalogo), ['primeira-missao']);
+  e.missoes = { a: feita, b: feita };
+  assert.deepEqual(avaliar(e, catalogo).sort(), ['primeira-missao', 'todas-as-missoes']);
+  assert.ok(!avaliar(e, { ...catalogo, missoes: [] }).includes('todas-as-missoes'), 'sem missões no catálogo não há "todas"');
+});
+
+test('XP de missões entra no XP total, uma vez por missão concluída', async () => {
+  const { xpDoEstado, xpMissoes } = await import('../../js/core/progression.js');
+  const e = estadoInicial();
+  e.quiz.melhor = { 1: { pts: 500, estrelas: 1 } };
+  e.missoes = {
+    a: { concluida: true, xp: 150 },
+    b: { concluida: false, xp: 0 }
+  };
+  assert.equal(xpMissoes(e.missoes), 150);
+  assert.equal(xpDoEstado(e), 650);
+  assert.equal(xpDoEstado({ quiz: { melhor: {} } }), 0, 'estado sem missões');
+});
