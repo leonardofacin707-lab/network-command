@@ -121,7 +121,7 @@ test('a resposta certa não se destaca pelo tamanho (achado 4 da auditoria)', ()
 
 test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem buracos', () => {
   const jogaveis = niveis.filter(n => n.desafios);
-  assert.deepEqual(jogaveis.map(n => n.id), [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(jogaveis.map(n => n.id), jogaveis.map((_, i) => i + 1), 'os níveis jogáveis são 1..N, sem buracos');
   const ids = niveis.map(n => n.id);
   // um nível "em breve" nunca fica antes de um jogável (senão o jogável nunca abriria)
   const primeiroEmBreve = niveis.findIndex(n => !n.desafios);
@@ -132,9 +132,9 @@ test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem
   }
 });
 
-test('níveis 4 a 7: tipos variados e respostas numéricas conferidas', () => {
+test('níveis acrescentados (4 em diante): tipos variados e respostas numéricas conferidas', () => {
   const porId = new Map(perguntas.map(q => [q.id, q]));
-  for (const nivel of [4, 5, 6, 7]) {
+  for (const nivel of niveis.filter(n => n.desafios && n.id >= 4).map(n => n.id)) {
     const tipos = new Set(perguntas.filter(q => q.nivel === nivel).map(q => q.tipo));
     assert.equal(tipos.size, 5, `nível ${nivel} usa os 5 tipos`);
   }
@@ -199,4 +199,11 @@ test('nível 7 (IPv6): contas e formatos conferidos', () => {
   // 48 + 16 + 64 = 128
   assert.deepEqual(porId.get('ipv6-009').itens.map(i => Number(i.match(/\((\d+) bits\)/)[1])).reduce((x, y) => x + y), 128);
   assert.deepEqual(porId.get('ipv6-009').itens.map(i => i.split(' (')[0]), ['Prefixo de roteamento global', 'ID da sub-rede', 'ID da interface']);
+});
+
+test('nível 8 (DHCP e NAT): ordem do DORA e porta do servidor', () => {
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  assert.deepEqual(porId.get('dhcp-002').itens, ['DHCPDISCOVER', 'DHCPOFFER', 'DHCPREQUEST', 'DHCPACK']);
+  assert.equal(porId.get('dhcp-004').resposta, 67);
+  assert.equal(niveis.find(n => n.id === 8).desafios.length, 9);
 });

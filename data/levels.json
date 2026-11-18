@@ -164,7 +164,24 @@
     "id": 8,
     "nome": "DHCP e NAT",
     "icone": "dhcp",
-    "modulos": "Módulos 11 e 12"
+    "modulos": "Módulos 11 e 12",
+    "categoria": "dhcp",
+    "resumo": [
+      "DHCP: o que entrega e as quatro mensagens (DORA)",
+      "Concessão (lease) e portas do DHCP",
+      "NAT estático, dinâmico e PAT"
+    ],
+    "desafios": [
+      "dhcp-001",
+      "dhcp-002",
+      "dhcp-003",
+      "dhcp-004",
+      "dhcp-005",
+      "nat-001",
+      "nat-002",
+      "nat-003",
+      "dhcp-006"
+    ]
   },
   {
     "id": 9,
