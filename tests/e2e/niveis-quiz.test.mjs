@@ -13,7 +13,10 @@ after(async () => { await navegador?.close(); await servidor?.fechar(); });
 
 const perguntas = JSON.parse(readFileSync(new URL('../../data/questions.json', import.meta.url), 'utf8'));
 const NOVOS = [...new Set(perguntas.filter(q => q.nivel > 3).map(q => q.nivel))].sort((a, b) => a - b);
+const NIVEIS = JSON.parse(readFileSync(new URL('../../data/levels.json', import.meta.url), 'utf8'));
 const PROXIMO_EM_BREVE = Math.max(...NOVOS) + 1;
+// 1 se ainda existe um nível "em breve" logo depois do último jogável; 0 quando o jogo já está com todos os níveis
+const EM_BREVE_ESPERADO = NIVEIS.some(n => n.id === PROXIMO_EM_BREVE && !n.desafios) ? 1 : 0;
 const exato = t => new RegExp('^\\s*' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$');
 const ESTADO = { versao: 4, perfil: { nome: 'Leonardo', criadoEm: '2026-11-16T10:00:00.000Z' },
   quiz: { melhor: { 1: { pts: 900, estrelas: 3 }, 2: { pts: 900, estrelas: 3 }, 3: { pts: 900, estrelas: 3 } }, historico: [] }, conquistas: {} };
@@ -74,7 +77,7 @@ test('os níveis abrem em sequência (cada um só depois do anterior); o seguint
   assert.equal(await pagina.locator('.no[data-nivel="4"]').getAttribute('aria-disabled'), null, 'nível 4 liberado pelo 3');
   assert.equal(await pagina.locator('.no[data-nivel="5"]').getAttribute('aria-disabled'), 'true', 'nível 5 bloqueado');
   assert.equal(await pagina.locator('.no[data-nivel="6"]').getAttribute('aria-disabled'), 'true', 'nível 6 bloqueado');
-  assert.equal(await pagina.locator(`.no[data-nivel="${PROXIMO_EM_BREVE}"].st-embreve`).count(), 1);
+  assert.equal(await pagina.locator(`.no[data-nivel="${PROXIMO_EM_BREVE}"].st-embreve`).count(), EM_BREVE_ESPERADO);
   for (const n of [5, 6]) {
     await pagina.locator(`.no[data-nivel="${n}"]`).click({ force: true, timeout: 2000 });
     assert.equal(await pagina.locator('.card').count(), 0, `nível ${n} não deve abrir`);
@@ -94,7 +97,7 @@ test('jogada perfeita em todos os níveis novos: 900 pontos, 3 estrelas, progres
   const e = await salvo();
   for (const nivel of NOVOS) assert.equal(e.quiz.melhor[nivel].pts, 900, `nível ${nivel}`);
   assert.equal(e.quiz.historico.length, NOVOS.length * 9);
-  assert.equal(await pagina.locator(`.no[data-nivel="${PROXIMO_EM_BREVE}"].st-embreve`).count(), 1);
+  assert.equal(await pagina.locator(`.no[data-nivel="${PROXIMO_EM_BREVE}"].st-embreve`).count(), EM_BREVE_ESPERADO);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

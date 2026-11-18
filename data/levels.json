@@ -256,6 +256,23 @@
     "id": 12,
     "nome": "Chefão: diagnóstico",
     "icone": "ferramenta",
-    "modulos": "Módulo 17"
+    "modulos": "Módulo 17",
+    "categoria": "troubleshooting",
+    "resumo": [
+      "O método de diagnóstico em seis etapas",
+      "Ferramentas: ping, ipconfig, tracert e nslookup",
+      "Isolar o ponto da falha, camada por camada"
+    ],
+    "desafios": [
+      "troubleshooting-001",
+      "troubleshooting-002",
+      "troubleshooting-003",
+      "troubleshooting-004",
+      "troubleshooting-005",
+      "troubleshooting-006",
+      "troubleshooting-007",
+      "troubleshooting-008",
+      "troubleshooting-009"
+    ]
   }
 ]

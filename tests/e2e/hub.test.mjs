@@ -167,6 +167,7 @@ test('árvore de habilidades: Teoria pelo quiz, Prática e Diagnóstico pelas mi
   assert.match(await pagina.locator('[data-trilha="roteamento"]').innerText(), /0 de 6 desafios dominados/);
   assert.match(await pagina.locator('[data-trilha="servicos"]').innerText(), /0 de 27 desafios dominados/);
   assert.match(await pagina.locator('[data-trilha="seguranca"]').innerText(), /Conteúdo em desenvolvimento/);
+  assert.match(await pagina.locator('[data-trilha="troubleshooting"]').innerText(), /0 de 9 desafios dominados/);
   assert.equal(await pagina.locator('.degraus li', { hasText: 'Sem conteúdo ainda' }).count(), 10, '16 níveis de Prática/Diagnóstico menos 6 medidos');
   assert.match(await pagina.locator('[data-trilha="subnetting"] .degraus li', { hasText: 'Prática' }).innerText(), /0 de 3 concluídos/);
   assert.match(await pagina.locator('[data-trilha="subnetting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 1 concluído/);

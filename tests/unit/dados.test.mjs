@@ -125,7 +125,7 @@ test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem
   const ids = niveis.map(n => n.id);
   // um nível "em breve" nunca fica antes de um jogável (senão o jogável nunca abriria)
   const primeiroEmBreve = niveis.findIndex(n => !n.desafios);
-  assert.ok(niveis.slice(primeiroEmBreve).every(n => !n.desafios), `ordem dos níveis: ${ids}`);
+  if (primeiroEmBreve >= 0) assert.ok(niveis.slice(primeiroEmBreve).every(n => !n.desafios), `ordem dos níveis: ${ids}`);
   for (const n of jogaveis) {
     assert.equal(n.desafios.length, 9, `nível ${n.id}`);
     assert.ok(n.categoria && n.resumo?.length >= 3, `nível ${n.id}`);
@@ -248,4 +248,16 @@ test('nível 11 (Serviços): ordem da consulta DNS, registros e porta do FTP', (
   // todo nível jogável usa categorias que existem e pertencem a uma trilha existente
   const cats = new Map(categorias.map(c => [c.id, c]));
   for (const q of perguntas) assert.ok(cats.has(q.categoria), `${q.id}: categoria ${q.categoria}`);
+});
+
+test('nível 12 (chefão de diagnóstico): método em 6 etapas, camada do LED e ferramentas', () => {
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  assert.equal(niveis.find(n => n.id === 12).desafios.length, 9);
+  assert.equal(porId.get('troubleshooting-001').itens.length, 6);
+  assert.match(porId.get('troubleshooting-001').itens[0], /Identificar/);
+  assert.match(porId.get('troubleshooting-001').itens[5], /Documentar/);
+  assert.equal(porId.get('troubleshooting-004').resposta, 1);
+  assert.deepEqual(porId.get('troubleshooting-002').pares.map(p => p.esquerda), ['ping', 'ipconfig', 'tracert', 'nslookup']);
+  // cada camada aparece uma vez no "sintoma e camada"
+  assert.deepEqual(porId.get('troubleshooting-003').itens.map(i => i.grupo), [0, 1, 2, 3]);
 });
