@@ -76,7 +76,8 @@ test('preservação: todo o conteúdo da v0.1 está nos dados novos', () => {
     assert.equal(novo.nome, antigo.nome);
     assert.equal(novo.modulos, antigo.modulos);
     assert.equal(novo.icone, antigo.icone);
-    if (!antigo.desafios) { assert.equal(novo.desafios, undefined); continue; }
+    // Níveis que eram "em breve" na v0.1 podem ter ganhado conteúdo depois (níveis 4 e 5); o que já existia não muda.
+    if (!antigo.desafios) continue;
     assert.deepEqual(novo.resumo, antigo.resumo);
     assert.equal(novo.desafios.length, antigo.desafios.length);
     antigo.desafios.forEach((d, i) => {
@@ -116,4 +117,32 @@ test('a resposta certa não se destaca pelo tamanho (achado 4 da auditoria)', ()
     return t[q.correta] === Math.max(...t);
   }).length;
   assert.ok(maisLonga / quizzes.length <= 0.5, `a certa é a mais longa em ${maisLonga} de ${quizzes.length}`);
+});
+
+test('níveis jogáveis: 9 desafios cada, com resumo, categoria e sequência sem buracos', () => {
+  const jogaveis = niveis.filter(n => n.desafios);
+  assert.deepEqual(jogaveis.map(n => n.id), [1, 2, 3, 4, 5]);
+  const ids = niveis.map(n => n.id);
+  // um nível "em breve" nunca fica antes de um jogável (senão o jogável nunca abriria)
+  const primeiroEmBreve = niveis.findIndex(n => !n.desafios);
+  assert.ok(niveis.slice(primeiroEmBreve).every(n => !n.desafios), `ordem dos níveis: ${ids}`);
+  for (const n of jogaveis) {
+    assert.equal(n.desafios.length, 9, `nível ${n.id}`);
+    assert.ok(n.categoria && n.resumo?.length >= 3, `nível ${n.id}`);
+  }
+});
+
+test('níveis 4 e 5: tipos variados e respostas numéricas conferidas', () => {
+  const porId = new Map(perguntas.map(q => [q.id, q]));
+  for (const nivel of [4, 5]) {
+    const tipos = new Set(perguntas.filter(q => q.nivel === nivel).map(q => q.tipo));
+    assert.equal(tipos.size, 5, `nível ${nivel} usa os 5 tipos`);
+  }
+  assert.equal(porId.get('ethernet-002').resposta, 48);
+  assert.equal(porId.get('ipv4-001').resposta, 32);
+  assert.equal(porId.get('ipv4-002').resposta, parseInt('11000000', 2));
+  // ordem do quadro Ethernet e dos prefixos (menos hosts → mais hosts)
+  assert.deepEqual(porId.get('ethernet-003').itens, ['Preâmbulo', 'MAC de destino', 'MAC de origem', 'Tipo', 'Dados', 'FCS']);
+  assert.deepEqual(porId.get('ipv4-007').itens, ['/30', '/27', '/24', '/16']);
+  assert.ok(porId.get('ipv4-007').itens.map(i => 2 ** (32 - Number(i.slice(1)))).every((v, i, a) => i === 0 || v > a[i - 1]));
 });

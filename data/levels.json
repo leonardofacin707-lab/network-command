@@ -72,13 +72,47 @@
     "id": 4,
     "nome": "Dentro do switch",
     "icone": "switch",
-    "modulos": "Módulo 7"
+    "modulos": "Módulo 7",
+    "categoria": "ethernet",
+    "resumo": [
+      "Endereço MAC e o quadro Ethernet",
+      "Como o switch aprende, encaminha e inunda",
+      "Unicast, multicast e broadcast; full-duplex"
+    ],
+    "desafios": [
+      "ethernet-001",
+      "ethernet-002",
+      "ethernet-003",
+      "ethernet-004",
+      "ethernet-005",
+      "ethernet-006",
+      "ethernet-007",
+      "ethernet-008",
+      "ethernet-009"
+    ]
   },
   {
     "id": 5,
     "nome": "Endereço IPv4",
     "icone": "ip",
-    "modulos": "Módulos 8 e 9"
+    "modulos": "Módulos 8 e 9",
+    "categoria": "ipv4",
+    "resumo": [
+      "Octetos, binário e decimal",
+      "Máscara, prefixo, rede, host e broadcast",
+      "Endereços privados, públicos, loopback e link-local"
+    ],
+    "desafios": [
+      "ipv4-001",
+      "ipv4-002",
+      "ipv4-003",
+      "ipv4-004",
+      "ipv4-005",
+      "ipv4-006",
+      "ipv4-007",
+      "ipv4-008",
+      "ipv4-009"
+    ]
   },
   {
     "id": 6,
