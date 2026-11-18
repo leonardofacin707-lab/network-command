@@ -4,7 +4,7 @@ import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
   removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro } from '../sim/topologia.js';
 import { criarSimulacao } from '../sim/motor.js';
-import { formatarIPv4 } from '../sim/ipv4.js';
+import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
 import { diagnosticar } from '../sim/diagnostico.js';
 import { exemploLan, exemploDuasRedes } from './exemplos.js';
@@ -117,7 +117,8 @@ export function criarEditor(raiz, opcoes) {
   }
 
   // ---------- painel de configuração ----------
-  const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : `${rede} ${mascara}`);
+  const redePrefixo = (rede, mascara) => `${rede}/${prefixoDeMascara(lerMascara(mascara))}`;
+  const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : redePrefixo(rede, mascara));
   const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
   function infoConcessao(d) {
     const c = sim.concessoes.get(d.id);
@@ -148,21 +149,17 @@ export function criarEditor(raiz, opcoes) {
       </fieldset>`).join('')}
       ${d.tipo === 'pc' ? `<fieldset class="iface"${d.dhcp ? ' disabled' : ''}><legend>Gateway</legend><label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}"></fieldset>` : ''}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="rotas-estaticas"><legend>Rotas estáticas</legend>
-        ${(d.rotas ?? []).length ? `<table class="tabela"><caption class="sr-only">Rotas estáticas de ${esc(d.nome)}</caption>
-          <thead><tr><th scope="col">Rede</th><th scope="col">Máscara</th><th scope="col">Próximo salto</th><th scope="col"><span class="sr-only">Ação</span></th></tr></thead>
-          <tbody>${d.rotas.map((r, i) => `<tr><td>${esc(r.rede)}</td><td>${esc(r.mascara)}</td><td>${esc(r.via)}</td>
-            <td><button class="btn-sec" type="button" data-remover-rota="${i}" aria-label="Remover a rota para ${esc(r.rede)}">Remover</button></td></tr>`).join('')}</tbody></table>` : '<p>Nenhuma rota estática. O roteador só conhece as redes ligadas diretamente a ele.</p>'}
+        ${(d.rotas ?? []).length ? `<ol class="regras" aria-label="Rotas estáticas de ${esc(d.nome)}">${d.rotas.map((r, i) => `<li class="regra"><span class="regra-txt">${esc(redePrefixo(r.rede, r.mascara))} <b>via</b> ${esc(r.via)}</span>
+          <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-rota="${i}" aria-label="Remover a rota para ${esc(r.rede)}">Remover</button></span></li>`).join('')}</ol>` : '<p>Nenhuma rota estática. O roteador só conhece as redes ligadas diretamente a ele.</p>'}
         <label for="cfg-rota-rede">Rede de destino</label><input id="cfg-rota-rede" class="campo" name="rota-rede" inputmode="decimal" autocomplete="off" placeholder="ex.: 172.16.0.0 (0.0.0.0 = rota padrão)">
         <label for="cfg-rota-m">Máscara da rede</label><input id="cfg-rota-m" class="campo" name="rota-m" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24 (/0 = rota padrão)">
         <label for="cfg-rota-via">Próximo salto</label><input id="cfg-rota-via" class="campo" name="rota-via" inputmode="decimal" autocomplete="off" placeholder="ex.: 10.0.0.2 (o roteador vizinho)">
         <p class="motivo">Preencha os três campos e use Aplicar para acrescentar a rota.</p></fieldset>` : ''}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="filtros-pacotes"><legend>Filtro de pacotes</legend>
-        ${(d.filtros ?? []).length ? `<table class="tabela"><caption class="sr-only">Regras de filtro de ${esc(d.nome)}, lidas de cima para baixo</caption>
-          <thead><tr><th scope="col">#</th><th scope="col">Ação</th><th scope="col">Origem</th><th scope="col">Destino</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
-          <tbody>${d.filtros.map((f, i) => `<tr><td>${i + 1}</td><td>${f.acao === 'negar' ? 'negar' : 'permitir'}</td><td>${esc(alvoFiltro(f.origem, f.origemM))}</td><td>${esc(alvoFiltro(f.destino, f.destinoM))}</td>
-            <td class="acoes-regra"><button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="-1" aria-label="Subir a regra ${i + 1}"${i === 0 ? ' disabled' : ''}>↑</button>
-            <button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="1" aria-label="Descer a regra ${i + 1}"${i === d.filtros.length - 1 ? ' disabled' : ''}>↓</button>
-            <button class="btn-sec" type="button" data-remover-filtro="${i}" aria-label="Remover a regra ${i + 1}">Remover</button></td></tr>`).join('')}</tbody></table>` : '<p>Nenhuma regra: o roteador encaminha tudo.</p>'}
+        ${(d.filtros ?? []).length ? `<ol class="regras" aria-label="Regras de filtro de ${esc(d.nome)}, lidas de cima para baixo">${d.filtros.map((f, i) => `<li class="regra"><span class="regra-txt"><b>${f.acao === 'negar' ? 'negar' : 'permitir'}</b> de ${esc(alvoFiltro(f.origem, f.origemM))} <b>para</b> ${esc(alvoFiltro(f.destino, f.destinoM))}</span>
+          <span class="acoes-regra"><button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="-1" aria-label="Subir a regra ${i + 1}"${i === 0 ? ' disabled' : ''}>↑</button>
+          <button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="1" aria-label="Descer a regra ${i + 1}"${i === d.filtros.length - 1 ? ' disabled' : ''}>↓</button>
+          <button class="btn-sec" type="button" data-remover-filtro="${i}" aria-label="Remover a regra ${i + 1}">Remover</button></span></li>`).join('')}</ol>` : '<p>Nenhuma regra: o roteador encaminha tudo.</p>'}
         <label for="cfg-filtro-acao">Nova regra: ação</label><select id="cfg-filtro-acao" class="campo" name="filtro-acao"><option value="">(não acrescentar)</option><option value="negar">negar</option><option value="permitir">permitir</option></select>
         <label for="cfg-filtro-o">Origem: rede</label><input id="cfg-filtro-o" class="campo" name="filtro-o" inputmode="decimal" autocomplete="off" placeholder="vazio = qualquer origem">
         <label for="cfg-filtro-om">Origem: máscara</label><input id="cfg-filtro-om" class="campo" name="filtro-om" autocomplete="off" placeholder="ex.: /24 ou /32 para um só PC">

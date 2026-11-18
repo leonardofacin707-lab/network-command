@@ -128,6 +128,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - 🔧 Texto do Laboratório dizia que o motor "não simula VLANs" (desatualizado desde o Campus); corrigido, com teste para não voltar.
 - 🔧 Menu lateral: o selo "protótipo" encostava no nome ("Laboratório") e sobrepunha "Árvore de Habilidades"; o texto agora quebra dentro da própria coluna e o selo é menor.
 - 🔧 Lista "Prática" do dashboard tinha recuo extra.
+- 🔧 Painel do roteador (rotas estáticas e filtro de pacotes): as tabelas estouravam a largura (botão "Remover" cortado, colunas esmagadas no celular); agora cada rota/regra é um cartão de uma linha com os botões ao lado ou abaixo, sem rolagem horizontal.
 
 ### Problemas conhecidos (testes)
 - O e2e "layout sem rolagem horizontal e sem nós sobrepostos" do mapa do quiz falhou **uma vez** em ~4 execuções completas sob carga e passa isolado e nas reexecuções; causa não identificada (suspeita de corrida do robô jogador). Não há falha reproduzível no app.

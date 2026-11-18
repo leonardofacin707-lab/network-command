@@ -237,7 +237,7 @@ test('rotas estáticas pela interface: validação, rota de ida, de volta, remo�
   await pagina.locator('#form-cfg button[type=submit]').click();
   assert.match(await pagina.locator('#lab-estado').innerText(), /preencha a rede, a máscara e o próximo salto/);
   await aplicar('172.16.0.0', '/24', '10.0.0.2');
-  assert.match(await pagina.locator('#rotas-estaticas tbody').innerText(), /172\.16\.0\.0\s+255\.255\.255\.0\s+10\.0\.0\.2/);
+  assert.match(await pagina.locator('#rotas-estaticas .regra').innerText(), /172\.16\.0\.0\/24\s+via\s+10\.0\.0\.2/);
   assert.equal((await salvo()).missoes['rotas-estaticas']?.concluida ?? false, false);
   await pagina.locator('#m-verificar').click();
   assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 2, 'só a ida não basta');
@@ -301,8 +301,8 @@ test('DHCP pela interface: sem pool não há IP; com pool os PCs recebem endere�
 test('filtro de pacotes pela interface: validação, mover regra para cima e concluir (240 XP)', async () => {
   const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/filtro-ordem');
   await disp('r1').click();
-  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 2);
-  assert.match(await pagina.locator('#filtros-pacotes tbody tr').nth(0).innerText(), /negar\s+192\.168\.1\.0 255\.255\.255\.0\s+192\.168\.2\.0 255\.255\.255\.0/);
+  assert.equal(await pagina.locator('#filtros-pacotes .regra').count(), 2);
+  assert.match(await pagina.locator('#filtros-pacotes .regra').nth(0).innerText(), /negar de 192\.168\.1\.0\/24\s+para 192\.168\.2\.0\/24/);
   assert.equal(await pagina.locator('[data-mover-filtro="0"][data-delta="-1"]').isDisabled(), true, 'a primeira regra não sobe');
   await pagina.locator('#m-verificar').click();
   assert.deepEqual(await pagina.locator('#m-objetivos li').evaluateAll(l => l.map(x => x.className.includes('ok'))), [false, true, true]);
@@ -311,10 +311,10 @@ test('filtro de pacotes pela interface: validação, mover regra para cima e con
   await pagina.fill('#cfg-filtro-o', '192.168.1.5'); await pagina.fill('#cfg-filtro-om', '/24');
   await pagina.locator('#form-cfg button[type=submit]').click();
   assert.match(await pagina.locator('#lab-estado').innerText(), /endereço de rede seria 192\.168\.1\.0/);
-  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 2);
+  assert.equal(await pagina.locator('#filtros-pacotes .regra').count(), 2);
   await pagina.locator('[data-mover-filtro="1"][data-delta="-1"]').click();
   assert.match(await pagina.locator('#lab-estado').innerText(), /Regra movida/);
-  assert.match(await pagina.locator('#filtros-pacotes tbody tr').nth(0).innerText(), /permitir/);
+  assert.match(await pagina.locator('#filtros-pacotes .regra').nth(0).innerText(), /permitir/);
   await pagina.locator('#m-verificar').click();
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+240 XP/);
   const e = await salvo();
@@ -323,10 +323,10 @@ test('filtro de pacotes pela interface: validação, mover regra para cima e con
   await pagina.selectOption('#cfg-filtro-acao', 'negar');
   await pagina.fill('#cfg-filtro-d', '192.168.2.10'); await pagina.fill('#cfg-filtro-dm', '/32');
   await pagina.locator('#form-cfg button[type=submit]').click();
-  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 3);
-  assert.match(await pagina.locator('#filtros-pacotes tbody tr').nth(2).innerText(), /negar\s+qualquer\s+192\.168\.2\.10 255\.255\.255\.255/);
+  assert.equal(await pagina.locator('#filtros-pacotes .regra').count(), 3);
+  assert.match(await pagina.locator('#filtros-pacotes .regra').nth(2).innerText(), /negar de qualquer\s+para 192\.168\.2\.10\/32/);
   await pagina.locator('[data-remover-filtro="2"]').click();
-  assert.equal(await pagina.locator('#filtros-pacotes tbody tr').count(), 2);
+  assert.equal(await pagina.locator('#filtros-pacotes .regra').count(), 2);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

@@ -67,5 +67,8 @@
 .iface-dhcp .opcao{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600}
 .iface-dhcp .opcao input{width:18px;height:18px;flex:none}
 .iface[disabled]{opacity:.55}
-.acoes-regra{white-space:nowrap}
-.acoes-regra .btn-sec{padding:2px 8px;min-height:32px}
+.regras{list-style:none;margin:6px 0 10px;padding:0;display:grid;gap:6px}
+.regra{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;padding:6px 8px;border:1px solid var(--linha);border-radius:8px}
+.regra-txt{flex:1 1 140px;min-width:0;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.acoes-regra{display:flex;gap:6px;flex:none}
+.acoes-regra .btn-sec{padding:2px 8px;min-height:32px;font-size:12px}
