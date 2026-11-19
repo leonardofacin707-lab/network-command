@@ -166,3 +166,9 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Não vale pontos nem estrelas (usa o mesmo caminho da revisão de erros); as respostas entram no histórico, então erros vão para a revisão.
 - Corrigido junto: o cabeçalho da revisão mostrava "Nível revisao · ..."; agora mostra só o nome.
 - Testes: `tests/unit/treino.test.mjs` e um e2e em `hub.test.mjs`.
+
+## Varredura geral (18/11)
+
+- Script de varredura abriu 62 rotas (todas as missões, projetos, desafios, níveis do quiz e abas) em 1280 px e 390 px, checando erros de console, rolagem horizontal, sobreposição de nós e página vazia.
+- Único defeito: nas missões de DHCP os PCs ficavam com as caixas se tocando (3 px). Espaçamento corrigido em `tools/gerar-dhcp.mjs` (PCs centralizados, 120 de intervalo).
+- Depois da correção: 0 problemas na varredura; 210 unitários e 87 e2e passando.

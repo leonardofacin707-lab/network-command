@@ -12,8 +12,8 @@ const add = (t, tipo, x, y) => ok(adicionarDispositivo(t, tipo, { x, y }));
 function lan({ n, pool }) {
   let t = topologiaVazia();
   t = add(t, 'roteador', 150, 230); t = add(t, 'switch', 400, 230);
-  const ys = [90, 190, 290, 390];
-  for (let i = 0; i < n; i++) t = add(t, 'pc', 680, ys[i]);
+  // PCs centralizados em y=230, com 120 de espaço (100 deixava as caixas se tocando)
+  for (let i = 0; i < n; i++) t = add(t, 'pc', 680, 230 + (i - (n - 1) / 2) * 120);
   t = ok(conectar(t, 'r1', 'sw1', 'gi0', 'fa1'));
   for (let i = 1; i <= n; i++) { t = ok(conectar(t, `pc${i}`, 'sw1', 'eth0', `fa${i + 1}`)); t = ok(configurarDhcpPc(t, `pc${i}`, true)); }
   t = ok(configurarInterface(t, 'r1', 'gi0', { ip: '192.168.10.1', mascara: '/24' }));

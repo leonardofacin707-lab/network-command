@@ -1507,7 +1507,7 @@
           "tipo": "pc",
           "nome": "PC1",
           "x": 680,
-          "y": 90,
+          "y": 110,
           "interfaces": [
             {
               "id": "eth0",
@@ -1523,7 +1523,7 @@
           "tipo": "pc",
           "nome": "PC2",
           "x": 680,
-          "y": 190,
+          "y": 230,
           "interfaces": [
             {
               "id": "eth0",
@@ -1539,7 +1539,7 @@
           "tipo": "pc",
           "nome": "PC3",
           "x": 680,
-          "y": 290,
+          "y": 350,
           "interfaces": [
             {
               "id": "eth0",
@@ -1675,7 +1675,7 @@
           "tipo": "pc",
           "nome": "PC1",
           "x": 680,
-          "y": 90,
+          "y": 50,
           "interfaces": [
             {
               "id": "eth0",
@@ -1691,7 +1691,7 @@
           "tipo": "pc",
           "nome": "PC2",
           "x": 680,
-          "y": 190,
+          "y": 170,
           "interfaces": [
             {
               "id": "eth0",
@@ -1723,7 +1723,7 @@
           "tipo": "pc",
           "nome": "PC4",
           "x": 680,
-          "y": 390,
+          "y": 410,
           "interfaces": [
             {
               "id": "eth0",
