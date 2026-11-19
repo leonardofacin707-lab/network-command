@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 23 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 26 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 23);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 23 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 26);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 26 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(2).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 23 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 26 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -372,6 +372,64 @@ test('DNS pela interface: registros no servidor, DNS nos clientes, nslookup e co
   await disp('pc3').click();
   await pagina.locator('[data-remover-registro="0"]').click();
   assert.equal(await pagina.locator('#dns-pc .regra').count(), 1);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('NAT pela interface: IP, rota e NAT na Borda; escolha incompleta é recusada; conclusão (260 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/nat-saida-da-empresa');
+  const aplicar = async () => { await pagina.locator('#form-cfg button[type=submit]').click(); };
+  await disp('pc1').click();
+  await pagina.fill('#term-entrada', 'ping -n 1 200.0.1.10');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /inacessível/);
+  await disp('r1').click();
+  assert.match(await pagina.locator('#nat-roteador').innerText(), /NAT simplificado/);
+  await pagina.fill('#cfg-ip-gi1', '200.0.0.2'); await pagina.fill('#cfg-m-gi1', '/30');
+  await pagina.fill('#cfg-rota-rede', '0.0.0.0'); await pagina.fill('#cfg-rota-m', '/0'); await pagina.fill('#cfg-rota-via', '200.0.0.1');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
+  // sem NAT: a ida chega ao servidor, a resposta não volta
+  await pagina.locator('#m-verificar').click();
+  assert.equal(await pagina.locator('#m-objetivos li.falha').count(), 2);
+  assert.match(await pagina.locator('#m-objetivos').innerText(), /resposta não voltou/);
+  // só um lado escolhido: recusado
+  await pagina.selectOption('#cfg-nat-dentro', 'gi0');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /escolha a interface de dentro e a de fora/);
+  // lados iguais: recusado
+  await pagina.selectOption('#cfg-nat-dentro', 'gi0'); await pagina.selectOption('#cfg-nat-fora', 'gi0');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /diferentes/);
+  // certo
+  await pagina.selectOption('#cfg-nat-dentro', 'gi0'); await pagina.selectOption('#cfg-nat-fora', 'gi1');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
+  await disp('pc2').click();
+  await pagina.fill('#term-entrada', 'ping -n 1 200.0.1.10');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Resposta de 200\.0\.1\.10: bytes=32[\s\S]*TTL=126[\s\S]*Recebidos = 1/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+260 XP/);
+  const e = await salvo();
+  assert.equal(e.missoes['nat-saida-da-empresa'].concluida, true);
+  assert.deepEqual(e.missoes['nat-saida-da-empresa'].topologia.dispositivos.find(d => d.id === 'r1').nat, { dentro: 'gi0', fora: 'gi1' });
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('NAT com os lados trocados: o terminal mostra o bloqueio e a troca pela interface conclui (180 XP)', async () => {
+  const { pagina, erros, disp, contexto } = await abrir('missoes/nat-lados-trocados');
+  await disp('pc1').click();
+  await pagina.fill('#term-entrada', 'ping -n 1 200.0.1.10');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /NAT do roteador não deixa entrar/);
+  await disp('r1').click();
+  assert.equal(await pagina.locator('#cfg-nat-dentro').inputValue(), 'gi1');
+  await pagina.selectOption('#cfg-nat-dentro', 'gi0'); await pagina.selectOption('#cfg-nat-fora', 'gi1');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+180 XP/);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

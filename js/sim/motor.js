@@ -136,13 +136,13 @@ export function enviarPacote(t, origemId, ipDest) {
   if (arp.achados.length === 0) return resultado('arp-falhou', { de: ipDeOrigem });
   if (arp.achados.length > 1) return resultado('conflito-ip', { de: ipDeOrigem });
   let atual = arp.achados[0];
-  const saltos = [], caminho = [origemId];
+  const saltos = [], caminho = [origemId], traducoes = []; // traducoes: NAT aplicado no caminho [{ d, de, para }]
 
   for (let passo = 0; passo < MAX_SALTOS; passo++) {
     const dev = dispositivo(t, atual.d);
     caminho.push(dev.id);
     const dono = donoDoIp(dev, ipDest);
-    if (dono) return { status: 'entregue', destino: { d: dev.id, p: dono.id }, ttl, saltos, caminho, de: ipDest, aprendizado };
+    if (dono) return { status: 'entregue', destino: { d: dev.id, p: dono.id }, ttl, saltos, caminho, de: ipDest, aprendizado, traducoes, origemVista: ipDeOrigem };
     if (dev.tipo !== 'roteador') return { status: 'descartado', saltos, caminho, ttl, aprendizado };
     const ingresso = configDaInterface(dev, atual.p);
     ttl -= 1;
@@ -151,6 +151,10 @@ export function enviarPacote(t, origemId, ipDest) {
     if (filtroNega(dev, ipDeOrigem, ipDest)) return { status: 'bloqueado', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
     const saida = escolherRota(t, dev, ipDest);
     if (!saida) return { status: 'rede-inalcancavel', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
+    if (dev.nat) {
+      if (atual.p === dev.nat.fora && saida.porta === dev.nat.dentro) return { status: 'bloqueado', por: 'nat', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
+      if (atual.p === dev.nat.dentro && saida.porta === dev.nat.fora) { traducoes.push({ d: dev.id, de: ipDeOrigem, para: saida.ip }); ipDeOrigem = saida.ip; }
+    }
     arp = resolverArp(t, dev.id, saida.porta, saida.proximo);
     if (arp.achados.length === 0) return { status: 'host-inalcancavel', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
     if (arp.achados.length > 1) return { status: 'conflito-ip', de: ingresso.ip, saltos, caminho, ttl, aprendizado };
@@ -269,10 +273,20 @@ export function criarSimulacao(original) {
       const ida = enviarPacote(t, origemId, ipDest);
       aprender(ida.aprendizado);
       if (ida.status !== 'entregue') return { ...ida, volta: null };
-      const volta = enviarPacote(t, ida.destino.d, ipDeOrigem(t, origemId));
-      aprender(volta.aprendizado);
-      if (volta.status !== 'entregue') return { status: 'timeout', saltos: ida.saltos, caminho: ida.caminho, ida, volta };
-      return { status: 'entregue', ttl: volta.ttl, de: ipDest, saltos: ida.saltos, caminho: ida.caminho, destino: ida.destino, ida, volta };
+      // A resposta vai para o IP que o destino enxergou (traduzido pelo NAT). Em cada roteador com NAT, a resposta é
+      // "destraduzida" e segue como nova perna até o IP anterior (o roteador guarda o mapeamento: simplificação de uma tabela NAT).
+      let de = ida.destino.d, alvo = ida.origemVista ?? ipDeOrigem(t, origemId), ttl = null, volta;
+      const etapas = [...(ida.traducoes ?? [])].reverse();
+      for (let i = 0; i <= etapas.length; i++) {
+        volta = enviarPacote(t, de, alvo);
+        aprender(volta.aprendizado);
+        const esperado = etapas[i];
+        if (volta.status !== 'entregue' || (esperado && volta.destino.d !== esperado.d)) return { status: 'timeout', saltos: ida.saltos, caminho: ida.caminho, ida, volta };
+        // TTL contínuo: o que sobrou da perna anterior, menos 1 do roteador que traduziu e menos os saltos desta perna
+        ttl = ttl === null ? volta.ttl : ttl - 1 - (TTL_INICIAL.roteador - volta.ttl);
+        if (esperado) { de = esperado.d; alvo = esperado.de; }
+      }
+      return { status: 'entregue', ttl, de: ipDest, saltos: ida.saltos, caminho: ida.caminho, destino: ida.destino, traducoes: ida.traducoes, ida, volta };
     },
     /**
      * DNS (simplificado): o cliente consulta o servidor configurado (um computador com registros). Precisa alcançá-lo por ping

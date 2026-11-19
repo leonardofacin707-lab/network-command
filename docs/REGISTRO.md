@@ -172,3 +172,11 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Script de varredura abriu 62 rotas (todas as missões, projetos, desafios, níveis do quiz e abas) em 1280 px e 390 px, checando erros de console, rolagem horizontal, sobreposição de nós e página vazia.
 - Único defeito: nas missões de DHCP os PCs ficavam com as caixas se tocando (3 px). Espaçamento corrigido em `tools/gerar-dhcp.mjs` (PCs centralizados, 120 de intervalo).
 - Depois da correção: 0 problemas na varredura; 210 unitários e 87 e2e passando.
+
+## NAT simplificado
+
+- **Motor:** o roteador ganhou `nat: { dentro, fora }` (tipo PAT/overload). Pacote que entra por "dentro" e sai por "fora" passa a ter como origem o IP da interface de fora; o `ping` leva a resposta ao IP traduzido e, no roteador, "destraduz" e segue até o computador de dentro (o mapeamento é implícito, sem tabela). Quem entra por "fora" rumo à rede de "dentro" é bloqueado (`status: 'bloqueado', por: 'nat'`). O TTL da resposta é contado de ponta a ponta.
+- **Interface:** fieldset "NAT" no painel do roteador (duas listas de interfaces; as duas vazias = NAT desligado; só uma escolhida é recusada). O terminal e o verificador explicam o bloqueio por NAT.
+- **Missões (3):** `nat-sem-volta` (diagnóstico: a ida chega, a volta se perde), `nat-lados-trocados` (diagnóstico: dentro/fora invertidos) e `nat-saida-da-empresa` (prática: IP, rota padrão e NAT, cada um é necessário). O objetivo de restrição `sem-rota-privada` impede contornar o NAT com uma rota para a rede privada no provedor.
+- **🧪 Não simulado:** tabela de traduções, portas, expiração, NAT estático/redirecionamento de portas, várias interfaces de dentro, NAT de entrada. É uma simplificação didática, avisada no painel e no texto do laboratório.
+- **Testes:** `tests/unit/nat.test.mjs`, 4 testes de missão e 2 e2e pela interface. Varredura de 65 rotas sem problemas e axe sem violações na missão de NAT.

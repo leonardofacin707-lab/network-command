@@ -9,7 +9,7 @@ Projeto de portfólio de Leonardo Facin, baseado nos tópicos do curso *Conceito
 | Módulo | O que faz | Estado |
 |---|---|---|
 | Conhecimento | Quiz em 12 níveis mais 1 bônus (117 desafios, 5 tipos de pergunta), XP, estrelas, revisão de erros | pronto |
-| Laboratório | Editor visual de rede, IPv4, VLANs, rotas estáticas, DHCP, filtro de pacotes, DNS, terminal (ping, ipconfig…) sobre um motor de simulação próprio | protótipo |
+| Laboratório | Editor visual de rede, IPv4, VLANs, rotas estáticas, DHCP, filtro de pacotes, DNS, NAT, terminal (ping, ipconfig…) sobre um motor de simulação próprio | protótipo |
 | Missões e Campus | Defeitos de rede para diagnosticar e corrigir, verificados por ping | protótipo |
 | Empresa | Planejamento de sub-redes (VLSM), portas e orçamento | protótipo |
 | Data Center | Disponibilidade em série e paralelo, custo e portas | protótipo |

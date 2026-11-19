@@ -97,7 +97,7 @@ const MSG_TENTATIVA = {
   'arp-falhou': r => `Resposta de ${formatarIPv4(r.de)}: Host de destino inacessível.`,
   'host-inalcancavel': r => `Resposta de ${formatarIPv4(r.de)}: Host de destino inacessível.`,
   'ttl-expirado': r => `Resposta de ${formatarIPv4(r.de)}: Tempo de vida (TTL) expirado em trânsito.`,
-  bloqueado: r => `Resposta de ${formatarIPv4(r.de)}: Comunicação proibida administrativamente (bloqueada por um filtro do roteador).`
+  bloqueado: r => `Resposta de ${formatarIPv4(r.de)}: Comunicação proibida administrativamente (${r.por === 'nat' ? 'o NAT do roteador não deixa entrar tráfego pelo lado de fora' : 'bloqueada por um filtro do roteador'}).`
 };
 
 function ping(t, sim, d, args) {

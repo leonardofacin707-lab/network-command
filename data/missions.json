@@ -2934,6 +2934,542 @@
     }
   },
   {
+    "id": "nat-sem-volta",
+    "modulo": "missoes",
+    "titulo": "A ida chega, a volta se perde",
+    "dificuldade": 2,
+    "xp": 170,
+    "habilidades": [
+      "servicos.diagnostico"
+    ],
+    "cenario": "O Cliente1 (192.168.1.10) usa endereço privado e precisa falar com o Servidor da Internet (200.0.1.10). A Borda já tem IP e rota padrão para o Provedor, mas o ping dá \"esgotado o tempo limite\". O Provedor, como qualquer provedor, não tem rotas para redes privadas e você não pode pedir uma.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "tipo": "sem-rota-privada",
+        "roteador": "r2"
+      }
+    ],
+    "dicas": [
+      "Faça ping 200.0.1.10 e depois tracert: a ida passa por Borda e Provedor. O pacote chega ao Servidor, mas a resposta não volta.",
+      "O Servidor responde para 192.168.1.10, um endereço privado. O Provedor não sabe como chegar lá. A Borda precisa trocar o endereço de origem por um que o Provedor conheça.",
+      "Selecione a Borda e ligue o NAT: interface de dentro = a que leva à rede 192.168.1.0/24 (gi0), de fora = a que leva ao Provedor (gi1)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 80,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 250,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "Borda",
+          "x": 430,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "200.0.0.2",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "0.0.0.0",
+              "mascara": "0.0.0.0",
+              "via": "200.0.0.1"
+            }
+          ],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "Provedor",
+          "x": 610,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "200.0.0.1",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "200.0.1.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 800,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "200.0.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "200.0.1.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "sw1",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "nat-lados-trocados",
+    "modulo": "missoes",
+    "titulo": "NAT ligado, mas ao contrário",
+    "dificuldade": 2,
+    "xp": 180,
+    "habilidades": [
+      "servicos.diagnostico"
+    ],
+    "cenario": "Alguém já ligou o NAT na Borda, mas o Cliente1 continua sem alcançar o Servidor. Agora o ping responde \"Comunicação proibida administrativamente\". O Provedor não conhece redes privadas.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "tipo": "sem-rota-privada",
+        "roteador": "r2"
+      }
+    ],
+    "dicas": [
+      "Use ping e leia a mensagem: ela vem da Borda e fala em NAT. O NAT está ativo, mas não está traduzindo o tráfego do Cliente1.",
+      "No NAT, \"dentro\" é o lado da rede privada e \"fora\" é o lado do provedor. Veja qual interface da Borda leva a cada lado.",
+      "Na Borda, troque as duas interfaces do NAT: dentro = gi0 (192.168.1.1), fora = gi1 (200.0.0.2)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 80,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 250,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "Borda",
+          "x": 430,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "200.0.0.2",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [
+            {
+              "rede": "0.0.0.0",
+              "mascara": "0.0.0.0",
+              "via": "200.0.0.1"
+            }
+          ],
+          "pools": [],
+          "filtros": [],
+          "nat": {
+            "dentro": "gi1",
+            "fora": "gi0"
+          }
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "Provedor",
+          "x": 610,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "200.0.0.1",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "200.0.1.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 800,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "200.0.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "200.0.1.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "sw1",
+            "p": "fa2"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "nat-saida-da-empresa",
+    "modulo": "missoes",
+    "titulo": "Dê saída para a Internet à empresa",
+    "dificuldade": 3,
+    "xp": 260,
+    "habilidades": [
+      "servicos.pratica",
+      "roteamento.pratica"
+    ],
+    "cenario": "Dois clientes (192.168.1.10 e 192.168.1.11) precisam acessar o Servidor (200.0.1.10). O Provedor liga na Borda pela rede 200.0.0.0/30: o Provedor usa 200.0.0.1 e a Borda deve usar 200.0.0.2. A interface gi1 da Borda ainda não tem IP, não há rota e não há NAT. O Provedor não aceita rotas para endereços privados.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      },
+      {
+        "id": "o3",
+        "tipo": "sem-rota-privada",
+        "roteador": "r2"
+      }
+    ],
+    "dicas": [
+      "São três coisas na Borda: IP na interface que liga ao Provedor, uma rota para o resto do mundo e o NAT.",
+      "Configure o IP 200.0.0.2 com máscara /30 na gi1 e crie a rota 0.0.0.0 /0 com próximo salto 200.0.0.1.",
+      "Ligue o NAT com dentro = gi0 e fora = gi1. Depois teste o ping dos dois clientes."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 80,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 80,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 250,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "Borda",
+          "x": 430,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "Provedor",
+          "x": 610,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "200.0.0.1",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "200.0.1.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 800,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "200.0.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "200.0.1.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "filial-fora-do-ar",
     "modulo": "missoes",
     "titulo": "Filial fora do ar: três defeitos",

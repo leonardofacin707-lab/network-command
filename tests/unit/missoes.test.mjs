@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 23);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 26);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -389,4 +389,48 @@ test('chefão de cinco camadas: cada um dos cinco defeitos é necessário', () =
   const todas = Object.keys(correcoes);
   assert.equal(verificarMissao(x, aplicar(todas)).todosOk, true);
   for (const faltando of todas) assert.equal(verificarMissao(x, aplicar(todas.filter(n => n !== faltando))).todosOk, false, `sem a correção "${faltando}"`);
+});
+
+// ---- NAT ----
+test('NAT: "a ida chega, a volta se perde" só resolve com NAT (rota no provedor é recusada pela restrição)', () => {
+  const x = m('nat-sem-volta');
+  const t0 = x.topologia;
+  assert.deepEqual(verificarMissao(x, t0).objetivos.map(o => o.ok), [false, true]);
+  assert.match(verificarMissao(x, t0).objetivos[0].motivo, /resposta não voltou/);
+  assert.equal(verificarMissao(x, ok(configurarNat(t0, 'r1', { dentro: 'gi0', fora: 'gi1' }))).todosOk, true);
+  const atalho = rotaEst(t0, 'r2', '192.168.1.0', '/24', '200.0.0.2');
+  const r = verificarMissao(x, atalho);
+  assert.equal(r.objetivos[0].ok, true, 'o ping até passaria...');
+  assert.equal(r.objetivos[1].ok, false, '...mas o provedor não pode ter rota privada');
+  assert.equal(r.todosOk, false);
+});
+
+test('NAT: lados trocados bloqueiam e a troca resolve', () => {
+  const x = m('nat-lados-trocados');
+  const antes = verificarMissao(x, x.topologia);
+  assert.equal(antes.objetivos[0].ok, false);
+  assert.match(antes.objetivos[0].motivo, /NAT com os lados trocados/);
+  assert.equal(verificarMissao(x, ok(configurarNat(x.topologia, 'r1', { dentro: 'gi0', fora: 'gi1' }))).todosOk, true);
+});
+
+test('NAT: saída da empresa exige IP, rota e NAT (cada um é necessário)', () => {
+  const x = m('nat-saida-da-empresa');
+  const t0 = x.topologia;
+  assert.equal(verificarMissao(x, t0).todosOk, false);
+  const correcoes = {
+    ip: t => ok(configurarInterface(t, 'r1', 'gi1', { ip: '200.0.0.2', mascara: '/30' })),
+    // sem o IP da interface a rota nem pode ser criada (o simulador recusa): nesse caso fica sem rota
+    rota: t => adicionarRotaEstatica(t, 'r1', { rede: '0.0.0.0', mascara: '/0', via: '200.0.0.1' }).topologia ?? t,
+    nat: t => ok(configurarNat(t, 'r1', { dentro: 'gi0', fora: 'gi1' }))
+  };
+  const aplicar = nomes => nomes.reduce((t, n) => correcoes[n](t), t0);
+  const todas = Object.keys(correcoes);
+  assert.equal(verificarMissao(x, aplicar(todas)).todosOk, true);
+  for (const faltando of todas) assert.equal(verificarMissao(x, aplicar(todas.filter(n => n !== faltando))).todosOk, false, `sem "${faltando}"`);
+});
+
+test('NAT: objetivo de restrição é validado e normalizado', () => {
+  const base = JSON.parse(JSON.stringify(m('nat-sem-volta')));
+  base.objetivos = [{ id: 'a', tipo: 'sem-rota-privada', roteador: 'r2', lixo: 1 }, { id: 'b', tipo: 'sem-rota-privada', roteador: 'pc1' }, { id: 'c', tipo: 'sem-rota-privada', roteador: 'zz' }];
+  assert.deepEqual(validarMissao(base).objetivos, [{ id: 'a', tipo: 'sem-rota-privada', roteador: 'r2' }]);
 });

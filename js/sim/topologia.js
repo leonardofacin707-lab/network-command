@@ -42,7 +42,7 @@ function novoDispositivo(t, tipo, pos) {
     interfaces: def.portas.filter(p => p.ip).map(p => ({ id: p.id, ip: '', mascara: '' }))
   };
   if (tipo === 'pc') d.gateway = '';
-  if (tipo === 'roteador') { d.rotas = []; d.pools = []; d.filtros = []; } // filtros: [{ acao, origem, origemM, destino, destinoM }]; rotas estáticas: [{ rede, mascara, via }]; pools DHCP: [{ porta, inicio, fim }]
+  if (tipo === 'roteador') { d.rotas = []; d.pools = []; d.filtros = []; d.nat = null; } // nat: { dentro, fora } (portas) // filtros: [{ acao, origem, origemM, destino, destinoM }]; rotas estáticas: [{ rede, mascara, via }]; pools DHCP: [{ porta, inicio, fim }]
   if (tipo === 'switch') d.portas = {}; // configuração das portas, só o que foge do padrão (access, VLAN 1)
   return d;
 }
@@ -189,6 +189,25 @@ export function removerRegistroDns(t, id, indice) {
 
 /** Máximo de regras de filtro por roteador. */
 export const MAX_FILTROS = 12;
+
+/**
+ * NAT (simplificado, tipo PAT/overload): pacotes que entram pela porta "dentro" e saem pela porta "fora" passam a ter como
+ * origem o IP da porta "fora"; a resposta volta para esse IP e o roteador a devolve ao computador de dentro. Quem entra pela
+ * porta "fora" rumo à rede de "dentro" é bloqueado (não há redirecionamento de portas nesta simulação).
+ */
+export function configurarNat(t, id, { dentro, fora }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores fazem NAT nesta simulação.' };
+  if (!d.interfaces.some(i => i.id === dentro) || !d.interfaces.some(i => i.id === fora)) return { erro: 'Escolha duas interfaces deste roteador.' };
+  if (dentro === fora) return { erro: 'As interfaces de dentro e de fora precisam ser diferentes.' };
+  return { topologia: trocar(t, id, x => ({ ...x, nat: { dentro, fora } })) };
+}
+
+export function removerNat(t, id) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores fazem NAT nesta simulação.' };
+  return { topologia: trocar(t, id, x => ({ ...x, nat: null })) };
+}
 
 function lerAlvoDeFiltro(rede, mascara, rotulo) {
   const rTxt = String(rede ?? '').trim(), mTxt = String(mascara ?? '').trim();
@@ -356,6 +375,7 @@ export function normalizarTopologia(bruto) {
         if (oN === null || omN === null || dN === null || dmN === null || enderecoDeRede(oN, omN) !== oN || enderecoDeRede(dN, dmN) !== dN) continue;
         d.filtros.push({ acao: f.acao, origem: formatarIPv4(oN), origemM: formatarIPv4(omN), destino: formatarIPv4(dN), destinoM: formatarIPv4(dmN) });
       }
+      d.nat = b.nat && typeof b.nat === 'object' && b.nat.dentro !== b.nat.fora && d.interfaces.some(i => i.id === b.nat.dentro) && d.interfaces.some(i => i.id === b.nat.fora) ? { dentro: b.nat.dentro, fora: b.nat.fora } : null;
       d.pools = [];
       for (const q of Array.isArray(b.pools) ? b.pools : []) {
         if (!q || typeof q !== 'object' || !d.interfaces.some(i => i.id === q.porta) || d.pools.some(x => x.porta === q.porta)) continue;
