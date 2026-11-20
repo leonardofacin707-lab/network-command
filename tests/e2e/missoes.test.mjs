@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 26 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 31 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 26);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 26 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 31);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 31 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(2).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 26 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 31 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -430,6 +430,53 @@ test('NAT com os lados trocados: o terminal mostra o bloqueio e a troca pela int
   await pagina.locator('#form-cfg button[type=submit]').click();
   await pagina.locator('#m-verificar').click();
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+180 XP/);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('segurança pela interface: captura mostra as duas respostas ARP do gateway falso; tnc e filtro por porta fecham o Telnet (260 XP)', async () => {
+  const s1 = await abrir('missoes/seg-gateway-falso');
+  await s1.disp('pc1').click();
+  await s1.pagina.locator('#captura-ligada').check();
+  assert.match(await s1.pagina.locator('#captura').innerText(), /Rode um comando/);
+  await s1.pagina.fill('#term-entrada', 'ping -n 1 10.0.0.10');
+  await s1.pagina.press('#term-entrada', 'Enter');
+  const cap = await s1.pagina.locator('#captura').innerText();
+  assert.match(cap, /Captura de ping -n 1 10\.0\.0\.10 em Cliente1/);
+  assert.equal((cap.match(/192\.168\.1\.1 está em/g) ?? []).length, 2, 'duas respostas para o IP do gateway');
+  assert.match(cap, /Quem tem 192\.168\.1\.1\?/);
+  assert.deepEqual(s1.erros, []);
+  await s1.contexto.close();
+
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/seg-feche-telnet');
+  const aplicar = () => pagina.locator('#form-cfg button[type=submit]').click();
+  await disp('pc1').click();
+  await pagina.fill('#term-entrada', 'tnc 10.0.0.10 23');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /RemotePort\s+: 23 \(Telnet\)[\s\S]*TcpTestSucceeded : True/);
+  // serviços do servidor aparecem marcados
+  await disp('pc3').click();
+  assert.equal(await pagina.locator('#servicos-pc input[value="23"]').isChecked(), true);
+  assert.equal(await pagina.locator('#servicos-pc input[value="443"]').isChecked(), false);
+  // regra inválida: porta em icmp
+  await disp('r1').click();
+  await pagina.selectOption('#cfg-filtro-acao', 'negar');
+  await pagina.selectOption('#cfg-filtro-proto', 'icmp'); await pagina.fill('#cfg-filtro-porta', '23');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Porta só existe em regras tcp ou udp/);
+  await pagina.selectOption('#cfg-filtro-acao', 'negar');
+  await pagina.fill('#cfg-filtro-o', '192.168.1.0'); await pagina.fill('#cfg-filtro-om', '/24');
+  await pagina.fill('#cfg-filtro-d', '10.0.0.10'); await pagina.fill('#cfg-filtro-dm', '/32');
+  await pagina.selectOption('#cfg-filtro-proto', 'tcp'); await pagina.fill('#cfg-filtro-porta', '23');
+  await aplicar();
+  assert.match(await pagina.locator('#filtros-pacotes .regra').first().innerText(), /negar tcp de 192\.168\.1\.0\/24 para 10\.0\.0\.10\/32 porta 23 \(Telnet\)/);
+  await disp('pc1').click();
+  await pagina.fill('#term-entrada', 'tnc 10.0.0.10 23');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /bloqueou a conexão[\s\S]*TcpTestSucceeded : False/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+260 XP/);
+  assert.equal((await salvo()).missoes['seg-feche-telnet'].topologia.dispositivos.find(d => d.id === 'r1').filtros[0].porta, 23);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

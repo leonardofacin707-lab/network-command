@@ -1,7 +1,7 @@
 // Regras das missões (sem DOM): validar dados, verificar objetivos com o motor e calcular o XP.
-import { criarSimulacao, configDaInterface } from '../sim/motor.js';
+import { criarSimulacao, configDaInterface, NOMES_PORTAS } from '../sim/motor.js';
 import { dispositivo, normalizarTopologia } from '../sim/topologia.js';
-import { lerIPv4, lerMascara, mesmaRede } from '../sim/ipv4.js';
+import { lerIPv4, lerMascara, mesmaRede, formatarIPv4 } from '../sim/ipv4.js';
 
 export const PENALIDADE_DICA = 0.2;  // cada dica usada tira 20% do XP...
 export const XP_MINIMO = 0.4;        // ...até um mínimo de 40%
@@ -32,7 +32,8 @@ const MOTIVO = {
   'ttl-expirado': 'o pacote expirou no caminho',
   bloqueado: 'um roteador bloqueou o tráfego (filtro de pacotes ou NAT com os lados trocados)',
   descartado: 'o pacote foi descartado',
-  timeout: 'o pacote chegou, mas a resposta não voltou'
+  timeout: 'o pacote chegou, mas a resposta não voltou',
+  recusada: 'a porta está fechada no destino (nenhum serviço escutando)'
 };
 
 /** Primeiro IP configurado de um dispositivo, como número (alvo dos objetivos, que apontam para dispositivos, não para IPs). */
@@ -51,6 +52,14 @@ export function verificarMissao(missao, topologia) {
   const sim = criarSimulacao(topologia);
   const nome = id => dispositivo(topologia, id)?.nome ?? id;
   const objetivos = missao.objetivos.map(o => {
+    // o computador precisa ter recebido o endereço do servidor DHCP legítimo (defesa contra servidor DHCP falso)
+    if (o.tipo === 'dhcp-de') {
+      const texto = `${nome(o.pc)} recebe o endereço do servidor DHCP ${nome(o.roteador)}`;
+      const c = sim.concessoes.get(o.pc);
+      if (!c?.ok) return { id: o.id, texto, ok: false, motivo: `${nome(o.pc)} não recebeu endereço por DHCP` };
+      return c.servidor.d === o.roteador ? { id: o.id, texto, ok: true, motivo: '' }
+        : { id: o.id, texto, ok: false, motivo: `o endereço veio de outro servidor DHCP (${nome(c.servidor.d)}, ${formatarIPv4(c.servidor.ip)})` };
+    }
     // restrição: o roteador (do provedor) não pode ter rotas estáticas para redes privadas; força a solução por NAT
     if (o.tipo === 'sem-rota-privada') {
       const r = dispositivo(topologia, o.roteador);
@@ -62,18 +71,26 @@ export function verificarMissao(missao, topologia) {
     // esperado: 'falha' = objetivo de isolamento (ex.: setores em VLANs diferentes não devem se alcançar)
     const isolar = o.esperado === 'falha';
     const porNome = typeof o.nome === 'string'; // objetivo "de alcança o nome X": resolve pelo DNS e depois faz o ping
-    const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${porNome ? `${o.nome} (pelo nome)` : nome(o.para)}`;
+    const porta = Number.isInteger(o.porta) ? o.porta : null; // objetivo de serviço: conexão TCP nessa porta
+    const alvoTxt = porNome ? `${o.nome} (pelo nome${o.para ? `, que deve levar a ${nome(o.para)}` : ''})` : nome(o.para);
+    const texto = porta !== null
+      ? `${nome(o.de)} ${isolar ? 'não conecta' : 'conecta'} em ${nome(o.para)} na porta ${porta}${NOMES_PORTAS[porta] ? ` (${NOMES_PORTAS[porta]})` : ''}`
+      : `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${alvoTxt}`;
     if (!dispositivo(topologia, o.de) || (!porNome && !dispositivo(topologia, o.para))) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
     let ip;
     if (porNome) {
       const res = sim.resolver(o.de, o.nome);
       if (!res.ok) return isolar ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: MOTIVO_DNS[res.motivo] };
       ip = res.ip;
+      // nome que deve levar a um computador específico: se o DNS responder outro endereço, é um registro falso
+      if (o.para && ip !== ipDoDispositivo(sim.topologia, o.para)) {
+        return isolar ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: `o DNS respondeu ${formatarIPv4(ip)}, que não é o endereço de ${nome(o.para)} (resposta falsa?)` };
+      }
     } else {
       ip = ipDoDispositivo(sim.topologia, o.para); // com as concessões DHCP
       if (ip === null) return { id: o.id, texto, ok: false, motivo: `${nome(o.para)} não tem IP configurado` };
     }
-    const r = sim.ping(o.de, ip);
+    const r = porta !== null ? sim.conectar(o.de, ip, porta) : sim.ping(o.de, ip);
     const entregue = r.status === 'entregue';
     if (isolar) return entregue ? { id: o.id, texto, ok: false, motivo: 'ainda se comunicam, mas deveriam estar isolados' } : { id: o.id, texto, ok: true, motivo: '' };
     return entregue ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: MOTIVO[r.status] ?? 'sem resposta' };
@@ -93,9 +110,13 @@ export function validarMissao(m) {
   const nomeValido = n => typeof n === 'string' && /^[a-z0-9]([a-z0-9.-]{0,60}[a-z0-9])?$/.test(n);
   const objetivos = (Array.isArray(m.objetivos) ? m.objetivos : []).filter(o => o && typeof o.id === 'string'
     && ((o.tipo === 'sem-rota-privada' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
-      || (dispositivo(topologia, o.de) && (dispositivo(topologia, o.para) || nomeValido(o.nome))))).map(o => {
+      || (o.tipo === 'dhcp-de' && dispositivo(topologia, o.pc)?.tipo === 'pc' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
+      || (!o.tipo && dispositivo(topologia, o.de) && (dispositivo(topologia, o.para) || nomeValido(o.nome))))).map(o => {
     if (o.tipo === 'sem-rota-privada') return { id: o.id, tipo: 'sem-rota-privada', roteador: o.roteador };
-    const base = nomeValido(o.nome) && !dispositivo(topologia, o.para) ? { id: o.id, de: o.de, nome: o.nome } : { id: o.id, de: o.de, para: o.para };
+    if (o.tipo === 'dhcp-de') return { id: o.id, tipo: 'dhcp-de', pc: o.pc, roteador: o.roteador };
+    let base;
+    if (nomeValido(o.nome)) base = { id: o.id, de: o.de, nome: o.nome, ...(dispositivo(topologia, o.para) ? { para: o.para } : {}) };
+    else base = { id: o.id, de: o.de, para: o.para, ...(Number.isInteger(o.porta) && o.porta >= 1 && o.porta <= 65535 ? { porta: o.porta } : {}) };
     return o.esperado === 'falha' ? { ...base, esperado: 'falha' } : base;
   });
   if (!objetivos.length) return null;

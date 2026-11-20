@@ -1,8 +1,8 @@
 // Terminal simulado (estilo Prompt de Comando do Windows, em português). Puro: recebe texto, devolve linhas.
-// Comandos: ipconfig [/all|/renew], ping [-n N] destino, tracert destino, nslookup nome, arp -a, hostname, help, cls.
+// Comandos: ipconfig [/all|/renew], ping [-n N] destino, tracert destino, nslookup nome, tnc destino porta, arp -a, hostname, help, cls.
 // Simplificações assumidas: sem latência (sempre "tempo<1ms") e nomes de host resolvidos só entre os dispositivos do laboratório.
 import { lerIPv4, formatarIPv4 } from './ipv4.js';
-import { configDaInterface, conflitosDeIp, macDe, temLink, interfacesConfiguradas } from './motor.js';
+import { configDaInterface, conflitosDeIp, macDe, temLink, interfacesConfiguradas, NOMES_PORTAS } from './motor.js';
 import { dispositivo, rotuloDaPorta } from './topologia.js';
 
 const AJUDA = [
@@ -12,6 +12,7 @@ const AJUDA = [
   '  ping [-n N] destino  testa a conexão com um IP ou nome de dispositivo',
   '  tracert destino     mostra os roteadores no caminho até o destino',
   '  nslookup nome       consulta o servidor DNS configurado neste computador',
+  '  tnc destino porta   testa uma conexão TCP com um serviço (ex.: tnc 192.168.1.60 80)',
   '  arp -a              mostra os endereços MAC já descobertos',
   '  hostname            mostra o nome desta máquina',
   '  cls                 limpa a tela',
@@ -150,6 +151,32 @@ function tracert(t, sim, d, args) {
   return linhas;
 }
 
+const FALHA_TCP = {
+  recusada: 'a porta está fechada: o computador respondeu com RST (nenhum serviço escutando nela)',
+  timeout: 'o pedido chegou, mas a resposta não voltou',
+  bloqueado: 'um roteador bloqueou a conexão (filtro de pacotes ou NAT)',
+  'sem-ip': 'este computador não tem IP', 'sem-link': 'este computador está sem cabo', 'gateway-fora': 'o gateway está fora da sub-rede',
+  'sem-rota': 'não há gateway para chegar a outra rede', 'arp-falhou': 'ninguém respondeu na rede local',
+  'rede-inalcancavel': 'um roteador não conhece a rede de destino', 'host-inalcancavel': 'o roteador não encontrou o destino',
+  'conflito-ip': 'há IP duplicado no caminho', 'ttl-expirado': 'o pacote expirou no caminho'
+};
+
+/** Teste de conexão TCP, no formato do Test-NetConnection (tnc) do Windows PowerShell. */
+function tnc(t, sim, d, args) {
+  if (args.length !== 2) return ['Uso: tnc destino porta   (ex.: tnc 192.168.1.60 80)'];
+  const porta = Number(args[1]);
+  if (!Number.isInteger(porta) || porta < 1 || porta > 65535) return ['Porta inválida. Use um número de 1 a 65535.'];
+  const dest = resolverDestino(t, sim, d, args[0]);
+  if (!dest) return [`AVISO: não foi possível resolver o nome ${args[0]}.`];
+  const r = sim.conectar(d.id, dest.ip, porta);
+  const ok = r.status === 'entregue';
+  const linhas = [];
+  if (!ok) linhas.push(`AVISO: a conexão TCP com ${formatarIPv4(dest.ip)}:${porta} falhou: ${FALHA_TCP[r.status] ?? 'sem resposta (' + r.status + ')'}.`, '');
+  return [...linhas, `ComputerName     : ${dest.nome ?? formatarIPv4(dest.ip)}`, `RemoteAddress    : ${formatarIPv4(dest.ip)}`,
+    `RemotePort       : ${porta}${NOMES_PORTAS[porta] ? ' (' + NOMES_PORTAS[porta] + ')' : ''}`, `SourceAddress    : ${interfacesConfiguradas(d)[0] ? formatarIPv4(interfacesConfiguradas(d)[0].ip) : '(sem IP)'}`,
+    `TcpTestSucceeded : ${ok ? 'True' : 'False'}`, ''];
+}
+
 function arp(t, sim, d, args) {
   if (args.length !== 1 || args[0] !== '-a') return ['Uso: arp -a'];
   const tabela = sim.tabelaArp(d.id);
@@ -175,6 +202,7 @@ export function executar(sim, dispositivoId, linhaDigitada) {
     case 'ping': return { linhas: ping(t, sim, d, args), limpar: false };
     case 'tracert': return { linhas: tracert(t, sim, d, args), limpar: false };
     case 'nslookup': return { linhas: nslookup(t, sim, d, args), limpar: false };
+    case 'tnc': case 'test-netconnection': return { linhas: tnc(t, sim, d, args.filter(a => a.toLowerCase() !== '-port')), limpar: false };
     case 'arp': return { linhas: arp(t, sim, d, args), limpar: false };
     case 'hostname': return { linhas: [d.nome], limpar: false };
     case 'cls': return { linhas: [], limpar: true };

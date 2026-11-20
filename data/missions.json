@@ -3470,6 +3470,1059 @@
     }
   },
   {
+    "id": "seg-dhcp-falso",
+    "modulo": "missoes",
+    "titulo": "Quem está entregando esses endereços?",
+    "dificuldade": 2,
+    "xp": 200,
+    "habilidades": [
+      "seguranca.diagnostico",
+      "servicos.diagnostico"
+    ],
+    "cenario": "Desde ontem, os clientes da recepção não acessam o Servidor (10.0.0.10). Eles usam DHCP e o servidor oficial é o R1 (pool 192.168.1.100 a 150). Alguém ligou um equipamento desconhecido no switch. (Simulação simplificada: veja as observações na dica final.)",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      },
+      {
+        "id": "o3",
+        "tipo": "dhcp-de",
+        "pc": "pc1",
+        "roteador": "r1"
+      },
+      {
+        "id": "o4",
+        "tipo": "dhcp-de",
+        "pc": "pc2",
+        "roteador": "r1"
+      }
+    ],
+    "dicas": [
+      "No Cliente1, rode ipconfig /all. Que endereço ele recebeu e quem é o \"Servidor DHCP\"? Compare com o pool oficial do R1.",
+      "O endereço veio de 192.168.1.254, o roteador Desconhecido: um servidor DHCP falso (rogue DHCP). Ele entrega como gateway ele mesmo, e o tráfego não chega ao servidor.",
+      "Desligue o cabo do Desconhecido (ou apague o pool dele). Na vida real, switches gerenciáveis têm o DHCP snooping, que só aceita ofertas DHCP pela porta do servidor confiável. Simplificação: aqui o servidor mais próximo no switch sempre responde primeiro."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp": true
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 300,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 520,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [
+            {
+              "porta": "gi0",
+              "inicio": "192.168.1.100",
+              "fim": "192.168.1.150"
+            }
+          ],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1"
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "Desconhecido",
+          "x": 300,
+          "y": 440,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.254",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "rotas": [],
+          "pools": [
+            {
+              "porta": "gi0",
+              "inicio": "192.168.1.50",
+              "fim": "192.168.1.60"
+            }
+          ],
+          "filtros": [],
+          "nat": null
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "r2",
+            "p": "gi0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "sw1",
+            "p": "fa4"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "seg-gateway-falso",
+    "modulo": "missoes",
+    "titulo": "Dois donos para o mesmo gateway",
+    "dificuldade": 2,
+    "xp": 200,
+    "habilidades": [
+      "seguranca.diagnostico",
+      "ethernet-comutacao.diagnostico"
+    ],
+    "cenario": "Os clientes perderam o acesso ao Servidor (10.0.0.10) logo depois que um visitante ligou o notebook na rede. Use a captura de pacotes do terminal para descobrir o que está acontecendo no ARP. (Simulação simplificada: veja as observações na dica final.)",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3"
+      }
+    ],
+    "dicas": [
+      "No terminal do Cliente1, marque \"Capturar pacotes\" e rode ping 10.0.0.10. Olhe as respostas ARP para \"Quem tem 192.168.1.1?\".",
+      "Chegam duas respostas com MACs diferentes: o R1 e o notebook Visitante, que está usando o IP do gateway. É a ideia do ARP spoofing: alguém se passar pelo gateway para receber o tráfego dos outros.",
+      "Desligue o cabo do Visitante ou tire o IP dele. Simplificação: num ataque real o atacante envia respostas ARP falsas sem precisar do mesmo IP, e o tráfego é desviado sem erro aparente; aqui o simulador mostra o conflito. Defesa real: inspeção dinâmica de ARP (DAI) nos switches."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 300,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 520,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1"
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Visitante",
+          "x": 300,
+          "y": 440,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "seg-dns-falso",
+    "modulo": "missoes",
+    "titulo": "O banco que não é o banco",
+    "dificuldade": 2,
+    "xp": 200,
+    "habilidades": [
+      "seguranca.diagnostico",
+      "servicos.diagnostico"
+    ],
+    "cenario": "O Cliente1 abre banco.local normalmente, mas a página parece diferente da que o Cliente2 vê. O servidor DNS da empresa é o Dns (192.168.1.50) e o banco é o computador Banco (192.168.1.60). Os dois clientes precisam chegar ao Banco verdadeiro, na porta 443 (HTTPS). (Simulação simplificada: veja as observações na dica final.)",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "nome": "banco.local",
+        "para": "pc4"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "nome": "banco.local",
+        "para": "pc4"
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc4",
+        "porta": 443
+      }
+    ],
+    "dicas": [
+      "Compare nslookup banco.local no Cliente1 e no Cliente2. Os endereços são iguais? E o servidor que respondeu?",
+      "O Cliente1 está usando como DNS o 192.168.1.66, o computador Falso, que responde banco.local com o próprio endereço (um site falso esperando a sua senha).",
+      "No Cliente1, troque o servidor DNS para 192.168.1.50. Simplificação: na vida real o DNS falso costuma chegar por um DHCP falso ou por malware que altera a configuração; o HTTPS com certificado válido ajudaria a perceber a fraude."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "dns": "192.168.1.66"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "dns": "192.168.1.50"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 380,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Dns",
+          "x": 720,
+          "y": 70,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.50",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "registros": [
+            {
+              "nome": "banco.local",
+              "ip": "192.168.1.60"
+            }
+          ]
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Banco",
+          "x": 760,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.60",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "servicos": [
+            443
+          ]
+        },
+        {
+          "id": "pc5",
+          "tipo": "pc",
+          "nome": "Falso",
+          "x": 720,
+          "y": 400,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.66",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "registros": [
+            {
+              "nome": "banco.local",
+              "ip": "192.168.1.66"
+            }
+          ],
+          "servicos": [
+            80,
+            443
+          ]
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc5",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa5"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "seg-bloqueio-demais",
+    "modulo": "missoes",
+    "titulo": "Bloquearam o ping e levaram o site junto",
+    "dificuldade": 2,
+    "xp": 200,
+    "habilidades": [
+      "seguranca.diagnostico",
+      "troubleshooting.diagnostico"
+    ],
+    "cenario": "Pediram para bloquear o ping dos clientes até o Servidor (10.0.0.10), para dificultar a varredura da rede. Depois da mudança no R1, o site (porta 80) também parou para os clientes. O ping deve continuar bloqueado; o site precisa voltar.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3",
+        "porta": 80
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "porta": 80
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc3",
+        "esperado": "falha"
+      }
+    ],
+    "dicas": [
+      "Olhe a regra do filtro do R1: ela tem protocolo? Sem protocolo (ip) ela vale para tudo: ping, HTTP, SSH.",
+      "O ping usa ICMP. O site usa TCP na porta 80. A regra precisa ser só para icmp.",
+      "No R1, remova a regra atual e crie: negar, protocolo icmp, origem 192.168.1.0 /24, destino 10.0.0.10 /32."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 260,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 450,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [
+            {
+              "acao": "negar",
+              "origem": "192.168.1.0",
+              "origemM": "255.255.255.0",
+              "destino": "10.0.0.10",
+              "destinoM": "255.255.255.255"
+            }
+          ],
+          "nat": null
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 630,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 820,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1",
+          "servicos": [
+            22,
+            23,
+            80
+          ]
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Admin",
+          "x": 820,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c6",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "seg-feche-telnet",
+    "modulo": "missoes",
+    "titulo": "Feche o Telnet para os clientes",
+    "dificuldade": 3,
+    "xp": 260,
+    "habilidades": [
+      "seguranca.pratica",
+      "roteamento.pratica"
+    ],
+    "cenario": "O Servidor (10.0.0.10) oferece SSH (22), Telnet (23) e HTTP (80). O Telnet manda tudo, inclusive a senha, sem criptografia. A rede dos clientes (192.168.1.0/24) deve continuar acessando o site e o SSH, mas não o Telnet. O Admin, na mesma rede do servidor, ainda precisa do Telnet para um equipamento antigo.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3",
+        "porta": 80
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "porta": 22
+      },
+      {
+        "id": "o3",
+        "de": "pc1",
+        "para": "pc3",
+        "porta": 23,
+        "esperado": "falha"
+      },
+      {
+        "id": "o4",
+        "de": "pc2",
+        "para": "pc3",
+        "porta": 23,
+        "esperado": "falha"
+      },
+      {
+        "id": "o5",
+        "de": "pc4",
+        "para": "pc3",
+        "porta": 23
+      }
+    ],
+    "dicas": [
+      "Teste no Cliente1 com tnc 10.0.0.10 23 e tnc 10.0.0.10 80. Desligar o Telnet no servidor tiraria o acesso do Admin também.",
+      "O tráfego dos clientes passa pelo R1; o do Admin não (está na mesma rede do servidor). Uma regra no filtro do R1 resolve só para os clientes.",
+      "No R1, acrescente: negar, protocolo tcp, origem 192.168.1.0 /24, destino 10.0.0.10 /32, porta 23."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 260,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 450,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.0.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "sw2",
+          "tipo": "switch",
+          "nome": "SW2",
+          "x": 630,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 820,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1",
+          "servicos": [
+            22,
+            23,
+            80
+          ]
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Admin",
+          "x": 820,
+          "y": 330,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "10.0.0.20",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "10.0.0.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c5",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c6",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw2",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "filial-fora-do-ar",
     "modulo": "missoes",
     "titulo": "Filial fora do ar: três defeitos",

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 26);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 31);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -433,4 +433,58 @@ test('NAT: objetivo de restrição é validado e normalizado', () => {
   const base = JSON.parse(JSON.stringify(m('nat-sem-volta')));
   base.objetivos = [{ id: 'a', tipo: 'sem-rota-privada', roteador: 'r2', lixo: 1 }, { id: 'b', tipo: 'sem-rota-privada', roteador: 'pc1' }, { id: 'c', tipo: 'sem-rota-privada', roteador: 'zz' }];
   assert.deepEqual(validarMissao(base).objetivos, [{ id: 'a', tipo: 'sem-rota-privada', roteador: 'r2' }]);
+});
+
+// ---- Segurança ----
+const cabo = (t, id) => t.cabos.find(c => c.a.d === id || c.b.d === id).id;
+const porNomeDisp = (t, nome) => t.dispositivos.find(d => d.nome === nome).id;
+
+test('segurança: DHCP falso — desligar o equipamento desconhecido (ou apagar o pool dele) resolve', () => {
+  const x = m('seg-dhcp-falso'), t0 = x.topologia, falso = porNomeDisp(t0, 'Desconhecido');
+  const r0 = verificarMissao(x, t0);
+  assert.equal(r0.todosOk, false);
+  assert.match(r0.objetivos[2].motivo, /outro servidor DHCP \(Desconhecido, 192\.168\.1\.254\)/);
+  assert.equal(verificarMissao(x, ok(removerCabo(t0, cabo(t0, falso)))).todosOk, true);
+  assert.equal(verificarMissao(x, ok(configurarPoolDhcp(t0, falso, 'gi0', { inicio: '', fim: '' }))).todosOk, true);
+});
+
+test('segurança: gateway falso — conflito de IP com o gateway; tirar o visitante resolve', () => {
+  const x = m('seg-gateway-falso'), t0 = x.topologia, vis = porNomeDisp(t0, 'Visitante');
+  const r0 = verificarMissao(x, t0);
+  assert.equal(r0.todosOk, false);
+  assert.match(r0.objetivos[0].motivo, /IP duplicado/);
+  assert.equal(verificarMissao(x, ok(removerCabo(t0, cabo(t0, vis)))).todosOk, true);
+  assert.equal(verificarMissao(x, ok(configurarInterface(t0, vis, 'eth0', { ip: '192.168.1.99', mascara: '/24' }))).todosOk, true);
+});
+
+test('segurança: DNS falso — o nome resolve, mas para o computador errado; trocar o DNS do Cliente1 resolve', () => {
+  const x = m('seg-dns-falso'), t0 = x.topologia;
+  const r0 = verificarMissao(x, t0);
+  assert.deepEqual(r0.objetivos.map(o => o.ok), [false, true, true]);
+  assert.match(r0.objetivos[0].motivo, /respondeu 192\.168\.1\.66, que não é o endereço de Banco/);
+  assert.equal(verificarMissao(x, ok(configurarDnsPc(t0, 'pc1', '192.168.1.50'))).todosOk, true);
+});
+
+test('segurança: feche o Telnet — só a regra por porta e origem no R1 resolve; desligar o Telnet no servidor tira o Admin', () => {
+  const x = m('seg-feche-telnet'), t0 = x.topologia, srv = porNomeDisp(t0, 'Servidor');
+  assert.deepEqual(verificarMissao(x, t0).objetivos.map(o => o.ok), [true, true, false, false, true]);
+  const regra = extra => ok(adicionarFiltro(t0, 'r1', { acao: 'negar', origem: '192.168.1.0', origemM: '/24', destino: '10.0.0.10', destinoM: '/32', ...extra }));
+  assert.equal(verificarMissao(x, regra({ protocolo: 'tcp', porta: '23' })).todosOk, true);
+  assert.equal(verificarMissao(x, regra({})).todosOk, false, 'sem porta derruba o site e o SSH');
+  assert.equal(verificarMissao(x, ok(configurarServicos(t0, srv, [22, 80]))).todosOk, false, 'o Admin perde o Telnet');
+});
+
+test('segurança: bloqueio demais — trocar a regra ip por icmp devolve o site e mantém o ping bloqueado', () => {
+  const x = m('seg-bloqueio-demais'), t0 = x.topologia;
+  assert.deepEqual(verificarMissao(x, t0).objetivos.map(o => o.ok), [false, false, true]);
+  const certo = ok(adicionarFiltro(ok(removerFiltro(t0, 'r1', 0)), 'r1', { acao: 'negar', origem: '192.168.1.0', origemM: '/24', destino: '10.0.0.10', destinoM: '/32', protocolo: 'icmp' }));
+  assert.equal(verificarMissao(x, certo).todosOk, true);
+  assert.equal(verificarMissao(x, ok(removerFiltro(t0, 'r1', 0))).todosOk, false, 'tirar a regra libera o ping');
+});
+
+test('objetivos novos são validados: porta, nome+para e dhcp-de', () => {
+  const base = JSON.parse(JSON.stringify(m('seg-dns-falso')));
+  base.objetivos = [{ id: 'a', de: 'pc1', para: 'pc4', porta: 443 }, { id: 'b', de: 'pc1', para: 'pc4', porta: 70000 }, { id: 'c', de: 'pc1', nome: 'banco.local', para: 'pc4' },
+    { id: 'd', tipo: 'dhcp-de', pc: 'pc1', roteador: 'pc2' }, { id: 'e', tipo: 'qualquer', de: 'pc1', para: 'pc2' }];
+  assert.deepEqual(validarMissao(base).objetivos, [{ id: 'a', de: 'pc1', para: 'pc4', porta: 443 }, { id: 'b', de: 'pc1', para: 'pc4' }, { id: 'c', de: 'pc1', nome: 'banco.local', para: 'pc4' }]);
 });

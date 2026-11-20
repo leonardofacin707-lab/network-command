@@ -72,3 +72,15 @@
 .regra-txt{flex:1 1 140px;min-width:0;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
 .acoes-regra{display:flex;gap:6px;flex:none}
 .acoes-regra .btn-sec{padding:2px 8px;min-height:32px;font-size:12px}
+.servicos{display:flex;flex-wrap:wrap;gap:4px 14px}
+.captura-liga{margin-top:10px}
+.captura-rolagem{max-height:340px;overflow:auto;border:1px solid var(--linha);border-radius:8px}
+.tabela.captura{font-size:13px;margin:0}
+.tabela.captura td,.tabela.captura th{padding:6px 8px;vertical-align:top}
+.tabela.captura small{color:var(--suave);font-family:ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.tabela.captura .proto-arp td:nth-child(3){color:var(--sinal)}
+.tabela.captura .proto-icmp td:nth-child(3){color:var(--destaque)}
+.tabela.captura .proto-tcp td:nth-child(3){color:var(--ok)}
+.tabela.captura .proto-dns td:nth-child(3),.tabela.captura .proto-udp td:nth-child(3){color:#c4b5fd}
+.servico,.captura-liga{display:flex;gap:8px;align-items:center;cursor:pointer}
+.servico input,.captura-liga input{width:18px;height:18px;flex:none}

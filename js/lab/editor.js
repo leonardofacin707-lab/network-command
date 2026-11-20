@@ -2,8 +2,8 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat } from '../sim/topologia.js';
-import { criarSimulacao } from '../sim/motor.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos } from '../sim/topologia.js';
+import { criarSimulacao, NOMES_PORTAS } from '../sim/motor.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
 import { diagnosticar } from '../sim/diagnostico.js';
@@ -26,6 +26,7 @@ export function criarEditor(raiz, opcoes) {
   const exemplos = opcoes.restricoes?.exemplos !== false;
   let topo = opcoes.topologia;
   let sim = criarSimulacao(topo);
+  let capturaLigada = false, ultimaCaptura = null; // captura de pacotes do terminal (último comando)
   let sel = null, modo = 'mover', origemCabo = null, confirmaLimpar = false;
   const saidas = new Map(), historicos = new Map(), posHist = new Map();
   const controle = new AbortController();
@@ -118,6 +119,7 @@ export function criarEditor(raiz, opcoes) {
 
   // ---------- painel de configuração ----------
   const redePrefixo = (rede, mascara) => `${rede}/${prefixoDeMascara(lerMascara(mascara))}`;
+  const PORTAS_COMUNS = [21, 22, 23, 25, 80, 443];
   const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : redePrefixo(rede, mascara));
   const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
   function infoConcessao(d) {
@@ -156,6 +158,9 @@ export function criarEditor(raiz, opcoes) {
           <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-registro="${i}" aria-label="Remover o registro ${esc(r.nome)}">Remover</button></span></li>`).join('')}</ol>` : '<p>Sem registros: este computador não responde consultas DNS.</p>'}
         <label for="cfg-reg-nome">Novo registro: nome</label><input id="cfg-reg-nome" class="campo" name="reg-nome" autocomplete="off" spellcheck="false" placeholder="ex.: www.loja.local">
         <label for="cfg-reg-ip">Novo registro: endereço IP</label><input id="cfg-reg-ip" class="campo" name="reg-ip" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.60"></fieldset>` : ''}
+      ${d.tipo === 'pc' ? `<fieldset class="iface" id="servicos-pc"><legend>Serviços (portas TCP abertas)</legend>
+        <p class="motivo">Marque os serviços que este computador oferece. Teste de outro computador com <code>tnc ip porta</code>.</p>
+        <div class="servicos">${[...new Set([...PORTAS_COMUNS, ...(d.servicos ?? [])])].sort((a, b) => a - b).map(p => `<label class="servico"><input type="checkbox" name="servico" value="${p}"${(d.servicos ?? []).includes(p) ? ' checked' : ''}> ${p} ${esc(NOMES_PORTAS[p] ?? '')}</label>`).join('')}</div></fieldset>` : ''}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="rotas-estaticas"><legend>Rotas estáticas</legend>
         ${(d.rotas ?? []).length ? `<ol class="regras" aria-label="Rotas estáticas de ${esc(d.nome)}">${d.rotas.map((r, i) => `<li class="regra"><span class="regra-txt">${esc(redePrefixo(r.rede, r.mascara))} <b>via</b> ${esc(r.via)}</span>
           <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-rota="${i}" aria-label="Remover a rota para ${esc(r.rede)}">Remover</button></span></li>`).join('')}</ol>` : '<p>Nenhuma rota estática. O roteador só conhece as redes ligadas diretamente a ele.</p>'}
@@ -168,7 +173,7 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-nat-fora">Interface de fora (lado do provedor)</label><select id="cfg-nat-fora" class="campo" name="nat-fora"><option value="">(NAT desligado)</option>${d.interfaces.map(i => `<option value="${i.id}"${d.nat?.fora === i.id ? ' selected' : ''}>${esc(rotuloDaPorta(d, i.id))}</option>`).join('')}</select>
         <p class="motivo">NAT simplificado (tipo PAT): o que sai de dentro para fora ganha o IP da interface de fora, e a resposta volta sozinha. Quem vem de fora rumo à rede de dentro é bloqueado; não há redirecionamento de portas, tabela de traduções nem tempo de expiração.</p></fieldset>` : ''}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="filtros-pacotes"><legend>Filtro de pacotes</legend>
-        ${(d.filtros ?? []).length ? `<ol class="regras" aria-label="Regras de filtro de ${esc(d.nome)}, lidas de cima para baixo">${d.filtros.map((f, i) => `<li class="regra"><span class="regra-txt"><b>${f.acao === 'negar' ? 'negar' : 'permitir'}</b> de ${esc(alvoFiltro(f.origem, f.origemM))} <b>para</b> ${esc(alvoFiltro(f.destino, f.destinoM))}</span>
+        ${(d.filtros ?? []).length ? `<ol class="regras" aria-label="Regras de filtro de ${esc(d.nome)}, lidas de cima para baixo">${d.filtros.map((f, i) => `<li class="regra"><span class="regra-txt"><b>${f.acao === 'negar' ? 'negar' : 'permitir'}</b> ${f.protocolo ? `<b>${esc(f.protocolo)}</b> ` : ''}de ${esc(alvoFiltro(f.origem, f.origemM))} <b>para</b> ${esc(alvoFiltro(f.destino, f.destinoM))}${f.porta ? ` <b>porta</b> ${f.porta}${NOMES_PORTAS[f.porta] ? ' (' + NOMES_PORTAS[f.porta] + ')' : ''}` : ''}</span>
           <span class="acoes-regra"><button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="-1" aria-label="Subir a regra ${i + 1}"${i === 0 ? ' disabled' : ''}>↑</button>
           <button class="btn-sec" type="button" data-mover-filtro="${i}" data-delta="1" aria-label="Descer a regra ${i + 1}"${i === d.filtros.length - 1 ? ' disabled' : ''}>↓</button>
           <button class="btn-sec" type="button" data-remover-filtro="${i}" aria-label="Remover a regra ${i + 1}">Remover</button></span></li>`).join('')}</ol>` : '<p>Nenhuma regra: o roteador encaminha tudo.</p>'}
@@ -177,7 +182,9 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-filtro-om">Origem: máscara</label><input id="cfg-filtro-om" class="campo" name="filtro-om" autocomplete="off" placeholder="ex.: /24 ou /32 para um só PC">
         <label for="cfg-filtro-d">Destino: rede</label><input id="cfg-filtro-d" class="campo" name="filtro-d" inputmode="decimal" autocomplete="off" placeholder="vazio = qualquer destino">
         <label for="cfg-filtro-dm">Destino: máscara</label><input id="cfg-filtro-dm" class="campo" name="filtro-dm" autocomplete="off" placeholder="ex.: 255.255.255.0">
-        <p class="motivo">As regras valem de cima para baixo; vale a primeira que casa. O que não casa com nenhuma é <b>permitido</b> (numa ACL Cisco seria negado). O filtro não guarda estado: a resposta de um ping também passa por ele, com origem e destino trocados.</p></fieldset>` : ''}
+        <label for="cfg-filtro-proto">Protocolo</label><select id="cfg-filtro-proto" class="campo" name="filtro-proto"><option value="ip">ip (qualquer)</option><option value="icmp">icmp (ping)</option><option value="tcp">tcp</option><option value="udp">udp</option></select>
+        <label for="cfg-filtro-porta">Porta de destino (só tcp ou udp)</label><input id="cfg-filtro-porta" class="campo" name="filtro-porta" inputmode="numeric" autocomplete="off" placeholder="vazio = qualquer porta; ex.: 23 (Telnet)">
+        <p class="motivo">As regras valem de cima para baixo; vale a primeira que casa. O que não casa com nenhuma é <b>permitido</b> (numa ACL Cisco seria negado). O filtro não guarda estado: a resposta também passa por ele, com origem e destino trocados (e as portas também: a resposta de um serviço sai da porta dele para a porta do cliente).</p></fieldset>` : ''}
       ${d.tipo === 'switch' ? `<p>O switch não tem IP nesta simulação. Configure o modo de cada porta: <b>access</b> (uma VLAN, sem marca) ou <b>trunk</b> (leva todas as VLANs entre switches; a VLAN nativa é a 1).</p>
         <table class="tabela portas-sw"><caption class="sr-only">Portas do switch</caption>
           <thead><tr><th scope="col">Porta</th><th scope="col">Modo</th><th scope="col">VLAN</th></tr></thead>
@@ -205,13 +212,29 @@ export function criarEditor(raiz, opcoes) {
       <div class="term-saida" id="term-saida" role="log" aria-live="polite" tabindex="0" aria-label="Saída do terminal"><pre>${esc(saidas.get(d.id).join('\n'))}</pre></div>
       <form id="form-term" class="term-linha" autocomplete="off"><label for="term-entrada" class="term-prompt">C:\\&gt;</label>
         <input id="term-entrada" class="campo term-entrada" spellcheck="false" autocapitalize="off" aria-label="Comando"></form>
+      <label class="captura-liga"><input type="checkbox" id="captura-ligada"${capturaLigada ? ' checked' : ''}> Capturar pacotes (estilo Wireshark) a cada comando</label>
+      <div id="captura" aria-live="polite">${tabelaCaptura()}</div>
     </div>`;
+  }
+
+  function tabelaCaptura() {
+    if (!capturaLigada) return '';
+    if (!ultimaCaptura) return '<p class="motivo">Rode um comando (ping, tracert, nslookup, tnc) para ver os pacotes que passaram pela rede.</p>';
+    const { comando, origem, pacotes } = ultimaCaptura;
+    if (!pacotes.length) return `<p class="motivo">Nenhum pacote saiu na rede com <code>${esc(comando)}</code> em ${esc(origem)}.</p>`;
+    return `<h4>Captura de <code>${esc(comando)}</code> em ${esc(origem)} (${pacotes.length} ${pacotes.length === 1 ? 'pacote' : 'pacotes'})</h4>
+      <div class="captura-rolagem" tabindex="0" role="region" aria-label="Pacotes capturados"><table class="tabela captura"><thead><tr><th scope="col">Nº</th><th scope="col">Trecho</th><th scope="col">Protocolo</th><th scope="col">Informação</th></tr></thead><tbody>
+      ${pacotes.map(p => `<tr class="proto-${esc(p.protocolo.toLowerCase())}"><td>${p.no}</td><td>${esc(p.de)} → ${esc(p.para)}</td><td>${esc(p.protocolo)}</td>
+        <td>${esc(p.info)}<br><small>MAC ${esc(p.macOrigem)} → ${esc(p.macDestino)}${p.ipOrigem ? ` · IP ${esc(p.ipOrigem)} → ${esc(p.ipDestino)} · TTL ${p.ttl}` : ''}</small></td></tr>`).join('')}
+      </tbody></table></div>
+      <p class="motivo">Simplificação: um pacote por trecho entre vizinhos (sem tempos, tamanhos nem quadros repetidos pelos switches).</p>`;
   }
 
   function rodarComando(linha) {
     const d = dispositivo(topo, sel);
     const saida = saidas.get(d.id) ?? [];
-    const r = executar(sim, d.id, linha);
+    const { resultado: r, pacotes } = sim.capturar(() => executar(sim, d.id, linha));
+    if (linha.trim() && !r.limpar) ultimaCaptura = { comando: linha.trim(), origem: d.nome, pacotes };
     const novas = r.limpar ? [] : [...saida, `C:\\>${linha}`, ...r.linhas, ''];
     saidas.set(d.id, r.limpar ? [] : novas.slice(-400));
     const hist = historicos.get(d.id) ?? [];
@@ -221,6 +244,7 @@ export function criarEditor(raiz, opcoes) {
     const pre = $('#term-saida pre');
     pre.textContent = saidas.get(d.id).join('\n');
     const caixa = $('#term-saida'); caixa.scrollTop = caixa.scrollHeight;
+    $('#captura').innerHTML = tabelaCaptura();
   }
 
   // ---------- interação ----------
@@ -332,6 +356,7 @@ export function criarEditor(raiz, opcoes) {
   }, { signal });
 
   raiz.addEventListener('change', e => {
+    if (e.target.id === 'captura-ligada') { capturaLigada = e.target.checked; $('#captura').innerHTML = tabelaCaptura(); return; }
     if (e.target.id !== 'cfg-dhcp') return;
     for (const fs of raiz.querySelectorAll('#form-cfg fieldset[data-fixo]')) fs.disabled = e.target.checked;
   }, { signal });
@@ -349,9 +374,10 @@ export function criarEditor(raiz, opcoes) {
         if (alvoCfg.tipo === 'pc') passos.push(t => configurarGateway(t, sel, f.get('gw')));
       }
       if (alvoCfg.tipo === 'roteador' && f.get('filtro-acao')) {
-        passos.push(t => adicionarFiltro(t, sel, { acao: f.get('filtro-acao'), origem: f.get('filtro-o'), origemM: f.get('filtro-om'), destino: f.get('filtro-d'), destinoM: f.get('filtro-dm') }));
+        passos.push(t => adicionarFiltro(t, sel, { acao: f.get('filtro-acao'), origem: f.get('filtro-o'), origemM: f.get('filtro-om'), destino: f.get('filtro-d'), destinoM: f.get('filtro-dm'), protocolo: f.get('filtro-proto') ?? 'ip', porta: f.get('filtro-porta') ?? '' }));
       }
       if (alvoCfg.tipo === 'pc') {
+        passos.push(t => configurarServicos(t, sel, f.getAll('servico').map(Number)));
         passos.push(t => configurarDnsPc(t, sel, f.get('dns')));
         const nomeReg = String(f.get('reg-nome') ?? '').trim(), ipReg = String(f.get('reg-ip') ?? '').trim();
         if (nomeReg || ipReg) passos.push(t => adicionarRegistroDns(t, sel, { nome: nomeReg, ip: ipReg }));

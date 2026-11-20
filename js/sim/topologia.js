@@ -153,6 +153,19 @@ export function removerRotaEstatica(t, id, indice) {
 export const MAX_REGISTROS_DNS = 12;
 const NOME_DNS = /^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?){0,3}$/;
 
+export const MAX_SERVICOS = 8;
+
+/** Portas TCP em que o computador oferece um serviço (ex.: 22 SSH, 80 HTTP). Lista vazia = nenhum serviço. */
+export function configurarServicos(t, id, portas) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores oferecem serviços nesta simulação.' };
+  const lista = [...new Set((portas ?? []).map(Number))];
+  if (lista.some(p => !Number.isInteger(p) || p < 1 || p > 65535)) return { erro: 'Porta inválida. Use números de 1 a 65535.' };
+  if (lista.length > MAX_SERVICOS) return { erro: `Limite de ${MAX_SERVICOS} serviços por computador.` };
+  lista.sort((a, b) => a - b);
+  return { topologia: trocar(t, id, x => { const { servicos: _, ...resto } = x; return lista.length ? { ...resto, servicos: lista } : resto; }) };
+}
+
 /** Define (ou limpa, se vazio) o servidor DNS configurado num computador cliente. */
 export function configurarDnsPc(t, id, dns) {
   const d = dispositivo(t, id);
@@ -209,6 +222,19 @@ export function removerNat(t, id) {
   return { topologia: trocar(t, id, x => ({ ...x, nat: null })) };
 }
 
+export const PROTOCOLOS_FILTRO = ['ip', 'icmp', 'tcp', 'udp'];
+
+/** Protocolo e porta de destino de uma regra: "ip" vale para tudo; porta só com tcp ou udp. Devolve { campos } ou { erro }. */
+function lerProtocoloPorta(protocolo, porta) {
+  if (!PROTOCOLOS_FILTRO.includes(protocolo)) return { erro: 'Protocolo inválido. Use ip (qualquer), icmp, tcp ou udp.' };
+  const txt = String(porta ?? '').trim();
+  if (!txt) return { campos: protocolo === 'ip' ? {} : { protocolo } };
+  if (protocolo !== 'tcp' && protocolo !== 'udp') return { erro: 'Porta só existe em regras tcp ou udp.' };
+  const n = Number(txt);
+  if (!Number.isInteger(n) || n < 1 || n > 65535) return { erro: 'Porta inválida. Use um número de 1 a 65535.' };
+  return { campos: { protocolo, porta: n } };
+}
+
 function lerAlvoDeFiltro(rede, mascara, rotulo) {
   const rTxt = String(rede ?? '').trim(), mTxt = String(mascara ?? '').trim();
   if (!rTxt && !mTxt) return { ip: 0, m: 0 }; // vazio = qualquer
@@ -224,14 +250,15 @@ function lerAlvoDeFiltro(rede, mascara, rotulo) {
  * Acrescenta uma regra ao filtro de pacotes do roteador (simplificação de uma ACL): as regras são lidas em ordem e vale a
  * primeira que casa com origem e destino do pacote; sem correspondência o pacote é permitido (numa ACL Cisco seria negado).
  */
-export function adicionarFiltro(t, id, { acao, origem, origemM, destino, destinoM }) {
+export function adicionarFiltro(t, id, { acao, origem, origemM, destino, destinoM, protocolo = 'ip', porta = '' }) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores têm filtro de pacotes nesta simulação.' };
   if (acao !== 'negar' && acao !== 'permitir') return { erro: 'Escolha a ação da regra: permitir ou negar.' };
   if ((d.filtros ?? []).length >= MAX_FILTROS) return { erro: `Limite de ${MAX_FILTROS} regras por roteador.` };
   const o = lerAlvoDeFiltro(origem, origemM, 'Origem'); if (o.erro) return o;
   const dest = lerAlvoDeFiltro(destino, destinoM, 'Destino'); if (dest.erro) return dest;
-  const regra = { acao, origem: formatarIPv4(o.ip), origemM: formatarIPv4(o.m), destino: formatarIPv4(dest.ip), destinoM: formatarIPv4(dest.m) };
+  const l4 = lerProtocoloPorta(protocolo || 'ip', porta); if (l4.erro) return l4;
+  const regra = { acao, origem: formatarIPv4(o.ip), origemM: formatarIPv4(o.m), destino: formatarIPv4(dest.ip), destinoM: formatarIPv4(dest.m), ...l4.campos };
   if (d.filtros.some(f => Object.keys(regra).every(k => f[k] === regra[k]))) return { erro: 'Essa regra já existe.' };
   return { topologia: trocar(t, id, x => ({ ...x, filtros: [...x.filtros, regra] })) };
 }
@@ -357,6 +384,8 @@ export function normalizarTopologia(bruto) {
         regs.push({ nome: nomeR, ip: formatarIPv4(ipN) });
       }
       if (regs.length) d.registros = regs;
+      const servs = [...new Set((Array.isArray(b.servicos) ? b.servicos : []).filter(p => Number.isInteger(p) && p >= 1 && p <= 65535))].slice(0, MAX_SERVICOS).sort((a, c) => a - c);
+      if (servs.length) d.servicos = servs;
     }
     if (b.tipo === 'roteador') {
       d.rotas = [];
@@ -373,7 +402,9 @@ export function normalizarTopologia(bruto) {
         if (d.filtros.length >= MAX_FILTROS || !f || typeof f !== 'object' || (f.acao !== 'negar' && f.acao !== 'permitir')) continue;
         const oN = lerIPv4(f.origem), omN = lerMascara(f.origemM), dN = lerIPv4(f.destino), dmN = lerMascara(f.destinoM);
         if (oN === null || omN === null || dN === null || dmN === null || enderecoDeRede(oN, omN) !== oN || enderecoDeRede(dN, dmN) !== dN) continue;
-        d.filtros.push({ acao: f.acao, origem: formatarIPv4(oN), origemM: formatarIPv4(omN), destino: formatarIPv4(dN), destinoM: formatarIPv4(dmN) });
+        const l4 = lerProtocoloPorta(f.protocolo ?? 'ip', f.porta ?? '');
+        if (l4.erro) continue;
+        d.filtros.push({ acao: f.acao, origem: formatarIPv4(oN), origemM: formatarIPv4(omN), destino: formatarIPv4(dN), destinoM: formatarIPv4(dmN), ...l4.campos });
       }
       d.nat = b.nat && typeof b.nat === 'object' && b.nat.dentro !== b.nat.fora && d.interfaces.some(i => i.id === b.nat.dentro) && d.interfaces.some(i => i.id === b.nat.fora) ? { dentro: b.nat.dentro, fora: b.nat.fora } : null;
       d.pools = [];
