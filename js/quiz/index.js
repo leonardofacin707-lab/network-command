@@ -3,13 +3,14 @@ import { desenharMapa, pararMapa } from './map.js';
 import { criarSessao } from './session.js';
 import { telaResultado } from './resultado.js';
 import { telaRevisao, telaHistorico, telaAssuntos, telaTreino } from './abas.js';
+import { telaExercicios } from './tela-exercicios.js';
 import { desafiosLiberados, sortearTreino, rotuloModulo } from './treino.js';
 import { desafiosDoDia, diaLocal } from './diario.js';
 import { registrarResposta, revisaoDeHoje } from './historico.js';
 import { statusDoNivel } from './unlock.js';
 import { limparHash } from '../app/router.js';
 
-const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
+const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino'], ['exercicios', 'Exercícios'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
 
 export default {
   id: 'conhecimento',
@@ -70,6 +71,7 @@ export default {
     raiz.addEventListener('submit', envio);
 
     if (aba === 'treino') telaTreino(tela, ctx);
+    else if (aba === 'exercicios') telaExercicios(tela);
     else if (aba === 'revisao') telaRevisao(tela, ctx);
     else if (aba === 'historico') telaHistorico(tela, ctx);
     else if (aba === 'assuntos') telaAssuntos(tela, ctx);

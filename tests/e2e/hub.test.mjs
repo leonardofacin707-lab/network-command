@@ -180,6 +180,28 @@ test('desafio do dia: 3 desafios iguais o dia todo, registra a sequência e apar
   await contexto.close();
 });
 
+test('exercícios sem fim: acerta, erra (mostra a resposta e os passos), dica e troca de tipo', async () => {
+  const { pagina, erros, contexto } = await abrir('conhecimento/exercicios', { largura: 390, altura: 800 });
+  await pagina.locator('#ex-enunciado').waitFor();
+  await pagina.selectOption('#ex-tipo', 'hosts');
+  const prefixo = Number((await pagina.locator('#ex-enunciado').innerText()).match(/\/(\d+)/)[1]);
+  await pagina.locator('#ex-dica').click();
+  assert.match(await pagina.locator('#ex-feedback').innerText(), /Dica: Bits de host/);
+  await pagina.fill('#ex-resp', String(2 ** (32 - prefixo) - 2));
+  await pagina.locator('#ex-form button[type=submit]').click();
+  assert.match(await pagina.locator('#ex-feedback').innerText(), /Certo![\s\S]*Bits de host: 32 - /);
+  assert.match(await pagina.locator('#ex-placar').innerText(), /1 de 1 certos · sequência atual: 1/);
+  await pagina.locator('#ex-proximo').click();
+  await pagina.selectOption('#ex-tipo', 'ipv6-abreviar');
+  await pagina.fill('#ex-resp', 'errado');
+  await pagina.locator('#ex-form button[type=submit]').click();
+  assert.match(await pagina.locator('#ex-feedback').innerText(), /Não foi dessa vez[\s\S]*Resposta: [0-9a-f:]+[\s\S]*Regra 1/);
+  assert.match(await pagina.locator('#ex-placar').innerText(), /1 de 2 certos · sequência atual: 0/);
+  assert.ok(await pagina.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, 'sem rolagem horizontal no celular');
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
 test('a revisão não dá XP nem estrelas', async () => {
   const { pagina, salvo, contexto } = await abrirComEstado('conhecimento/revisao', ESTADO);
   const antes = (await salvo()).quiz.melhor;
@@ -369,7 +391,7 @@ test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async (
 });
 
 test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async () => {
-  const rotas = [...ROTAS_MENU, 'conhecimento/treino', 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
+  const rotas = [...ROTAS_MENU, 'conhecimento/treino', 'conhecimento/exercicios', 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
   for (const largura of [1280, 390]) {
     for (const rota of rotas) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 900 });
