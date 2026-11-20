@@ -84,3 +84,6 @@
 .tabela.captura .proto-dns td:nth-child(3),.tabela.captura .proto-udp td:nth-child(3){color:#c4b5fd}
 .servico,.captura-liga{display:flex;gap:8px;align-items:center;cursor:pointer}
 .servico input,.captura-liga input{width:18px;height:18px;flex:none}
+.pacote-anim{fill:var(--destaque);stroke:#0a0f1a;stroke-width:2;pointer-events:none;filter:drop-shadow(0 0 4px var(--destaque))}
+.pacote-anim.proto-tcp{fill:var(--ok)}
+.pacote-anim.proto-dns,.pacote-anim.proto-udp{fill:#c4b5fd}

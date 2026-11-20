@@ -222,10 +222,27 @@ function capturarArp(t, ctx, d, p, ipQuemPergunta, ipProcurado, arp) {
   }
 }
 
+/**
+ * Caminho físico de um quadro: da porta de saída até o dispositivo de destino, atravessando só switches (busca em largura
+ * pelos cabos). Devolve a lista de ids [origem, ...switches, destino], ou null. Usado para animar o pacote no desenho.
+ */
+export function caminhoFisico(t, { de, porta, para }) {
+  const inicio = vizinhos(t, de).find(v => v.minhaPorta === porta);
+  if (!inicio) return null;
+  const fila = [[de, inicio.outro.d]], vistos = new Set([inicio.outro.d]);
+  while (fila.length) {
+    const rota = fila.shift(), atual = rota.at(-1);
+    if (atual === para) return rota;
+    if (dispositivo(t, atual)?.tipo !== 'switch') continue;
+    for (const v of vizinhos(t, atual)) if (!vistos.has(v.outro.d)) { vistos.add(v.outro.d); fila.push([...rota, v.outro.d]); }
+  }
+  return null;
+}
+
 /** Registra um quadro com o pacote IP entre dois vizinhos de camada 2 (os MACs mudam a cada salto, os IPs não). */
 function capturarQuadro(t, ctx, de, para, ipO, ipD, ttl, l4) {
   if (!ctx?.registrar) return;
-  ctx.registrar({ ...descreverL4(l4), de: nomeDe(t, de.d), para: nomeDe(t, para.d), macOrigem: macDe(de.d, de.p), macDestino: para.mac,
+  ctx.registrar({ ...descreverL4(l4), de: nomeDe(t, de.d), para: nomeDe(t, para.d), trecho: { de: de.d, porta: de.p, para: para.d }, macOrigem: macDe(de.d, de.p), macDestino: para.mac,
     ipOrigem: formatarIPv4(ipO), ipDestino: formatarIPv4(ipD), ttl });
 }
 

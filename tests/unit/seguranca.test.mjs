@@ -131,3 +131,14 @@ test('terminal: tnc mostra sucesso, porta fechada e bloqueio', () => {
   assert.match(run('tnc 192.168.2.10'), /Uso: tnc/);
   assert.match(run('help'), /tnc destino porta/);
 });
+
+test('caminho físico do quadro atravessa os switches até o próximo dispositivo', async () => {
+  const { caminhoFisico } = await import('../../js/sim/motor.js');
+  const t = base();
+  assert.deepEqual(caminhoFisico(t, { de: 'pc1', porta: 'eth0', para: 'r1' }), ['pc1', 'sw1', 'r1']);
+  assert.deepEqual(caminhoFisico(t, { de: 'r1', porta: 'gi1', para: 'pc2' }), ['r1', 'pc2']);
+  assert.equal(caminhoFisico(t, { de: 'pc1', porta: 'eth0', para: 'pc2' }), null, 'não atravessa roteador');
+  const sim = criarSimulacao(t);
+  const { pacotes } = sim.capturar(() => sim.ping('pc1', ip('192.168.2.10')));
+  assert.deepEqual(pacotes.find(p => p.protocolo === 'ICMP').trecho, { de: 'pc1', porta: 'eth0', para: 'r1' });
+});

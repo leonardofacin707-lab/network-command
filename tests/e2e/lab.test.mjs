@@ -290,3 +290,20 @@ test('o texto do laboratório não nega o que o motor simula (VLANs)', async () 
   assert.doesNotMatch(texto, /não\s+simula[^.]*VLANs/);
   await s.contexto.close();
 });
+
+test('animação do pacote: aparece com movimento liberado e não aparece com "reduzir movimento"', async () => {
+  const s = await novaPagina(navegador);
+  await s.pagina.goto(servidor.url + '/index.html#/missoes/seg-feche-telnet');
+  await s.pagina.locator('.disp').first().waitFor();
+  await s.pagina.locator('.disp[data-id="pc1"]').click();
+  await s.pagina.fill('#term-entrada', 'ping -n 1 10.0.0.10');
+  await s.pagina.press('#term-entrada', 'Enter');
+  assert.equal(await s.pagina.locator('.pacote-anim').count(), 0, 'reduzir movimento: sem animação');
+  await s.pagina.emulateMedia({ reducedMotion: 'no-preference' });
+  await s.pagina.fill('#term-entrada', 'ping -n 1 10.0.0.10');
+  await s.pagina.press('#term-entrada', 'Enter');
+  await s.pagina.locator('.pacote-anim').waitFor({ state: 'attached' });
+  await s.pagina.locator('.pacote-anim').waitFor({ state: 'detached', timeout: 8000 });
+  assert.deepEqual(s.erros, []);
+  await s.contexto.close();
+});

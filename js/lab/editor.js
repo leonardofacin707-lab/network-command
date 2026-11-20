@@ -3,7 +3,8 @@
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
   removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos } from '../sim/topologia.js';
-import { criarSimulacao, NOMES_PORTAS } from '../sim/motor.js';
+import { criarSimulacao, NOMES_PORTAS, caminhoFisico } from '../sim/motor.js';
+import { reduzMovimento } from '../core/ui.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
 import { diagnosticar } from '../sim/diagnostico.js';
@@ -245,6 +246,41 @@ export function criarEditor(raiz, opcoes) {
     pre.textContent = saidas.get(d.id).join('\n');
     const caixa = $('#term-saida'); caixa.scrollTop = caixa.scrollHeight;
     $('#captura').innerHTML = tabelaCaptura();
+    animarPacotes(pacotes);
+  }
+
+  /**
+   * Anima os pacotes IP do último comando no desenho: um ponto percorre os cabos, trecho a trecho, com a cor do protocolo.
+   * Com "reduzir movimento" ligado no sistema, nada se move (a tabela da captura continua disponível).
+   */
+  let animacao = null;
+  function animarPacotes(pacotes) {
+    if (animacao) { cancelAnimationFrame(animacao.quadro); animacao.ponto.remove(); animacao = null; }
+    if (reduzMovimento()) return;
+    const trechos = pacotes.filter(p => p.trecho).slice(0, 40).map(p => ({ cls: p.protocolo.toLowerCase(), pontos: (caminhoFisico(sim.topologia, p.trecho) ?? []).map(centro) }))
+      .filter(x => x.pontos.length > 1);
+    if (!trechos.length) return;
+    const svg = $('#lab-svg');
+    const ponto = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ponto.setAttribute('r', '9'); ponto.setAttribute('aria-hidden', 'true');
+    svg.appendChild(ponto);
+    const POR_CABO = 320; // ms por cabo
+    let i = 0, seg = 0, t0 = performance.now();
+    animacao = { ponto, quadro: 0 };
+    const passo = agora => {
+      if (!ponto.isConnected) $('#lab-svg')?.appendChild(ponto); // o desenho foi refeito (ex.: outro dispositivo selecionado)
+      const tr = trechos[i];
+      ponto.setAttribute('class', `pacote-anim proto-${tr.cls}`);
+      const f = Math.min(1, (agora - t0) / POR_CABO), [x1, y1] = tr.pontos[seg], [x2, y2] = tr.pontos[seg + 1];
+      ponto.setAttribute('cx', x1 + (x2 - x1) * f); ponto.setAttribute('cy', y1 + (y2 - y1) * f);
+      if (f >= 1) {
+        t0 = agora; seg++;
+        if (seg >= tr.pontos.length - 1) { seg = 0; i++; }
+        if (i >= trechos.length) { ponto.remove(); animacao = null; return; }
+      }
+      animacao.quadro = requestAnimationFrame(passo);
+    };
+    animacao.quadro = requestAnimationFrame(passo);
   }
 
   // ---------- interação ----------
