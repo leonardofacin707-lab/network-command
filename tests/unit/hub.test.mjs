@@ -185,3 +185,35 @@ test('resumoPratica: conta por módulo e indica o próximo item não concluído'
   assert.deepEqual(r.map(x => [x.modulo, x.feitos, x.total, x.proximo?.id ?? null]), [['missoes', 1, 2, 'm2'], ['campus', 0, 1, 'c1'], ['empresa', 1, 1, null]], 'módulo sem itens some');
   assert.deepEqual(resumoPratica(estadoInicial(), {}), []);
 });
+
+import { agendaRevisao, revisaoDeHoje } from '../../js/quiz/historico.js';
+const reg = (q, perfeito, dia) => ({ q, ok: perfeito, erros: perfeito ? 0 : 1, pts: perfeito ? 100 : 0, em: `2026-11-${String(dia).padStart(2, '0')}T12:00:00.000Z` });
+const dia = d => new Date(`2026-11-${String(d).padStart(2, '0')}T13:00:00.000Z`);
+
+test('repetição espaçada: erro volta já; cada acerto empurra para 1, 3 e 7 dias; depois sai', () => {
+  let h = [reg('a', false, 1)];
+  assert.deepEqual(revisaoDeHoje(h, dia(1)).erros, ['a']);
+  h = [...h, reg('a', true, 1)];
+  assert.deepEqual(revisaoDeHoje(h, dia(1)).ids, [], 'acertou: só volta amanhã');
+  assert.deepEqual(revisaoDeHoje(h, dia(2)).reforcos, ['a']);
+  h = [...h, reg('a', true, 2)];
+  assert.deepEqual(revisaoDeHoje(h, dia(4)).ids, []);
+  assert.deepEqual(revisaoDeHoje(h, dia(5)).reforcos, ['a'], '3 dias depois');
+  h = [...h, reg('a', true, 5)];
+  assert.deepEqual(revisaoDeHoje(h, dia(11)).ids, []);
+  assert.deepEqual(revisaoDeHoje(h, dia(12)).reforcos, ['a'], '7 dias depois');
+  h = [...h, reg('a', true, 12)];
+  assert.equal(agendaRevisao(h)[0].venceEm, null, 'formado: sai da revisão');
+  assert.deepEqual(revisaoDeHoje(h, dia(30)).ids, []);
+});
+
+test('repetição espaçada: acertar de novo no mesmo dia não adianta; errar recomeça; nunca errado não entra', () => {
+  let h = [reg('a', false, 1), reg('a', true, 1), reg('a', true, 1), reg('a', true, 1)];
+  assert.equal(agendaRevisao(h)[0].acertosSeguidos, 1);
+  h = [...h, reg('a', true, 2), reg('a', false, 3)];
+  assert.deepEqual(revisaoDeHoje(h, dia(3)).erros, ['a']);
+  assert.deepEqual(agendaRevisao([reg('b', true, 1)]), []);
+  const r = revisaoDeHoje([reg('a', false, 1), reg('a', true, 1), reg('c', false, 1)], dia(1));
+  assert.deepEqual(r.ids, ['c']);
+  assert.equal(r.futuras.length, 1);
+});

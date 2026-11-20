@@ -5,7 +5,7 @@ import { telaResultado } from './resultado.js';
 import { telaRevisao, telaHistorico, telaAssuntos, telaTreino } from './abas.js';
 import { desafiosLiberados, sortearTreino, rotuloModulo } from './treino.js';
 import { desafiosDoDia, diaLocal } from './diario.js';
-import { registrarResposta, listaRevisao } from './historico.js';
+import { registrarResposta, revisaoDeHoje } from './historico.js';
 import { statusDoNivel } from './unlock.js';
 import { limparHash } from '../app/router.js';
 
@@ -33,7 +33,7 @@ export default {
     const jogarId = id => jogar(catalogo.niveis.find(n => n.id === id));
     const revisar = () => {
       const porId = new Map(catalogo.perguntas.map(q => [q.id, q]));
-      const desafios = listaRevisao(store.obter().quiz.historico).map(id => porId.get(id));
+      const desafios = revisaoDeHoje(store.obter().quiz.historico).ids.map(id => porId.get(id)).filter(Boolean);
       if (desafios.length) jogar({ id: 'revisao', nome: 'Revisão de erros', revisao: true, desafios });
     };
 

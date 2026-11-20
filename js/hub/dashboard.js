@@ -1,7 +1,7 @@
 import { esc, dataHora } from '../core/ui.js';
 import { xpDoEstado, cargoDe, nivelDoJogador, estrelasTotal } from '../core/progression.js';
 import { statusDoNivel } from '../quiz/unlock.js';
-import { listaRevisao, estatisticas, foiPerfeita } from '../quiz/historico.js';
+import { revisaoDeHoje, estatisticas, foiPerfeita } from '../quiz/historico.js';
 import { dominioPorHabilidade, desempenhoPorAssunto, pontosFracos, resumoPratica } from './dominio.js';
 import { CONQUISTAS } from './conquistas-regras.js';
 import { diaLocal, sequenciaAtual } from '../quiz/diario.js';
@@ -19,7 +19,7 @@ export default {
       .map(t => ({ t, d: dominio[`${t.id}.teoria`] }))
       .filter(x => x.d && x.d.total > 0);
     const fracos = pontosFracos(desempenhoPorAssunto(historico, catalogo.perguntas));
-    const revisao = listaRevisao(historico);
+    const revisao = revisaoDeHoje(historico).ids;
     const est = estatisticas(historico);
     const recentes = [...historico].reverse().slice(0, 5);
     const porId = new Map(catalogo.perguntas.map(q => [q.id, q]));

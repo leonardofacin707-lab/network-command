@@ -1,6 +1,6 @@
 // Abas do módulo Conhecimento além do mapa: revisão de erros, histórico e desempenho por assunto.
 import { esc, dataHora } from '../core/ui.js';
-import { listaRevisao, ultimaPorPergunta, estatisticas, foiPerfeita } from './historico.js';
+import { revisaoDeHoje, ultimaPorPergunta, estatisticas, foiPerfeita, INTERVALOS_DIAS } from './historico.js';
 import { desempenhoPorAssunto } from '../hub/dominio.js';
 import { desafiosLiberados, TAMANHO_TREINO, resumoPorModulo } from './treino.js';
 import { diaLocal, sequenciaAtual, TAMANHO_DIARIO } from './diario.js';
@@ -11,24 +11,29 @@ const rotuloResultado = r => (foiPerfeita(r) ? '<span class="ok-txt">✓ De prim
 
 export function telaRevisao(app, { catalogo, store }) {
   const historico = store.obter().quiz.historico;
-  const ids = listaRevisao(historico);
+  const { erros, reforcos, ids, futuras } = revisaoDeHoje(historico);
   const porId = new Map(catalogo.perguntas.map(q => [q.id, q]));
   const ultimas = ultimaPorPergunta(historico);
+  const proximas = futuras.length ? `<p class="motivo">${futuras.length} ${futuras.length === 1 ? 'desafio volta' : 'desafios voltam'} nos próximos dias para reforço (o próximo em ${dataHora(futuras[0].venceEm.toISOString())}).</p>` : '';
+  const explica = `<p class="motivo">Repetição espaçada: depois de acertar um desafio que você tinha errado, ele volta para reforço depois de ${INTERVALOS_DIAS.join(', ')} dias. Depois de ${INTERVALOS_DIAS.length} acertos espaçados, sai da lista.</p>`;
   if (!ids.length) {
     app.innerHTML = `<section class="band"><div class="wrap painel">
       <h2>Revisão de erros</h2>
-      <p class="vazio-msg">${historico.length ? 'Nenhum desafio para revisar: a última tentativa de cada um foi de primeira.' : 'Ainda não há respostas. Jogue um nível no mapa e os desafios com erro aparecerão aqui.'}</p>
+      <p class="vazio-msg">${historico.length ? 'Nenhum desafio para revisar agora.' : 'Ainda não há respostas. Jogue um nível no mapa e os desafios com erro aparecerão aqui.'}</p>
+      ${proximas}${historico.length ? explica : ''}
     </div></section>`;
     return;
   }
+  const linha = (id, tipo) => { const q = porId.get(id); const r = ultimas.get(id); return `<tr>
+    <td>${esc(resumo(q.enunciado))}</td><td>${esc(q.assunto)}</td><td>${tipo === 'reforco' ? '<span class="aviso-txt">↻ Reforço</span>' : rotuloResultado(r)}<br><small>${dataHora(r.em)}</small></td></tr>`; };
   app.innerHTML = `<section class="band"><div class="wrap painel">
     <h2>Revisão de erros</h2>
-    <p>${ids.length} ${ids.length === 1 ? 'desafio teve' : 'desafios tiveram'} erro na última tentativa. Refazer não vale pontos, mas tira o desafio desta lista quando você acertar de primeira.</p>
-    <table class="tabela"><thead><tr><th>Desafio</th><th>Assunto</th><th>Última tentativa</th></tr></thead><tbody>
-      ${ids.map(id => { const q = porId.get(id); const r = ultimas.get(id); return `<tr>
-        <td>${esc(resumo(q.enunciado))}</td><td>${esc(q.assunto)}</td><td>${rotuloResultado(r)}<br><small>${dataHora(r.em)}</small></td></tr>`; }).join('')}
+    <p>${erros.length ? `${erros.length} ${erros.length === 1 ? 'desafio teve' : 'desafios tiveram'} erro na última tentativa.` : ''}${reforcos.length ? ` ${reforcos.length} ${reforcos.length === 1 ? 'desafio volta' : 'desafios voltam'} hoje para reforço.` : ''} Refazer não vale pontos.</p>
+    <table class="tabela"><thead><tr><th>Desafio</th><th>Assunto</th><th>Situação</th></tr></thead><tbody>
+      ${erros.map(id => linha(id, 'erro')).join('')}${reforcos.map(id => linha(id, 'reforco')).join('')}
     </tbody></table>
     <div class="acoes"><button class="btn" data-acao="revisar">Revisar agora (${ids.length})</button></div>
+    ${proximas}${explica}
   </div></section>`;
 }
 
