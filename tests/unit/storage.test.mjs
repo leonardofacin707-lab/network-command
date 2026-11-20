@@ -151,3 +151,10 @@ test('missões: só ids conhecidos; conclusão exige data e XP válidos', () => 
   assert.deepEqual(ruim.m1, { topologia: { dispositivos: [], cabos: [] }, concluida: false, em: null, xp: 0, dicas: 0 });
   assert.equal(limparMissoes({ m1: { concluida: 'sim', xp: 50 } }, ref.missoes).m1.concluida, false);
 });
+
+test('perfil: nome com marcação HTML vindo de um backup é descartado', () => {
+  for (const nome of ['<img src=x onerror=alert(1)>', 'a<script>', 'x"y', 'Leo\u0000']) {
+    assert.equal(normalizar({ versao: 4, perfil: { nome }, quiz: { melhor: {} } }, ref).perfil.nome, '', nome);
+  }
+  assert.equal(normalizar({ versao: 4, perfil: { nome: "  Ana   D'Ávila  " }, quiz: { melhor: {} } }, ref).perfil.nome, "Ana D'Ávila");
+});

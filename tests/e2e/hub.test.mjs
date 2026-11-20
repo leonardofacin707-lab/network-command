@@ -271,6 +271,32 @@ test('importar arquivo inválido ou malicioso não altera o progresso', async ()
   await contexto.close();
 });
 
+test('segurança: código injetado pelo nome ou por um backup não é executado em nenhuma tela', async () => {
+  const carga = `<img src=x onerror="window.__xss=1"><script>window.__xss=2</script>' onmouseover='window.__xss=3`;
+  const { pagina, erros, salvo, contexto } = await abrir('perfil');
+  await pagina.fill('#campo-nome', carga.slice(0, 40));
+  await pagina.locator('button', { hasText: 'Salvar nome' }).click();
+  assert.match(await pagina.locator('#erro-nome').innerText(), /Use só letras/);
+  assert.equal(await salvo(), null, 'nome com código é recusado e nada é salvo');
+  // backup com cargas em todos os campos de texto que o jogo exibe
+  const topo = { dispositivos: [{ id: 'pc1', tipo: 'pc', nome: carga, x: 100, y: 100, interfaces: [{ id: 'eth0', ip: carga, mascara: '/24' }], gateway: carga, dns: carga, registros: [{ nome: carga, ip: '1.1.1.1' }] }], cabos: [] };
+  const lixo = { versao: 4, perfil: { nome: carga }, lab: { topologia: topo }, missoes: { 'cabo-esquecido': { topologia: topo, dicas: 0 } }, quiz: { melhor: {}, historico: [{ q: carga, ok: false, erros: 1, pts: 0, em: carga }] }, conquistas: { [carga]: carga } };
+  await pagina.setInputFiles('#importar', { name: 'z.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(lixo)) });
+  await pagina.locator('#confirmar-import').waitFor();
+  await pagina.locator('#confirmar-import').click();
+  for (const rota of ['dashboard', 'perfil', 'laboratorio', 'missoes/cabo-esquecido', 'conhecimento/historico', 'conhecimento/revisao', 'conquistas', 'habilidades']) {
+    await pagina.goto(servidor.url + '/index.html#/' + rota);
+    await pagina.locator('#app h2').first().waitFor();
+    await pagina.waitForTimeout(150);
+    assert.equal(await pagina.evaluate(() => window.__xss), undefined, `código executado em ${rota}`);
+    assert.equal(await pagina.locator('#app img[src="x"], #app script').count(), 0, `elemento injetado em ${rota}`);
+  }
+  const e = await salvo();
+  assert.equal(e.perfil.nome, '', 'nome com código no backup é descartado');
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
 test('menu no celular: abre com o botão, fecha ao escolher uma página ou com Esc', async () => {
   const { pagina, contexto } = await abrir('dashboard', { largura: 390, altura: 800 });
   const caixa = () => pagina.locator('#lateral').boundingBox();

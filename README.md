@@ -35,7 +35,26 @@ O projeto usa módulos ES e arquivos JSON, então precisa de um servidor HTTP (a
 npm run serve      # http://localhost:5173
 ```
 
-Também funciona com a extensão Live Server do VS Code ou com GitHub Pages.
+Também funciona com a extensão Live Server do VS Code.
+
+## Publicar (GitHub Pages)
+
+```bash
+npm run build        # gera dist/ só com o que vai para o ar, com CSP e modo offline
+npm run serve:dist   # confere a versão de publicação em http://localhost:5174
+```
+
+O fluxo `.github/workflows/publicar.yml` faz isso sozinho: a cada envio para a `main` ele procura segredos no histórico, audita as dependências, roda todos os testes e só então publica `dist/` no GitHub Pages. Para ligar, no repositório: **Settings → Pages → Source: GitHub Actions**.
+
+Na versão publicada o jogo pode ser instalado no celular ("Adicionar à tela inicial") e funciona sem internet depois da primeira visita.
+
+## Segurança e privacidade
+
+Nenhum dado do jogador sai do aparelho: não há cadastro, servidor de jogo, rastreadores nem recursos de outros sites. Detalhes em [SECURITY.md](SECURITY.md) e na página [privacidade.html](privacidade.html).
+
+## Licença
+
+Código com todos os direitos reservados, visível para avaliação do portfólio (ver [LICENSE](LICENSE)). As fontes seguem a SIL Open Font License.
 
 ## Testes
 

@@ -8,16 +8,18 @@ const RAIZ = fileURLToPath(new URL('../../', import.meta.url));
 const TIPOS = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml',
-  '.png': 'image/png', '.md': 'text/markdown; charset=utf-8'
+  '.png': 'image/png', '.md': 'text/markdown; charset=utf-8', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json',
+  '.txt': 'text/plain; charset=utf-8'
 };
 
-export function iniciarServidor(porta = 0) {
+/** raiz: pasta servida (padrão: a do projeto; os testes da versão publicada usam dist/). */
+export function iniciarServidor(porta = 0, raiz = RAIZ) {
   const servidor = createServer(async (req, res) => {
     try {
       let caminho = decodeURIComponent(new URL(req.url, 'http://x').pathname);
       if (caminho.endsWith('/')) caminho += 'index.html';
-      const arquivo = normalize(join(RAIZ, caminho));
-      if (!arquivo.startsWith(RAIZ)) { res.writeHead(403).end('Proibido'); return; }
+      const arquivo = normalize(join(raiz, caminho));
+      if (!arquivo.startsWith(raiz)) { res.writeHead(403).end('Proibido'); return; }
       const dados = await readFile(arquivo);
       res.writeHead(200, { 'Content-Type': TIPOS[extname(arquivo)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
       res.end(dados);

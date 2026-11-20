@@ -71,3 +71,8 @@ async function iniciar() {
 }
 
 iniciar();
+
+// Modo offline (PWA): só na versão publicada (dist/, marcada pelo build). Em desenvolvimento e na prévia nada é registrado.
+if ('serviceWorker' in navigator && document.querySelector('meta[name="nc-publicado"]')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}

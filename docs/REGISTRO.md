@@ -180,3 +180,13 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **Missões (3):** `nat-sem-volta` (diagnóstico: a ida chega, a volta se perde), `nat-lados-trocados` (diagnóstico: dentro/fora invertidos) e `nat-saida-da-empresa` (prática: IP, rota padrão e NAT, cada um é necessário). O objetivo de restrição `sem-rota-privada` impede contornar o NAT com uma rota para a rede privada no provedor.
 - **🧪 Não simulado:** tabela de traduções, portas, expiração, NAT estático/redirecionamento de portas, várias interfaces de dentro, NAT de entrada. É uma simplificação didática, avisada no painel e no texto do laboratório.
 - **Testes:** `tests/unit/nat.test.mjs`, 4 testes de missão e 2 e2e pela interface. Varredura de 65 rotas sem problemas e axe sem violações na missão de NAT.
+
+## Pacote de lançamento seguro
+
+- **Privacidade:** fontes servidas pelo próprio site (Inter e Chakra Petch, OFL, em `fonts/`), sem Google Fonts; página `privacidade.html` ligada no rodapé; nenhum pedido a outros sites (testado).
+- **CSP:** `npm run build` gera `dist/` com `Content-Security-Policy` (só `'self'`; scripts embutidos proibidos, por isso o aviso de `file://` foi para `js/aviso-arquivo.js`) e `referrer: no-referrer`. A prévia do Claude continua sem CSP, porque o ambiente dela injeta o próprio código.
+- **Injeção de código (XSS):** `esc()` agora também escapa aspas simples; o nome de exibição importado de um backup passa pela mesma regra do formulário (antes só era cortado em 40 caracteres). Teste e2e tenta injetar código pelo nome e por um backup com cargas em todos os campos de texto e percorre 8 telas.
+- **PWA:** `manifest.webmanifest`, ícones em `icones/` e `sw.js` (cache versionado por hash dos arquivos, preenchido pelo build). Só é registrado na versão publicada (marca `nc-publicado`), nunca em desenvolvimento nem na prévia.
+- **Repositório:** `LICENSE` (todos os direitos reservados), `SECURITY.md`, `.github/workflows/publicar.yml` (gitleaks, `npm audit`, testes, build e GitHub Pages) e `.github/dependabot.yml`. gitleaks no histórico (37 commits) e nos arquivos: nenhum segredo; autor dos commits é genérico.
+- **Testes:** `tests/e2e/publicado.test.mjs` (CSP sem violação em 9 telas, sem pedidos externos, fonte local, privacidade, manifesto, offline depois da primeira visita, nada registrado em desenvolvimento). Total: 225 unitários e 94 e2e (1 ignorado).
+- **⏳ Depende do Leonardo:** criar o repositório no GitHub (com verificação em duas etapas na conta) e ligar Pages com origem "GitHub Actions".

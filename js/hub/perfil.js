@@ -1,10 +1,9 @@
 import { esc, dataHora } from '../core/ui.js';
 import { xpDoEstado, cargoDe, nivelDoJogador } from '../core/progression.js';
-import { normalizar, apagar, estadoInicial, MAX_NOME } from '../core/storage.js';
+import { normalizar, apagar, estadoInicial, MAX_NOME, NOME_VALIDO } from '../core/storage.js';
 import { estatisticas } from '../quiz/historico.js';
 import { CONQUISTAS } from './conquistas-regras.js';
 
-const NOME_VALIDO = /^[\p{L}\p{N} ._'-]+$/u;
 
 /** Valida o nome de exibição. Devolve { nome } ou { erro }. */
 export function validarNome(texto) {

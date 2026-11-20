@@ -1,9 +1,9 @@
 // Utilitários de interface compartilhados por todos os módulos.
 export const $ = sel => document.querySelector(sel);
 
-const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 /** Escapa texto para uso seguro dentro de HTML. */
-export const esc = s => String(s).replace(/[&<>"]/g, c => ENTIDADES[c]);
+export const esc = s => String(s).replace(/[&<>"']/g, c => ENTIDADES[c]);
 
 export const reduzMovimento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

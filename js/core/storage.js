@@ -7,6 +7,8 @@ export const CHAVE_V1 = 'jornada-do-pacote-v1'; // formato da v0.1: { melhor: { 
 export const VERSAO = 4;
 export const MAX_HISTORICO = 300;
 export const MAX_NOME = 40;
+/** Caracteres aceitos no nome de exibição (também na importação de backup: defesa em profundidade contra injeção). */
+export const NOME_VALIDO = /^[\p{L}\p{N} ._'-]+$/u;
 
 export const estadoInicial = () => ({
   versao: VERSAO,
@@ -119,7 +121,10 @@ export function normalizar(bruto, ref) {
   const melhorBruto = ehNovo ? bruto.quiz?.melhor : bruto.melhor; // sem "versao" = formato v1
   base.quiz.melhor = limparMelhor(melhorBruto, ref.limites);
   if (ehNovo) {
-    if (typeof bruto.perfil?.nome === 'string') base.perfil.nome = bruto.perfil.nome.trim().slice(0, MAX_NOME);
+    if (typeof bruto.perfil?.nome === 'string') {
+      const nome = bruto.perfil.nome.replace(/\s+/g, ' ').trim().slice(0, MAX_NOME).trim();
+      if (NOME_VALIDO.test(nome)) base.perfil.nome = nome;
+    }
     if (dataValida(bruto.perfil?.criadoEm)) base.perfil.criadoEm = bruto.perfil.criadoEm;
     base.quiz.historico = limparHistorico(bruto.quiz?.historico, ref.perguntas);
     base.conquistas = limparConquistas(bruto.conquistas, ref.conquistas);

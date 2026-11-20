@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <title>Network Command</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0a0f1a">
+<meta name="description" content="Jogo de estudo de redes: quiz, laboratório com simulador e missões de diagnóstico.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<link rel="stylesheet" href="css/fontes.css">
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/quiz.css">
 <link rel="stylesheet" href="css/hub.css">
@@ -28,20 +31,14 @@
     <footer>
       Projeto de portfólio de Leonardo Facin, feito em JavaScript puro (sem frameworks).<br>
       Trilha baseada nos tópicos do curso Conceitos Básicos de Redes (Cisco Networking Academy); perguntas e explicações originais.<br>
-      Projeto independente de estudo: não é afiliado à Cisco nem emite certificado oficial.
+      Projeto independente de estudo: não é afiliado à Cisco nem emite certificado oficial.<br>
+      <a href="privacidade.html">Privacidade</a>: seu progresso fica só neste aparelho; nada é enviado.
     </footer>
   </div>
 </div>
 <div class="fundo-menu" id="fundo-menu" hidden></div>
 <div id="avisos" role="status" aria-live="polite"></div>
-<script>
-  // Módulos ES e JSON exigem servidor HTTP; abrir o arquivo direto (file://) não funciona.
-  if (location.protocol === 'file:') {
-    document.getElementById('app').innerHTML = '<section class="band"><div class="painel"><h2>Abra por um servidor local</h2>' +
-      '<p>Este projeto usa módulos JavaScript e arquivos JSON, que o navegador bloqueia quando a página é aberta direto do disco.</p>' +
-      '<p>Na pasta do projeto, rode <code>npm run serve</code> (ou use a extensão Live Server do VS Code) e abra <code>http://localhost:5173</code>.</p></div></section>';
-  }
-</script>
+<script src="js/aviso-arquivo.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
