@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { iniciarServidor } from '../helpers/servidor.mjs';
 import { abrirNavegador, novaPagina } from '../helpers/navegador.mjs';
-import { legado, jogarNivel } from '../helpers/jogador.mjs';
+import { legado, jogarNivel, resolverAtual } from '../helpers/jogador.mjs';
 
 let servidor, navegador;
 before(async () => { servidor = await iniciarServidor(); navegador = await abrirNavegador(); });
@@ -127,14 +127,55 @@ test('revisão: lista o desafio errado, refazer acertando tira da lista', async 
 test('treino misto: sorteia entre os desafios liberados e não dá estrelas', async () => {
   const { pagina, erros, salvo, contexto } = await abrir('conhecimento/treino');
   await pagina.locator('[data-acao="treinar"]').waitFor();
-  assert.match(await pagina.locator('.aba[aria-current=page]').innerText(), /Treino misto/);
-  assert.match(await pagina.locator('#app').innerText(), /Sorteia 9 desafios entre os 9 dos níveis que você já liberou/);
+  assert.match(await pagina.locator('.aba[aria-current=page]').innerText(), /Treino/);
+  assert.match(await pagina.locator('[data-acao="treinar"]').innerText(), /Treino misto \(9\)/);
+  // por módulo: o módulo 1 tem desafios no nível 1 (liberado); o módulo 9 ainda está todo bloqueado
+  assert.match(await pagina.locator('tr[data-modulo="1"]').innerText(), /Comunicação em um mundo conectado[\s\S]*0 de 6/);
+  assert.equal(await pagina.locator('tr[data-modulo="9"] button').isDisabled(), true);
+  assert.match(await pagina.locator('tr[data-modulo="9"]').innerText(), /13 em níveis bloqueados/);
+  await pagina.locator('[data-acao="treinar-modulo"][data-modulo="1"]').click();
+  await pagina.locator('.card').waitFor();
+  assert.match(await pagina.locator('.barra b').innerText(), /Treino · Módulo 1 · Comunicação em um mundo conectado/);
+  assert.match(await pagina.locator('.modulo-curso').innerText(), /Módulo 1 · Comunicação em um mundo conectado/);
+  await pagina.locator('[data-acao="mapa"]').first().click();
+  await pagina.locator('.aba', { hasText: 'Treino' }).click();
   await pagina.locator('[data-acao="treinar"]').click();
   await pagina.locator('.card').waitFor();
   assert.equal((await pagina.locator('.barra b').innerText()).trim(), 'Treino misto');
   assert.match(await pagina.locator('.tipo').innerText(), /1 de 9/);
   await pagina.locator('.op').first().click({ timeout: 1500 }).catch(() => {});
   assert.deepEqual((await salvo())?.quiz.melhor ?? {}, {});
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('desafio do dia: 3 desafios iguais o dia todo, registra a sequência e aparece no dashboard', async () => {
+  const perguntas = JSON.parse(readFileSync(new URL('../../data/questions.json', import.meta.url), 'utf8'));
+  const { pagina, erros, salvo, contexto } = await abrir('conhecimento/treino');
+  await pagina.locator('#diario').waitFor();
+  assert.match(await pagina.locator('#diario').innerText(), /Ainda não feito hoje · sequência: 0 dias/);
+  await pagina.locator('[data-acao="diario"]').click();
+  const enunciados = [];
+  for (let i = 0; i < 3; i++) {
+    await pagina.locator('.card h2').waitFor();
+    const texto = (await pagina.locator('.card h2').innerText()).trim();
+    enunciados.push(texto);
+    await resolverAtual(pagina, perguntas.find(q => q.enunciado === texto));
+    await pagina.locator('[data-acao="proximo"]').click();
+  }
+  assert.match(await pagina.locator('.resultado').innerText(), /Sequência: 1 dia seguidos \(recorde: 1\)/);
+  const e = await salvo();
+  assert.equal(e.diario.sequencia, 1);
+  assert.match(e.diario.ultimoDia, /^\d{4}-\d{2}-\d{2}$/);
+  assert.deepEqual(e.quiz.melhor, {}, 'não vale estrelas');
+  // de novo no mesmo dia: os mesmos desafios
+  await pagina.locator('[data-acao="mapa"]').first().click();
+  await pagina.locator('.aba', { hasText: 'Treino' }).click();
+  assert.match(await pagina.locator('#diario').innerText(), /Feito hoje ✓ · sequência: 1 dia/);
+  await pagina.locator('[data-acao="diario"]').click();
+  assert.equal((await pagina.locator('.card h2').innerText()).trim(), enunciados[0]);
+  await pagina.goto(servidor.url + '/index.html#/dashboard');
+  assert.match(await pagina.locator('[data-teste="diario"]').innerText(), /Desafio do dia feito ✓ · sequência de 1/);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

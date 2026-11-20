@@ -190,3 +190,12 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **Repositório:** `LICENSE` (todos os direitos reservados), `SECURITY.md`, `.github/workflows/publicar.yml` (gitleaks, `npm audit`, testes, build e GitHub Pages) e `.github/dependabot.yml`. gitleaks no histórico (37 commits) e nos arquivos: nenhum segredo; autor dos commits é genérico.
 - **Testes:** `tests/e2e/publicado.test.mjs` (CSP sem violação em 9 telas, sem pedidos externos, fonte local, privacidade, manifesto, offline depois da primeira visita, nada registrado em desenvolvimento). Total: 225 unitários e 94 e2e (1 ignorado).
 - **⏳ Depende do Leonardo:** criar o repositório no GitHub (com verificação em duas etapas na conta) e ligar Pages com origem "GitHub Actions".
+
+## Desafios por módulo do curso, treino por módulo e desafio do dia
+
+- **Módulos:** `data/modulos.json` (os 17 módulos de Conceitos Básicos de Redes) e campo `modulo` em cada desafio (0 = bônus, além do curso), atribuído por `tools/marcar-modulos.mjs` a partir das notas de `docs/mapa-curso.md`. 22 desafios ficaram como bônus (segurança, VLSM, TTL, handshake etc.).
+- **Lista de revisão:** `docs/revisao-quiz.md`, gerada pelo mesmo script: cada desafio por módulo com resposta e explicação e uma caixa para marcar. ⏳ A revisão contra o material do NetAcad é do Leonardo.
+- **Interface:** o desafio mostra "Módulo N · nome"; a aba Treino lista os módulos com "dominados" (última tentativa de primeira) e botão para treinar só aquele módulo (só desafios de níveis liberados).
+- **Desafio do dia:** 3 desafios sorteados pela data (`js/quiz/diario.js`, gerador com semente, igual o dia todo), sequência de dias e recorde no estado (`diario`, normalizado). Não vale pontos nem estrelas. Aparece na aba Treino e no dashboard.
+- **Correção:** o mapa do quiz agora posiciona os nós já na primeira pintura (antes esperava o `ResizeObserver`); era a causa do teste de layout instável.
+- **Testes:** 232 unitários, 96 e2e (1 ignorado); varredura de 65 rotas e axe sem problemas.

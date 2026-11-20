@@ -15,7 +15,8 @@
       "A empresa que fabrica os roteadores usados nos grandes provedores"
     ],
     "correta": 0,
-    "explicacao": "A Internet é uma \"rede de redes\". Milhares de redes independentes cooperam porque seguem os mesmos padrões, e nenhuma pessoa ou empresa controla tudo."
+    "explicacao": "A Internet é uma \"rede de redes\". Milhares de redes independentes cooperam porque seguem os mesmos padrões, e nenhuma pessoa ou empresa controla tudo.",
+    "modulo": 1
   },
   {
     "id": "fundamentos-002",
@@ -50,7 +51,8 @@
         "grupo": 3
       }
     ],
-    "explicacao": "SOHO significa pequeno escritório ou escritório doméstico. Redes médias e grandes têm muitos locais e centenas ou milhares de hosts. A Internet é a rede mundial."
+    "explicacao": "SOHO significa pequeno escritório ou escritório doméstico. Redes médias e grandes têm muitos locais e centenas ou milhares de hosts. A Internet é a rede mundial.",
+    "modulo": 1
   },
   {
     "id": "fundamentos-003",
@@ -64,7 +66,8 @@
     "resposta": 1000,
     "unidade": "Mbps",
     "dica": "Cada prefixo (K, M, G, T) multiplica por mil.",
-    "explicacao": "1 Gbps = 1.000 Mbps = 1.000.000 Kbps = 1.000.000.000 bps. Em redes, os prefixos de velocidade usam potências de 10."
+    "explicacao": "1 Gbps = 1.000 Mbps = 1.000.000 Kbps = 1.000.000.000 bps. Em redes, os prefixos de velocidade usam potências de 10.",
+    "modulo": 1
   },
   {
     "id": "fundamentos-004",
@@ -82,7 +85,8 @@
       "Frequência do sinal (2,4 ou 5 GHz)"
     ],
     "correta": 0,
-    "explicacao": "Largura de banda é a capacidade teórica do meio. A taxa de transferência é o que realmente passa, e cai por causa do volume de dados, do tipo de tráfego e da latência no caminho."
+    "explicacao": "Largura de banda é a capacidade teórica do meio. A taxa de transferência é o que realmente passa, e cai por causa do volume de dados, do tipo de tráfego e da latência no caminho.",
+    "modulo": 1
   },
   {
     "id": "fundamentos-005",
@@ -100,7 +104,8 @@
       "Encapsulamento"
     ],
     "correta": 0,
-    "explicacao": "Latência é o atraso da viagem. Quanto mais dispositivos e distância entre origem e destino, maior tende a ser a latência."
+    "explicacao": "Latência é o atraso da viagem. Quanto mais dispositivos e distância entre origem e destino, maior tende a ser a latência.",
+    "modulo": 1
   },
   {
     "id": "fundamentos-006",
@@ -133,7 +138,8 @@
         "direita": "Navegar na rua, longe de qualquer roteador"
       }
     ],
-    "explicacao": "Bluetooth é de curto alcance e baixo consumo. O NFC exige que os aparelhos fiquem quase encostados. O GPS só recebe sinais de satélites. O Wi-Fi depende de um access point por perto, e os dados móveis usam as torres da operadora."
+    "explicacao": "Bluetooth é de curto alcance e baixo consumo. O NFC exige que os aparelhos fiquem quase encostados. O GPS só recebe sinais de satélites. O Wi-Fi depende de um access point por perto, e os dados móveis usam as torres da operadora.",
+    "modulo": 3
   },
   {
     "id": "fundamentos-007",
@@ -171,7 +177,8 @@
         "grupo": 1
       }
     ],
-    "explicacao": "Dados voluntários você cria e compartilha. Dados observados são registrados a partir do que você faz. Dados inferidos são conclusões tiradas analisando os outros dados."
+    "explicacao": "Dados voluntários você cria e compartilha. Dados observados são registrados a partir do que você faz. Dados inferidos são conclusões tiradas analisando os outros dados.",
+    "modulo": 1
   },
   {
     "id": "fundamentos-008",
@@ -189,7 +196,8 @@
       "A rede só aceita dispositivos conectados por cabo de rede ao roteador"
     ],
     "correta": 0,
-    "explicacao": "Com o SSID oculto, a rede não aparece na lista. Você adiciona manualmente digitando o SSID, o tipo de segurança e a senha exatamente como estão no roteador."
+    "explicacao": "Com o SSID oculto, a rede não aparece na lista. Você adiciona manualmente digitando o SSID, o tipo de segurança e a senha exatamente como estão no roteador.",
+    "modulo": 3
   },
   {
     "id": "fundamentos-009",
@@ -207,7 +215,8 @@
       "Escolher a rede com o sinal mais forte, pois ela é a mais confiável"
     ],
     "correta": 0,
-    "explicacao": "Em redes que você não controla, alguém pode capturar o tráfego. A VPN cria um túnel criptografado, e login ou senha nunca devem trafegar em texto puro."
+    "explicacao": "Em redes que você não controla, alguém pode capturar o tráfego. A VPN cria um túnel criptografado, e login ou senha nunca devem trafegar em texto puro.",
+    "modulo": 3
   },
   {
     "id": "fundamentos-010",
@@ -257,7 +266,8 @@
         "grupo": 2
       }
     ],
-    "explicacao": "O dispositivo final (host) é a origem ou o destino da mensagem. Os intermediários conectam e encaminham o tráfego. O meio físico é o caminho por onde o sinal viaja: cobre, fibra ou ar."
+    "explicacao": "O dispositivo final (host) é a origem ou o destino da mensagem. Os intermediários conectam e encaminham o tráfego. O meio físico é o caminho por onde o sinal viaja: cobre, fibra ou ar.",
+    "modulo": 2
   },
   {
     "id": "fundamentos-011",
@@ -275,7 +285,8 @@
       "Estar ligado por cabo ou por Wi-Fi"
     ],
     "correta": 0,
-    "explicacao": "Um host vira servidor quando roda software de servidor (web, e-mail, arquivos). O mesmo computador pode ser cliente e servidor ao mesmo tempo."
+    "explicacao": "Um host vira servidor quando roda software de servidor (web, e-mail, arquivos). O mesmo computador pode ser cliente e servidor ao mesmo tempo.",
+    "modulo": 2
   },
   {
     "id": "fundamentos-012",
@@ -293,7 +304,8 @@
       "É difícil de configurar mesmo em redes com poucos computadores"
     ],
     "correta": 0,
-    "explicacao": "A P2P é barata e simples, mas não escala bem, não tem gestão central, é menos segura e o desempenho cai quando todos são cliente e servidor ao mesmo tempo."
+    "explicacao": "A P2P é barata e simples, mas não escala bem, não tem gestão central, é menos segura e o desempenho cai quando todos são cliente e servidor ao mesmo tempo.",
+    "modulo": 2
   },
   {
     "id": "fundamentos-013",
@@ -318,7 +330,8 @@
         "direita": "Access point sem fio interno"
       }
     ],
-    "explicacao": "A porta Internet liga o roteador a outra rede, a do provedor. As portas LAN e o Wi-Fi ficam na mesma rede local da casa."
+    "explicacao": "A porta Internet liga o roteador a outra rede, a do provedor. As portas LAN e o Wi-Fi ficam na mesma rede local da casa.",
+    "modulo": 4
   },
   {
     "id": "fundamentos-014",
@@ -336,7 +349,8 @@
       "Na rede do provedor, que enxerga cada aparelho separadamente"
     ],
     "correta": 0,
-    "explicacao": "Por padrão, o roteador doméstico junta portas LAN e Wi-Fi na mesma LAN. A porta Internet é a única que fica em outra rede."
+    "explicacao": "Por padrão, o roteador doméstico junta portas LAN e Wi-Fi na mesma LAN. A porta Internet é a única que fica em outra rede.",
+    "modulo": 4
   },
   {
     "id": "fundamentos-015",
@@ -361,7 +375,8 @@
         "direita": "Longas distâncias em alta velocidade, sem interferência elétrica"
       }
     ],
-    "explicacao": "O par trançado (4 pares trançados contra interferência) é o mais comum nas LANs. O coaxial vem das operadoras de TV a cabo. A fibra usa pulsos de luz e alcança grandes distâncias."
+    "explicacao": "O par trançado (4 pares trançados contra interferência) é o mais comum nas LANs. O coaxial vem das operadoras de TV a cabo. A fibra usa pulsos de luz e alcança grandes distâncias.",
+    "modulo": 6
   },
   {
     "id": "fundamentos-016",
@@ -379,7 +394,8 @@
       "Tanto faz, o Bluetooth não usa rádio"
     ],
     "correta": 0,
-    "explicacao": "Wi-Fi doméstico usa as faixas não licenciadas de 2,4 GHz e 5 GHz. O Bluetooth divide a faixa de 2,4 GHz, então os 5 GHz evitam essa disputa."
+    "explicacao": "Wi-Fi doméstico usa as faixas não licenciadas de 2,4 GHz e 5 GHz. O Bluetooth divide a faixa de 2,4 GHz, então os 5 GHz evitam essa disputa.",
+    "modulo": 4
   },
   {
     "id": "fundamentos-017",
@@ -412,7 +428,8 @@
         "direita": "Barata, mas com banda muito pequena"
       }
     ],
-    "explicacao": "A escolha depende do lugar onde você está e dos provedores disponíveis. Em áreas sem cabo ou DSL, satélite e celular resolvem. Nas cidades, a fibra até a casa é cada vez mais comum."
+    "explicacao": "A escolha depende do lugar onde você está e dos provedores disponíveis. Em áreas sem cabo ou DSL, satélite e celular resolvem. Nas cidades, a fibra até a casa é cada vez mais comum.",
+    "modulo": 2
   },
   {
     "id": "fundamentos-018",
@@ -430,7 +447,8 @@
       "O custo do meio e da instalação"
     ],
     "correta": 0,
-    "explicacao": "Os critérios são distância, ambiente, quantidade e velocidade dos dados, e custo. A cor da capa só ajuda na organização."
+    "explicacao": "Os critérios são distância, ambiente, quantidade e velocidade dos dados, e custo. A cor da capa só ajuda na organização.",
+    "modulo": 6
   },
   {
     "id": "osi-tcpip-001",
@@ -448,7 +466,8 @@
       "O endereço digitado no navegador para abrir um site"
     ],
     "correta": 0,
-    "explicacao": "Assim como uma conversa precisa de idioma, ritmo e confirmação, os computadores precisam de regras comuns: formato, tamanho, temporização, codificação e forma de entrega."
+    "explicacao": "Assim como uma conversa precisa de idioma, ritmo e confirmação, os computadores precisam de regras comuns: formato, tamanho, temporização, codificação e forma de entrega.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-002",
@@ -477,7 +496,8 @@
         "direita": "Como a informação vira sinais no meio físico"
       }
     ],
-    "explicacao": "Essas regras garantem que a mensagem chegue e seja entendida. A temporização, por exemplo, evita que todos transmitam ao mesmo tempo."
+    "explicacao": "Essas regras garantem que a mensagem chegue e seja entendida. A temporização, por exemplo, evita que todos transmitam ao mesmo tempo.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-003",
@@ -497,7 +517,8 @@
       "Enlace de dados",
       "Física"
     ],
-    "explicacao": "Do topo para a base: 7 Aplicação, 6 Apresentação, 5 Sessão, 4 Transporte, 3 Rede, 2 Enlace de dados, 1 Física."
+    "explicacao": "Do topo para a base: 7 Aplicação, 6 Apresentação, 5 Sessão, 4 Transporte, 3 Rede, 2 Enlace de dados, 1 Física.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-004",
@@ -514,7 +535,8 @@
       "Internet",
       "Acesso à rede"
     ],
-    "explicacao": "O TCP/IP tem 4 camadas. É o modelo de protocolos que a Internet usa de verdade."
+    "explicacao": "O TCP/IP tem 4 camadas. É o modelo de protocolos que a Internet usa de verdade.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-005",
@@ -561,7 +583,8 @@
         "grupo": 3
       }
     ],
-    "explicacao": "As camadas 5, 6 e 7 do OSI viram a Aplicação do TCP/IP. Transporte e Rede (Internet) batem direto. Enlace e Física juntas formam o Acesso à rede."
+    "explicacao": "As camadas 5, 6 e 7 do OSI viram a Aplicação do TCP/IP. Transporte e Rede (Internet) batem direto. Enlace e Física juntas formam o Acesso à rede.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-006",
@@ -594,7 +617,8 @@
         "direita": "6 · Apresentação"
       }
     ],
-    "explicacao": "Uma dica para lembrar: a camada 3 trabalha com IP (pacotes), a 2 com MAC (quadros), a 4 com portas (segmentos) e a 1 com bits."
+    "explicacao": "Uma dica para lembrar: a camada 3 trabalha com IP (pacotes), a 2 com MAC (quadros), a 4 com portas (segmentos) e a 1 com bits.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-007",
@@ -612,7 +636,8 @@
       "Na tabela de roteamento de cada roteador da Internet"
     ],
     "correta": 0,
-    "explicacao": "Cada proposta de padrão passa por discussão e testes, e tudo fica registrado em RFCs numeradas, mantidas por organizações como a IETF."
+    "explicacao": "Cada proposta de padrão passa por discussão e testes, e tudo fica registrado em RFCs numeradas, mantidas por organizações como a IETF.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-008",
@@ -630,7 +655,8 @@
       "Dispensa o uso de endereços IP nos dispositivos"
     ],
     "correta": 0,
-    "explicacao": "As camadas separam responsabilidades. Isso facilita projetar protocolos, permite que produtos de fabricantes diferentes funcionem juntos e cria uma linguagem comum para descrever a rede."
+    "explicacao": "As camadas separam responsabilidades. Isso facilita projetar protocolos, permite que produtos de fabricantes diferentes funcionem juntos e cria uma linguagem comum para descrever a rede.",
+    "modulo": 5
   },
   {
     "id": "osi-tcpip-009",
@@ -648,7 +674,8 @@
       "Porque a operadora converte tudo para o formato de cada marca"
     ],
     "correta": 0,
-    "explicacao": "Padrões abertos garantem que qualquer dispositivo que implemente as mesmas regras consiga se comunicar, não importa o fabricante."
+    "explicacao": "Padrões abertos garantem que qualquer dispositivo que implemente as mesmas regras consiga se comunicar, não importa o fabricante.",
+    "modulo": 5
   },
   {
     "nivel": 4,
@@ -666,7 +693,8 @@
       "O tamanho do quadro, enviando os maiores pelas portas mais rápidas"
     ],
     "correta": 0,
-    "explicacao": "O switch trabalha na camada 2. Ele lê o MAC de destino do quadro e procura esse endereço na sua tabela de endereços MAC, que diz em qual porta o destinatário está."
+    "explicacao": "O switch trabalha na camada 2. Ele lê o MAC de destino do quadro e procura esse endereço na sua tabela de endereços MAC, que diz em qual porta o destinatário está.",
+    "modulo": 7
   },
   {
     "nivel": 4,
@@ -680,7 +708,8 @@
     "resposta": 48,
     "unidade": "bits",
     "dica": "O endereço MAC tem 6 bytes, e cada byte tem 8 bits.",
-    "explicacao": "Um endereço MAC tem 48 bits (6 bytes), escritos em 12 dígitos hexadecimais, como 00:1A:2B:3C:4D:5E."
+    "explicacao": "Um endereço MAC tem 48 bits (6 bytes), escritos em 12 dígitos hexadecimais, como 00:1A:2B:3C:4D:5E.",
+    "modulo": 7
   },
   {
     "nivel": 4,
@@ -699,7 +728,8 @@
       "Dados",
       "FCS"
     ],
-    "explicacao": "O quadro começa com o preâmbulo (sincronização), depois vêm o MAC de destino, o MAC de origem, o campo Tipo (qual protocolo está nos dados), os dados e, no fim, o FCS, que serve para detectar erros."
+    "explicacao": "O quadro começa com o preâmbulo (sincronização), depois vêm o MAC de destino, o MAC de origem, o campo Tipo (qual protocolo está nos dados), os dados e, no fim, o FCS, que serve para detectar erros.",
+    "modulo": 7
   },
   {
     "nivel": 4,
@@ -732,7 +762,8 @@
         "grupo": 1
       }
     ],
-    "explicacao": "A subcamada LLC faz a ligação com a camada de rede. A subcamada MAC cuida do quadro, dos endereços MAC e do acesso ao meio físico."
+    "explicacao": "A subcamada LLC faz a ligação com a camada de rede. A subcamada MAC cuida do quadro, dos endereços MAC e do acesso ao meio físico.",
+    "modulo": 0
   },
   {
     "nivel": 4,
@@ -750,7 +781,8 @@
       "Troca o MAC de origem por um endereço que ele já conhece"
     ],
     "correta": 0,
-    "explicacao": "O switch aprende olhando o MAC de origem: guarda na tabela que aquele endereço está na porta por onde o quadro chegou. Ninguém precisa cadastrar nada."
+    "explicacao": "O switch aprende olhando o MAC de origem: guarda na tabela que aquele endereço está na porta por onde o quadro chegou. Ninguém precisa cadastrar nada.",
+    "modulo": 7
   },
   {
     "nivel": 4,
@@ -784,7 +816,8 @@
         "grupo": 2
       }
     ],
-    "explicacao": "Com o destino conhecido em outra porta, o switch encaminha só por ela. Destino desconhecido e broadcast são inundados por todas as portas, menos a de entrada. Se o destino está na própria porta de entrada, não há por que encaminhar."
+    "explicacao": "Com o destino conhecido em outra porta, o switch encaminha só por ela. Destino desconhecido e broadcast são inundados por todas as portas, menos a de entrada. Se o destino está na própria porta de entrada, não há por que encaminhar.",
+    "modulo": 7
   },
   {
     "nivel": 4,
@@ -809,7 +842,8 @@
         "direita": "Todos os dispositivos da rede local"
       }
     ],
-    "explicacao": "Unicast é de um para um. Multicast é de um para um grupo que se inscreveu. Broadcast é de um para todos os dispositivos da mesma rede local."
+    "explicacao": "Unicast é de um para um. Multicast é de um para um grupo que se inscreveu. Broadcast é de um para todos os dispositivos da mesma rede local.",
+    "modulo": 9
   },
   {
     "nivel": 4,
@@ -827,7 +861,8 @@
       "Trocar o MAC de origem sem avisar o outro lado"
     ],
     "correta": 0,
-    "explicacao": "No full-duplex cada sentido tem seu próprio caminho. Por isso o dispositivo transmite e recebe ao mesmo tempo, e as colisões deixam de existir nesse enlace."
+    "explicacao": "No full-duplex cada sentido tem seu próprio caminho. Por isso o dispositivo transmite e recebe ao mesmo tempo, e as colisões deixam de existir nesse enlace.",
+    "modulo": 7
   },
   {
     "nivel": 4,
@@ -845,7 +880,8 @@
       "192.168.0.10"
     ],
     "correta": 0,
-    "explicacao": "Um MAC tem 6 bytes em hexadecimal. O segundo tem só 5 bytes, o terceiro usa a letra G (fora do hexadecimal 0 a F) e o último é um endereço IPv4."
+    "explicacao": "Um MAC tem 6 bytes em hexadecimal. O segundo tem só 5 bytes, o terceiro usa a letra G (fora do hexadecimal 0 a F) e o último é um endereço IPv4.",
+    "modulo": 7
   },
   {
     "nivel": 5,
@@ -859,7 +895,8 @@
     "resposta": 32,
     "unidade": "bits",
     "dica": "São 4 números (octetos) de 8 bits cada.",
-    "explicacao": "Um endereço IPv4 tem 32 bits, divididos em 4 octetos de 8 bits e escritos em decimal separados por pontos, como 192.168.1.10."
+    "explicacao": "Um endereço IPv4 tem 32 bits, divididos em 4 octetos de 8 bits e escritos em decimal separados por pontos, como 192.168.1.10.",
+    "modulo": 8
   },
   {
     "nivel": 5,
@@ -872,7 +909,8 @@
     "enunciado": "Quanto vale o octeto 11000000 em decimal?",
     "resposta": 192,
     "dica": "Some os pesos dos bits 1: 128 + 64.",
-    "explicacao": "Os pesos dos bits, da esquerda para a direita, são 128, 64, 32, 16, 8, 4, 2 e 1. Em 11000000 só os dois primeiros bits valem 1: 128 + 64 = 192."
+    "explicacao": "Os pesos dos bits, da esquerda para a direita, são 128, 64, 32, 16, 8, 4, 2 e 1. Em 11000000 só os dois primeiros bits valem 1: 128 + 64 = 192.",
+    "modulo": 8
   },
   {
     "nivel": 5,
@@ -918,7 +956,8 @@
         "grupo": 2
       }
     ],
-    "explicacao": "Os blocos privados são 10.0.0.0/8, 172.16.0.0 a 172.31.255.255 e 192.168.0.0/16. Por isso 172.32.0.1 já é público. 127.0.0.0/8 é loopback (o próprio equipamento) e 169.254.0.0/16 é link-local, usado quando o host não recebeu endereço."
+    "explicacao": "Os blocos privados são 10.0.0.0/8, 172.16.0.0 a 172.31.255.255 e 192.168.0.0/16. Por isso 172.32.0.1 já é público. 127.0.0.0/8 é loopback (o próprio equipamento) e 169.254.0.0/16 é link-local, usado quando o host não recebeu endereço.",
+    "modulo": 9
   },
   {
     "nivel": 5,
@@ -947,7 +986,8 @@
         "direita": "/25"
       }
     ],
-    "explicacao": "O prefixo conta quantos bits 1 a máscara tem, da esquerda para a direita. 255.255.255.128 tem 24 bits 1 nos três primeiros octetos mais 1 bit no último, ou seja, /25."
+    "explicacao": "O prefixo conta quantos bits 1 a máscara tem, da esquerda para a direita. 255.255.255.128 tem 24 bits 1 nos três primeiros octetos mais 1 bit no último, ou seja, /25.",
+    "modulo": 8
   },
   {
     "nivel": 5,
@@ -965,7 +1005,8 @@
       "Definir a velocidade máxima que a placa de rede aceita"
     ],
     "correta": 0,
-    "explicacao": "Os bits 1 da máscara marcam a parte de rede do endereço, e os bits 0 marcam a parte de host. É assim que o dispositivo descobre se o destino está na sua rede ou fora dela."
+    "explicacao": "Os bits 1 da máscara marcam a parte de rede do endereço, e os bits 0 marcam a parte de host. É assim que o dispositivo descobre se o destino está na sua rede ou fora dela.",
+    "modulo": 8
   },
   {
     "nivel": 5,
@@ -983,7 +1024,8 @@
       "Ele faz parte de um grupo multicast dentro da rede local do escritório"
     ],
     "correta": 0,
-    "explicacao": "O bloco 169.254.0.0/16 é de endereços link-local (APIPA). O sistema se atribui um deles quando não consegue obter um endereço do DHCP. Costuma indicar falha ao pedir endereço."
+    "explicacao": "O bloco 169.254.0.0/16 é de endereços link-local (APIPA). O sistema se atribui um deles quando não consegue obter um endereço do DHCP. Costuma indicar falha ao pedir endereço.",
+    "modulo": 9
   },
   {
     "nivel": 5,
@@ -1000,7 +1042,8 @@
       "/24",
       "/16"
     ],
-    "explicacao": "Quanto maior o prefixo, menos bits sobram para hosts. Uma /30 tem 2 hosts úteis, uma /27 tem 30, uma /24 tem 254 e uma /16 tem 65.534."
+    "explicacao": "Quanto maior o prefixo, menos bits sobram para hosts. Uma /30 tem 2 hosts úteis, uma /27 tem 30, uma /24 tem 254 e uma /16 tem 65.534.",
+    "modulo": 8
   },
   {
     "nivel": 5,
@@ -1018,7 +1061,8 @@
       "192.168.10.1"
     ],
     "correta": 0,
-    "explicacao": "Com /24, os 8 últimos bits são de host. O broadcast é o endereço com todos esses bits em 1, ou seja, 192.168.10.255. O .254 é o último host utilizável, e o .1 é só um host."
+    "explicacao": "Com /24, os 8 últimos bits são de host. O broadcast é o endereço com todos esses bits em 1, ou seja, 192.168.10.255. O .254 é o último host utilizável, e o .1 é só um host.",
+    "modulo": 9
   },
   {
     "nivel": 5,
@@ -1036,7 +1080,8 @@
       "10.0.1.10"
     ],
     "correta": 0,
-    "explicacao": "Com a máscara /24, os três primeiros octetos definem a rede. Só 192.168.1.200 tem a rede 192.168.1.0. Os outros ficam em redes diferentes e precisariam de um roteador para conversar."
+    "explicacao": "Com a máscara /24, os três primeiros octetos definem a rede. Só 192.168.1.200 tem a rede 192.168.1.0. Os outros ficam em redes diferentes e precisariam de um roteador para conversar.",
+    "modulo": 8
   },
   {
     "nivel": 6,
@@ -1050,7 +1095,8 @@
     "resposta": 5,
     "unidade": "bits",
     "dica": "O endereço tem 32 bits. Tire os bits do prefixo.",
-    "explicacao": "Bits de host = 32 − prefixo. Em uma /27 sobram 32 − 27 = 5 bits para identificar os hosts."
+    "explicacao": "Bits de host = 32 − prefixo. Em uma /27 sobram 32 − 27 = 5 bits para identificar os hosts.",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1064,7 +1110,8 @@
     "resposta": 62,
     "unidade": "hosts",
     "dica": "Use 2 elevado ao número de bits de host, menos 2.",
-    "explicacao": "Em uma /26 sobram 6 bits de host: 2^6 = 64 endereços. Dois não podem ser usados por hosts (o de rede e o de broadcast), então sobram 62."
+    "explicacao": "Em uma /26 sobram 6 bits de host: 2^6 = 64 endereços. Dois não podem ser usados por hosts (o de rede e o de broadcast), então sobram 62.",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1082,7 +1129,8 @@
       "255.255.255.240"
     ],
     "correta": 0,
-    "explicacao": "Uma /26 tem 24 bits 1 nos três primeiros octetos mais 2 bits 1 no último: 11000000 = 192. A máscara é 255.255.255.192."
+    "explicacao": "Uma /26 tem 24 bits 1 nos três primeiros octetos mais 2 bits 1 no último: 11000000 = 192. A máscara é 255.255.255.192.",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1111,7 +1159,8 @@
         "direita": "30 hosts"
       }
     ],
-    "explicacao": "Hosts úteis = 2^(bits de host) − 2. Uma /30 tem 2 bits de host (2 hosts), /29 tem 3 (6), /28 tem 4 (14) e /27 tem 5 (30)."
+    "explicacao": "Hosts úteis = 2^(bits de host) − 2. Uma /30 tem 2 bits de host (2 hosts), /29 tem 3 (6), /28 tem 4 (14) e /27 tem 5 (30).",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1154,7 +1203,8 @@
         "grupo": 3
       }
     ],
-    "explicacao": "Cada /26 tem 64 endereços, então as redes começam em .0, .64, .128 e .192. Cada host pertence à rede cujo bloco o contém."
+    "explicacao": "Cada /26 tem 64 endereços, então as redes começam em .0, .64, .128 e .192. Cada host pertence à rede cujo bloco o contém.",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1172,7 +1222,8 @@
       "/24, com 254 hosts úteis"
     ],
     "correta": 0,
-    "explicacao": "Precisamos de 50 hosts úteis. Uma /27 só tem 30, então não serve. A /26 tem 62 e é a menor que comporta os 50. A /25 e a /24 funcionam, mas desperdiçam endereços."
+    "explicacao": "Precisamos de 50 hosts úteis. Uma /27 só tem 30, então não serve. A /26 tem 62 e é a menor que comporta os 50. A /25 e a /24 funcionam, mas desperdiçam endereços.",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1186,7 +1237,8 @@
     "resposta": 8,
     "unidade": "sub-redes",
     "dica": "Quantos bits foram \"emprestados\" do host: 27 − 24.",
-    "explicacao": "De /24 para /27 foram emprestados 3 bits, e 2^3 = 8. Cada sub-rede tem 32 endereços, e 8 × 32 = 256."
+    "explicacao": "De /24 para /27 foram emprestados 3 bits, e 2^3 = 8. Cada sub-rede tem 32 endereços, e 8 × 32 = 256.",
+    "modulo": 9
   },
   {
     "nivel": 6,
@@ -1203,7 +1255,8 @@
       "Escolher o menor prefixo que comporte cada setor",
       "Alocar os blocos em sequência, sem sobreposição"
     ],
-    "explicacao": "Primeiro se levanta a necessidade de cada setor. Depois se ordena do maior para o menor, escolhe-se o menor prefixo que atenda e, por fim, os blocos são alocados um depois do outro, sem se sobreporem. É o que o módulo Empresa pede."
+    "explicacao": "Primeiro se levanta a necessidade de cada setor. Depois se ordena do maior para o menor, escolhe-se o menor prefixo que atenda e, por fim, os blocos são alocados um depois do outro, sem se sobreporem. É o que o módulo Empresa pede.",
+    "modulo": 0
   },
   {
     "nivel": 6,
@@ -1221,7 +1274,8 @@
       "172.16.0.0"
     ],
     "correta": 0,
-    "explicacao": "Uma /20 tem máscara 255.255.240.0, e o terceiro octeto avança de 16 em 16 (0, 16, 32, 48…). O valor 45 está no bloco que começa em 32, então a rede é 172.16.32.0."
+    "explicacao": "Uma /20 tem máscara 255.255.240.0, e o terceiro octeto avança de 16 em 16 (0, 16, 32, 48…). O valor 45 está no bloco que começa em 32, então a rede é 172.16.32.0.",
+    "modulo": 9
   },
   {
     "nivel": 7,
@@ -1235,7 +1289,8 @@
     "resposta": 128,
     "unidade": "bits",
     "dica": "É quatro vezes o tamanho de um endereço IPv4.",
-    "explicacao": "Um endereço IPv6 tem 128 bits, escritos como 8 grupos de 16 bits em hexadecimal. O IPv4 tem 32 bits, por isso o espaço de endereços do IPv6 é incomparavelmente maior."
+    "explicacao": "Um endereço IPv6 tem 128 bits, escritos como 8 grupos de 16 bits em hexadecimal. O IPv4 tem 32 bits, por isso o espaço de endereços do IPv6 é incomparavelmente maior.",
+    "modulo": 10
   },
   {
     "nivel": 7,
@@ -1253,7 +1308,8 @@
       "O IPv6 elimina a necessidade de qualquer equipamento de rede no caminho"
     ],
     "correta": 0,
-    "explicacao": "O espaço de 32 bits do IPv4 não comporta tantos dispositivos. O IPv6 usa 128 bits, o que permite dar endereços a praticamente qualquer dispositivo, além de simplificar alguns processos de rede."
+    "explicacao": "O espaço de 32 bits do IPv4 não comporta tantos dispositivos. O IPv6 usa 128 bits, o que permite dar endereços a praticamente qualquer dispositivo, além de simplificar alguns processos de rede.",
+    "modulo": 10
   },
   {
     "nivel": 7,
@@ -1271,7 +1327,8 @@
       "Um único número decimal de 128 dígitos, escrito sem nenhum separador"
     ],
     "correta": 0,
-    "explicacao": "Um endereço IPv6 tem 8 grupos de 16 bits (4 dígitos hexadecimais cada), como 2001:0db8:acad:0001:0000:0000:0000:0010. Os quatro números decimais são o formato do IPv4, e os seis pares são o do endereço MAC."
+    "explicacao": "Um endereço IPv6 tem 8 grupos de 16 bits (4 dígitos hexadecimais cada), como 2001:0db8:acad:0001:0000:0000:0000:0010. Os quatro números decimais são o formato do IPv4, e os seis pares são o do endereço MAC.",
+    "modulo": 10
   },
   {
     "nivel": 7,
@@ -1289,7 +1346,8 @@
       "2001:db8:::1"
     ],
     "correta": 0,
-    "explicacao": "Zeros à esquerda de cada grupo podem ser omitidos, e uma sequência de grupos só de zeros pode virar \"::\", mas uma única vez no endereço. Por isso a forma correta é 2001:db8::1."
+    "explicacao": "Zeros à esquerda de cada grupo podem ser omitidos, e uma sequência de grupos só de zeros pode virar \"::\", mas uma única vez no endereço. Por isso a forma correta é 2001:db8::1.",
+    "modulo": 10
   },
   {
     "nivel": 7,
@@ -1332,7 +1390,8 @@
         "grupo": 3
       }
     ],
-    "explicacao": "Global unicast começa com 2000::/3 (o 2001 do exemplo está nele). Link-local começa com fe80::/10 e só vale no enlace local. Multicast começa com ff00::/8. ::1 é o loopback, equivalente ao 127.0.0.1 do IPv4."
+    "explicacao": "Global unicast começa com 2000::/3 (o 2001 do exemplo está nele). Link-local começa com fe80::/10 e só vale no enlace local. Multicast começa com ff00::/8. ::1 é o loopback, equivalente ao 127.0.0.1 do IPv4.",
+    "modulo": 10
   },
   {
     "nivel": 7,
@@ -1350,7 +1409,8 @@
       "O mesmo broadcast, mas com o endereço ff:ff:ff:ff"
     ],
     "correta": 0,
-    "explicacao": "O IPv6 não tem broadcast. Para falar com vários destinos usa multicast, e o anycast entrega ao destino mais próximo de um grupo. Funções que no IPv4 usavam broadcast passam a usar endereços multicast, como o ff02::1 (todos os nós do enlace)."
+    "explicacao": "O IPv6 não tem broadcast. Para falar com vários destinos usa multicast, e o anycast entrega ao destino mais próximo de um grupo. Funções que no IPv4 usavam broadcast passam a usar endereços multicast, como o ff02::1 (todos os nós do enlace).",
+    "modulo": 10
   },
   {
     "nivel": 7,
@@ -1364,7 +1424,8 @@
     "resposta": 64,
     "unidade": "bits",
     "dica": "Metade do endereço de 128 bits é a parte da interface.",
-    "explicacao": "Em redes locais usa-se /64: 64 bits identificam a rede e 64 bits identificam a interface (host). Isso deixa um espaço gigantesco para hosts em cada sub-rede."
+    "explicacao": "Em redes locais usa-se /64: 64 bits identificam a rede e 64 bits identificam a interface (host). Isso deixa um espaço gigantesco para hosts em cada sub-rede.",
+    "modulo": 0
   },
   {
     "nivel": 7,
@@ -1393,7 +1454,8 @@
         "direita": "Loopback"
       }
     ],
-    "explicacao": "Global unicast: 2000::/3 (roteável na Internet). Link-local: fe80::/10 (só no enlace local). Multicast: ff00::/8. O loopback é um único endereço, ::1/128."
+    "explicacao": "Global unicast: 2000::/3 (roteável na Internet). Link-local: fe80::/10 (só no enlace local). Multicast: ff00::/8. O loopback é um único endereço, ::1/128.",
+    "modulo": 0
   },
   {
     "nivel": 7,
@@ -1409,7 +1471,8 @@
       "ID da sub-rede (16 bits)",
       "ID da interface (64 bits)"
     ],
-    "explicacao": "Os 48 primeiros bits são o prefixo de roteamento global (dado pelo provedor), os 16 seguintes identificam a sub-rede dentro da organização e os 64 últimos identificam a interface. 48 + 16 + 64 = 128 bits."
+    "explicacao": "Os 48 primeiros bits são o prefixo de roteamento global (dado pelo provedor), os 16 seguintes identificam a sub-rede dentro da organização e os 64 últimos identificam a interface. 48 + 16 + 64 = 128 bits.",
+    "modulo": 0
   },
   {
     "nivel": 8,
@@ -1427,7 +1490,8 @@
       "Criptografar o tráfego entre o computador e o roteador da casa"
     ],
     "correta": 0,
-    "explicacao": "O DHCP (Dynamic Host Configuration Protocol) configura os hosts automaticamente, sem ninguém digitar endereços. Traduzir nomes é função do DNS, e trocar endereços privados por públicos é função do NAT."
+    "explicacao": "O DHCP (Dynamic Host Configuration Protocol) configura os hosts automaticamente, sem ninguém digitar endereços. Traduzir nomes é função do DNS, e trocar endereços privados por públicos é função do NAT.",
+    "modulo": 11
   },
   {
     "nivel": 8,
@@ -1444,7 +1508,8 @@
       "DHCPREQUEST",
       "DHCPACK"
     ],
-    "explicacao": "O cliente procura servidores (Discover), um servidor oferece um endereço (Offer), o cliente pede aquele endereço (Request) e o servidor confirma (Acknowledgment). A sequência é conhecida como DORA."
+    "explicacao": "O cliente procura servidores (Discover), um servidor oferece um endereço (Offer), o cliente pede aquele endereço (Request) e o servidor confirma (Acknowledgment). A sequência é conhecida como DORA.",
+    "modulo": 12
   },
   {
     "nivel": 8,
@@ -1462,7 +1527,8 @@
       "O switch exige broadcast em toda mensagem que passa por ele na rede"
     ],
     "correta": 0,
-    "explicacao": "Ao conectar, o cliente não tem endereço IP e não sabe qual é o servidor. Por isso grita para toda a rede local, e qualquer servidor DHCP que ouvir pode responder."
+    "explicacao": "Ao conectar, o cliente não tem endereço IP e não sabe qual é o servidor. Por isso grita para toda a rede local, e qualquer servidor DHCP que ouvir pode responder.",
+    "modulo": 12
   },
   {
     "nivel": 8,
@@ -1476,7 +1542,8 @@
     "resposta": 67,
     "unidade": "",
     "dica": "O cliente usa a porta 68; o servidor usa a anterior.",
-    "explicacao": "O servidor DHCP escuta na porta UDP 67 e o cliente usa a porta UDP 68."
+    "explicacao": "O servidor DHCP escuta na porta UDP 67 e o cliente usa a porta UDP 68.",
+    "modulo": 15
   },
   {
     "nivel": 8,
@@ -1494,7 +1561,8 @@
       "O endereço do servidor DHCP que o cliente precisa decorar para pedir"
     ],
     "correta": 0,
-    "explicacao": "O servidor empresta o endereço por um tempo determinado. Antes de expirar, o cliente pede a renovação. Se não renovar, o endereço volta para o conjunto de endereços disponíveis."
+    "explicacao": "O servidor empresta o endereço por um tempo determinado. Antes de expirar, o cliente pede a renovação. Se não renovar, o endereço volta para o conjunto de endereços disponíveis.",
+    "modulo": 11
   },
   {
     "nivel": 8,
@@ -1512,7 +1580,8 @@
       "Sem o NAT, os endereços MAC dos aparelhos seriam apagados da rede"
     ],
     "correta": 0,
-    "explicacao": "Endereços como 192.168.0.15 são privados e não são roteados na Internet. O NAT, normalmente no roteador, troca o endereço privado por um público na saída e faz o caminho inverso na volta. Isso também economiza endereços IPv4."
+    "explicacao": "Endereços como 192.168.0.15 são privados e não são roteados na Internet. O NAT, normalmente no roteador, troca o endereço privado por um público na saída e faz o caminho inverso na volta. Isso também economiza endereços IPv4.",
+    "modulo": 12
   },
   {
     "nivel": 8,
@@ -1537,7 +1606,8 @@
         "direita": "Vários hosts dividem um endereço público, distinguidos pela porta"
       }
     ],
-    "explicacao": "O NAT estático é um para um e fixo. O dinâmico sorteia um endereço público de um conjunto, quando houver. O PAT é o mais comum nas casas: um único endereço público atende muitos dispositivos, cada conexão com uma porta diferente."
+    "explicacao": "O NAT estático é um para um e fixo. O dinâmico sorteia um endereço público de um conjunto, quando houver. O PAT é o mais comum nas casas: um único endereço público atende muitos dispositivos, cada conexão com uma porta diferente.",
+    "modulo": 0
   },
   {
     "nivel": 8,
@@ -1574,7 +1644,8 @@
         "grupo": 1
       }
     ],
-    "explicacao": "O DHCP configura os hosts (endereço, gateway, concessão). O NAT traduz endereços na fronteira entre a rede privada e a Internet."
+    "explicacao": "O DHCP configura os hosts (endereço, gateway, concessão). O NAT traduz endereços na fronteira entre a rede privada e a Internet.",
+    "modulo": 12
   },
   {
     "nivel": 8,
@@ -1603,7 +1674,8 @@
         "direita": "Traduz nomes em endereços IP"
       }
     ],
-    "explicacao": "O DHCP entrega o conjunto completo para o host funcionar: o endereço, a máscara, o gateway padrão (para sair da rede) e o servidor DNS (para resolver nomes)."
+    "explicacao": "O DHCP entrega o conjunto completo para o host funcionar: o endereço, a máscara, o gateway padrão (para sair da rede) e o servidor DNS (para resolver nomes).",
+    "modulo": 11
   },
   {
     "nivel": 9,
@@ -1621,7 +1693,8 @@
       "Escolher o melhor caminho até uma rede em outro continente"
     ],
     "correta": 0,
-    "explicacao": "Para montar o quadro, o host precisa do MAC de destino, mas só conhece o IP. O ARP (Address Resolution Protocol) faz essa ligação dentro da rede local. Nomes são resolvidos pelo DNS e endereços são entregues pelo DHCP."
+    "explicacao": "Para montar o quadro, o host precisa do MAC de destino, mas só conhece o IP. O ARP (Address Resolution Protocol) faz essa ligação dentro da rede local. Nomes são resolvidos pelo DNS e endereços são entregues pelo DHCP.",
+    "modulo": 13
   },
   {
     "nivel": 9,
@@ -1638,7 +1711,8 @@
       "A guarda o MAC de B na tabela ARP",
       "A envia o quadro com o MAC de destino de B"
     ],
-    "explicacao": "A pergunta a todos \"quem tem este IP?\" (broadcast). Só B responde, direto para A (unicast). A guarda a resposta na tabela ARP, para não perguntar de novo, e então envia o quadro."
+    "explicacao": "A pergunta a todos \"quem tem este IP?\" (broadcast). Só B responde, direto para A (unicast). A guarda a resposta na tabela ARP, para não perguntar de novo, e então envia o quadro.",
+    "modulo": 13
   },
   {
     "nivel": 9,
@@ -1656,7 +1730,8 @@
       "O MAC do switch mais próximo do computador de origem"
     ],
     "correta": 0,
-    "explicacao": "O quadro só atravessa a rede local. O endereço IP de destino continua sendo o do host distante, mas o MAC de destino é o do gateway, que recebe o quadro e encaminha o pacote adiante. O PC descobre o MAC do gateway com o ARP."
+    "explicacao": "O quadro só atravessa a rede local. O endereço IP de destino continua sendo o do host distante, mas o MAC de destino é o do gateway, que recebe o quadro e encaminha o pacote adiante. O PC descobre o MAC do gateway com o ARP.",
+    "modulo": 13
   },
   {
     "nivel": 9,
@@ -1670,7 +1745,8 @@
     "resposta": 61,
     "unidade": "",
     "dica": "Cada roteador diminui o TTL em 1.",
-    "explicacao": "Cada roteador que encaminha o pacote reduz o TTL em 1: 64 − 3 = 61. Se chegar a 0, o pacote é descartado, o que impede que fique circulando para sempre."
+    "explicacao": "Cada roteador que encaminha o pacote reduz o TTL em 1: 64 − 3 = 61. Se chegar a 0, o pacote é descartado, o que impede que fique circulando para sempre.",
+    "modulo": 0
   },
   {
     "nivel": 9,
@@ -1699,7 +1775,8 @@
         "direita": "Usada quando nenhuma outra rota corresponde ao destino"
       }
     ],
-    "explicacao": "A rota conectada aparece sozinha quando a interface recebe um endereço. A estática é escrita à mão. A dinâmica vem de protocolos como OSPF. A rota padrão (0.0.0.0/0) é a \"saída\" para qualquer destino desconhecido."
+    "explicacao": "A rota conectada aparece sozinha quando a interface recebe um endereço. A estática é escrita à mão. A dinâmica vem de protocolos como OSPF. A rota padrão (0.0.0.0/0) é a \"saída\" para qualquer destino desconhecido.",
+    "modulo": 14
   },
   {
     "nivel": 9,
@@ -1717,7 +1794,8 @@
       "Nenhuma: com três rotas possíveis, o pacote é descartado"
     ],
     "correta": 0,
-    "explicacao": "As três rotas correspondem ao destino, mas o roteador escolhe a mais específica, a de prefixo mais longo. A /24 vence a /8, e a rota padrão só é usada quando nada mais corresponde."
+    "explicacao": "As três rotas correspondem ao destino, mas o roteador escolhe a mais específica, a de prefixo mais longo. A /24 vence a /8, e a rota padrão só é usada quando nada mais corresponde.",
+    "modulo": 0
   },
   {
     "nivel": 9,
@@ -1754,7 +1832,8 @@
         "grupo": 1
       }
     ],
-    "explicacao": "Destinos na mesma rede (192.168.1.0/24) são alcançados direto, com ARP do próprio destino. Qualquer destino fora da rede é enviado ao gateway padrão, que é o roteador."
+    "explicacao": "Destinos na mesma rede (192.168.1.0/24) são alcançados direto, com ARP do próprio destino. Qualquer destino fora da rede é enviado ao gateway padrão, que é o roteador.",
+    "modulo": 14
   },
   {
     "nivel": 9,
@@ -1772,7 +1851,8 @@
       "Nada: sem gateway a placa de rede é desativada"
     ],
     "correta": 0,
-    "explicacao": "Dentro da própria rede o ARP basta, e o gateway não é necessário. Para qualquer destino em outra rede, o host não sabe para onde enviar. Esse é um defeito clássico que o laboratório reproduz."
+    "explicacao": "Dentro da própria rede o ARP basta, e o gateway não é necessário. Para qualquer destino em outra rede, o host não sabe para onde enviar. Esse é um defeito clássico que o laboratório reproduz.",
+    "modulo": 12
   },
   {
     "nivel": 9,
@@ -1790,7 +1870,8 @@
       "O pacote é entregue ao switch mais próximo, que decide o destino final"
     ],
     "correta": 0,
-    "explicacao": "Sem rota, o roteador não sabe para onde enviar e descarta o pacote. Normalmente avisa a origem com uma mensagem ICMP de destino inalcançável. É o que aparece no ping quando falta rota."
+    "explicacao": "Sem rota, o roteador não sabe para onde enviar e descarta o pacote. Normalmente avisa a origem com uma mensagem ICMP de destino inalcançável. É o que aparece no ping quando falta rota.",
+    "modulo": 14
   },
   {
     "nivel": 10,
@@ -1808,7 +1889,8 @@
       "Traduz nomes de sites em endereços IP"
     ],
     "correta": 0,
-    "explicacao": "O TCP é orientado a conexão e confiável: numera os dados, o destino confirma o que recebeu e o que se perde é reenviado. Quem envia sem conexão e sem confirmação é o UDP."
+    "explicacao": "O TCP é orientado a conexão e confiável: numera os dados, o destino confirma o que recebeu e o que se perde é reenviado. Quem envia sem conexão e sem confirmação é o UDP.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1849,7 +1931,8 @@
         "grupo": 1
       }
     ],
-    "explicacao": "Web, e-mail e arquivos não podem perder pedaços, então usam TCP. Voz, vídeo ao vivo e consultas DNS preferem rapidez: uma perda pequena é tolerável e reenviar atrasaria tudo, então usam UDP."
+    "explicacao": "Web, e-mail e arquivos não podem perder pedaços, então usam TCP. Voz, vídeo ao vivo e consultas DNS preferem rapidez: uma perda pequena é tolerável e reenviar atrasaria tudo, então usam UDP.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1865,7 +1948,8 @@
       "SYN-ACK",
       "ACK"
     ],
-    "explicacao": "O cliente propõe a conexão (SYN), o servidor aceita e propõe a sua parte (SYN-ACK) e o cliente confirma (ACK). Só depois os dados são enviados."
+    "explicacao": "O cliente propõe a conexão (SYN), o servidor aceita e propõe a sua parte (SYN-ACK) e o cliente confirma (ACK). Só depois os dados são enviados.",
+    "modulo": 0
   },
   {
     "nivel": 10,
@@ -1894,7 +1978,8 @@
         "direita": "22"
       }
     ],
-    "explicacao": "HTTP usa a porta 80 e HTTPS a 443. O DNS usa a 53 (UDP e TCP) e o SSH, acesso remoto seguro, usa a 22."
+    "explicacao": "HTTP usa a porta 80 e HTTPS a 443. O DNS usa a 53 (UDP e TCP) e o SSH, acesso remoto seguro, usa a 22.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1908,7 +1993,8 @@
     "resposta": 65536,
     "unidade": "portas",
     "dica": "O número da porta tem 16 bits.",
-    "explicacao": "O número de porta tem 16 bits, então são 2^16 = 65.536 valores, de 0 a 65.535."
+    "explicacao": "O número de porta tem 16 bits, então são 2^16 = 65.536 valores, de 0 a 65.535.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1926,7 +2012,8 @@
       "Indicar a velocidade em que o dado será enviado"
     ],
     "correta": 0,
-    "explicacao": "O endereço IP leva o pacote até o dispositivo, e o número de porta leva os dados até o programa certo dentro dele (navegador, e-mail, jogo). Por isso vários programas usam a rede ao mesmo tempo sem se misturar."
+    "explicacao": "O endereço IP leva o pacote até o dispositivo, e o número de porta leva os dados até o programa certo dentro dele (navegador, e-mail, jogo). Por isso vários programas usam a rede ao mesmo tempo sem se misturar.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1944,7 +2031,8 @@
       "O pedaço de dados enviado por uma conexão TCP"
     ],
     "correta": 0,
-    "explicacao": "Um soquete é o par endereço IP + porta, como 192.168.1.10:443. Uma conexão fica definida pelos dois soquetes: o do cliente e o do servidor."
+    "explicacao": "Um soquete é o par endereço IP + porta, como 192.168.1.10:443. Uma conexão fica definida pelos dois soquetes: o do cliente e o do servidor.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1962,7 +2050,8 @@
       "Confia na camada de enlace, que nunca perde um quadro durante o envio"
     ],
     "correta": 0,
-    "explicacao": "Cada segmento tem um número de sequência. O destino confirma o que recebeu com ACK, e o que não é confirmado a tempo é retransmitido. Também reordena os segmentos se chegarem fora de ordem."
+    "explicacao": "Cada segmento tem um número de sequência. O destino confirma o que recebeu com ACK, e o que não é confirmado a tempo é retransmitido. Também reordena os segmentos se chegarem fora de ordem.",
+    "modulo": 15
   },
   {
     "nivel": 10,
@@ -1980,7 +2069,8 @@
       "Portas privadas, bloqueadas por padrão em qualquer rede"
     ],
     "correta": 0,
-    "explicacao": "As portas de 0 a 1023 são as conhecidas (HTTP 80, HTTPS 443, SSH 22…). De 1024 a 49151 ficam as registradas, e de 49152 a 65535 as dinâmicas, que os clientes usam como porta de origem temporária."
+    "explicacao": "As portas de 0 a 1023 são as conhecidas (HTTP 80, HTTPS 443, SSH 22…). De 1024 a 49151 ficam as registradas, e de 49152 a 65535 as dinâmicas, que os clientes usam como porta de origem temporária.",
+    "modulo": 15
   },
   {
     "nivel": 11,
@@ -1998,7 +2088,8 @@
       "Trocar endereços privados por públicos ao sair para a Internet"
     ],
     "correta": 0,
-    "explicacao": "As pessoas lembram nomes, e os computadores usam endereços IP. O DNS (Domain Name System) faz a tradução. DHCP entrega endereços, ARP descobre MACs e NAT troca endereços privados por públicos."
+    "explicacao": "As pessoas lembram nomes, e os computadores usam endereços IP. O DNS (Domain Name System) faz a tradução. DHCP entrega endereços, ARP descobre MACs e NAT troca endereços privados por públicos.",
+    "modulo": 16
   },
   {
     "nivel": 11,
@@ -2016,7 +2107,8 @@
       "O servidor DNS responde com o endereço IP",
       "O navegador se conecta ao endereço IP recebido"
     ],
-    "explicacao": "Primeiro o computador tenta o cache. Se não achar, pergunta ao servidor DNS. Com o endereço IP em mãos, o navegador abre a conexão com o servidor do site."
+    "explicacao": "Primeiro o computador tenta o cache. Se não achar, pergunta ao servidor DNS. Com o endereço IP em mãos, o navegador abre a conexão com o servidor do site.",
+    "modulo": 16
   },
   {
     "nivel": 11,
@@ -2045,7 +2137,8 @@
         "direita": "Servidor DNS responsável pelo domínio"
       }
     ],
-    "explicacao": "O registro A associa um nome a um endereço IPv4, e o AAAA a um IPv6. O MX diz para onde entregar os e-mails do domínio, e o NS indica quais servidores DNS respondem por ele."
+    "explicacao": "O registro A associa um nome a um endereço IPv4, e o AAAA a um IPv6. O MX diz para onde entregar os e-mails do domínio, e o NS indica quais servidores DNS respondem por ele.",
+    "modulo": 0
   },
   {
     "nivel": 11,
@@ -2091,7 +2184,8 @@
         "grupo": 2
       }
     ],
-    "explicacao": "HTTP e HTTPS levam páginas da web. SMTP envia e-mails, e POP3 e IMAP permitem receber e ler. FTP e SMB servem para transferir e compartilhar arquivos."
+    "explicacao": "HTTP e HTTPS levam páginas da web. SMTP envia e-mails, e POP3 e IMAP permitem receber e ler. FTP e SMB servem para transferir e compartilhar arquivos.",
+    "modulo": 16
   },
   {
     "nivel": 11,
@@ -2105,7 +2199,8 @@
     "resposta": 21,
     "unidade": "",
     "dica": "O FTP usa duas portas vizinhas: uma para dados e outra para comandos.",
-    "explicacao": "O FTP usa a porta 21 para controle (comandos) e a 20 para transferir dados no modo ativo."
+    "explicacao": "O FTP usa a porta 21 para controle (comandos) e a 20 para transferir dados no modo ativo.",
+    "modulo": 16
   },
   {
     "nivel": 11,
@@ -2123,7 +2218,8 @@
       "O HTTPS serve só para e-mail, e o HTTP serve só para páginas da web"
     ],
     "correta": 0,
-    "explicacao": "O HTTPS é o HTTP protegido por criptografia (TLS), o que impede que alguém no caminho leia ou altere os dados. É o que o cadeado do navegador indica."
+    "explicacao": "O HTTPS é o HTTP protegido por criptografia (TLS), o que impede que alguém no caminho leia ou altere os dados. É o que o cadeado do navegador indica.",
+    "modulo": 16
   },
   {
     "nivel": 11,
@@ -2141,7 +2237,8 @@
       "Guardar os endereços MAC de todos os aparelhos que já usaram a rede local"
     ],
     "correta": 0,
-    "explicacao": "O cache guarda por um tempo as respostas que já recebeu. Se o mesmo nome for pedido de novo, a resposta sai da memória, sem consultar o servidor DNS outra vez."
+    "explicacao": "O cache guarda por um tempo as respostas que já recebeu. Se o mesmo nome for pedido de novo, a resposta sai da memória, sem consultar o servidor DNS outra vez.",
+    "modulo": 0
   },
   {
     "nivel": 11,
@@ -2159,7 +2256,8 @@
       "Na máscara de sub-rede, que estaria impedindo qualquer tráfego de saída"
     ],
     "correta": 0,
-    "explicacao": "Se o ping para um endereço IP da Internet funciona, o cabo, o IP, a máscara e o gateway estão certos. O que falha é a tradução de nome em endereço, ou seja, o DNS. É um bom exemplo de diagnóstico por camadas."
+    "explicacao": "Se o ping para um endereço IP da Internet funciona, o cabo, o IP, a máscara e o gateway estão certos. O que falha é a tradução de nome em endereço, ou seja, o DNS. É um bom exemplo de diagnóstico por camadas.",
+    "modulo": 17
   },
   {
     "nivel": 11,
@@ -2177,7 +2275,8 @@
       "O SSH usa o protocolo UDP, e o Telnet depende de uma conexão TCP"
     ],
     "correta": 0,
-    "explicacao": "No Telnet, usuário e senha trafegam sem criptografia e qualquer um no caminho pode lê-los. O SSH protege a sessão inteira com criptografia, e por isso é o padrão para acesso remoto."
+    "explicacao": "No Telnet, usuário e senha trafegam sem criptografia e qualquer um no caminho pode lê-los. O SSH protege a sessão inteira com criptografia, e por isso é o padrão para acesso remoto.",
+    "modulo": 16
   },
   {
     "nivel": 12,
@@ -2196,7 +2295,8 @@
       "Verificar o funcionamento completo",
       "Documentar o que foi feito"
     ],
-    "explicacao": "Primeiro se entende o problema, depois se levanta uma teoria e se testa. Confirmada a causa, planeja-se e aplica-se a correção, verifica-se se tudo voltou a funcionar e, por fim, documenta-se para ajudar nos próximos casos."
+    "explicacao": "Primeiro se entende o problema, depois se levanta uma teoria e se testa. Confirmada a causa, planeja-se e aplica-se a correção, verifica-se se tudo voltou a funcionar e, por fim, documenta-se para ajudar nos próximos casos.",
+    "modulo": 17
   },
   {
     "nivel": 12,
@@ -2225,7 +2325,8 @@
         "direita": "Consulta um servidor DNS"
       }
     ],
-    "explicacao": "O ping verifica a conectividade. O ipconfig (ip addr no Linux) mostra a configuração IP. O tracert (traceroute no Linux) lista os saltos até o destino, e o nslookup testa a resolução de nomes."
+    "explicacao": "O ping verifica a conectividade. O ipconfig (ip addr no Linux) mostra a configuração IP. O tracert (traceroute no Linux) lista os saltos até o destino, e o nslookup testa a resolução de nomes.",
+    "modulo": 17
   },
   {
     "nivel": 12,
@@ -2260,7 +2361,8 @@
         "grupo": 3
       }
     ],
-    "explicacao": "Cabo e LED são da camada física. Uma porta na VLAN errada é um problema de comutação, na camada de enlace. Gateway errado é endereçamento, na camada de rede. Falha só no nome indica o DNS, um serviço da camada de aplicação."
+    "explicacao": "Cabo e LED são da camada física. Uma porta na VLAN errada é um problema de comutação, na camada de enlace. Gateway errado é endereçamento, na camada de rede. Falha só no nome indica o DNS, um serviço da camada de aplicação.",
+    "modulo": 0
   },
   {
     "nivel": 12,
@@ -2274,7 +2376,8 @@
     "resposta": 1,
     "unidade": "",
     "dica": "É a camada dos cabos, conectores e sinais.",
-    "explicacao": "LED apagado costuma indicar cabo solto, defeituoso ou porta desligada. Isso é da camada 1, a física. Por isso se começa por ela antes de mexer em endereços e configurações."
+    "explicacao": "LED apagado costuma indicar cabo solto, defeituoso ou porta desligada. Isso é da camada 1, a física. Por isso se começa por ela antes de mexer em endereços e configurações.",
+    "modulo": 0
   },
   {
     "nivel": 12,
@@ -2292,7 +2395,8 @@
       "Substituição, trocando peças até o problema sumir"
     ],
     "correta": 0,
-    "explicacao": "Na abordagem de baixo para cima (bottom-up) se parte da camada física. A de cima para baixo (top-down) começa pela aplicação. A divisão e conquista começa por uma camada intermediária, e a substituição troca componentes suspeitos por outros que funcionam."
+    "explicacao": "Na abordagem de baixo para cima (bottom-up) se parte da camada física. A de cima para baixo (top-down) começa pela aplicação. A divisão e conquista começa por uma camada intermediária, e a substituição troca componentes suspeitos por outros que funcionam.",
+    "modulo": 0
   },
   {
     "nivel": 12,
@@ -2310,7 +2414,8 @@
       "O servidor DNS está resolvendo os nomes de forma correta"
     ],
     "correta": 0,
-    "explicacao": "O endereço 127.0.0.1 é o loopback: o pacote nem sai da placa de rede. Funcionar comprova apenas o TCP/IP do computador. Cabo, switch, gateway e DNS precisam ser testados à parte."
+    "explicacao": "O endereço 127.0.0.1 é o loopback: o pacote nem sai da placa de rede. Funcionar comprova apenas o TCP/IP do computador. Cabo, switch, gateway e DNS precisam ser testados à parte.",
+    "modulo": 9
   },
   {
     "nivel": 12,
@@ -2328,7 +2433,8 @@
       "Na placa de rede, que não consegue enviar nenhum pacote para fora"
     ],
     "correta": 0,
-    "explicacao": "Se o gateway responde, o cabo, a placa, o IP e a máscara do computador estão bons. O pacote morre depois dele: pode faltar a rota padrão no roteador, o NAT pode estar desligado ou o link do provedor pode ter caído. Como o teste usou o IP, o DNS não entra."
+    "explicacao": "Se o gateway responde, o cabo, a placa, o IP e a máscara do computador estão bons. O pacote morre depois dele: pode faltar a rota padrão no roteador, o NAT pode estar desligado ou o link do provedor pode ter caído. Como o teste usou o IP, o DNS não entra.",
+    "modulo": 17
   },
   {
     "nivel": 12,
@@ -2346,7 +2452,8 @@
       "Reconfigurar o endereço IP de todos os computadores do setor"
     ],
     "correta": 0,
-    "explicacao": "O primeiro passo é identificar o problema: quantos usuários, que serviços, desde quando e o que mudou. Ações apressadas, como reiniciar ou trocar tudo, escondem a causa e podem piorar a situação."
+    "explicacao": "O primeiro passo é identificar o problema: quantos usuários, que serviços, desde quando e o que mudou. Ações apressadas, como reiniciar ou trocar tudo, escondem a causa e podem piorar a situação.",
+    "modulo": 17
   },
   {
     "nivel": 12,
@@ -2364,7 +2471,8 @@
       "Os dois passam a usar o mesmo endereço MAC para resolver o conflito"
     ],
     "correta": 0,
-    "explicacao": "Com o mesmo IP, as respostas ARP se alternam e o tráfego vai ora para um, ora para outro. O resultado é conexão instável, e o sistema costuma avisar do conflito. A solução é dar um endereço diferente a um deles. Há uma missão assim no laboratório."
+    "explicacao": "Com o mesmo IP, as respostas ARP se alternam e o tráfego vai ora para um, ora para outro. O resultado é conexão instável, e o sistema costuma avisar do conflito. A solução é dar um endereço diferente a um deles. Há uma missão assim no laboratório.",
+    "modulo": 17
   },
   {
     "nivel": 13,
@@ -2406,7 +2514,8 @@
         "grupo": 2
       }
     ],
-    "explicacao": "Malware é software malicioso (ransomware, cavalo de Troia, vírus). Engenharia social engana a pessoa, e não o sistema (phishing, golpes por telefone). Ataques à rede, como o DDoS e o man-in-the-middle, miram a comunicação e a disponibilidade."
+    "explicacao": "Malware é software malicioso (ransomware, cavalo de Troia, vírus). Engenharia social engana a pessoa, e não o sistema (phishing, golpes por telefone). Ataques à rede, como o DDoS e o man-in-the-middle, miram a comunicação e a disponibilidade.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2424,7 +2533,8 @@
       "Um defeito do cabo de rede que causa perda de pacotes na conexão"
     ],
     "correta": 0,
-    "explicacao": "No phishing o golpista se passa por banco, loja ou empresa conhecida, normalmente por e-mail, mensagem ou site falso, para convencer a vítima a entregar senhas ou dados. Desconfie de urgência, de links estranhos e de erros no endereço do remetente."
+    "explicacao": "No phishing o golpista se passa por banco, loja ou empresa conhecida, normalmente por e-mail, mensagem ou site falso, para convencer a vítima a entregar senhas ou dados. Desconfie de urgência, de links estranhos e de erros no endereço do remetente.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2442,7 +2552,8 @@
       "Guardar uma cópia dos arquivos do usuário em outro lugar seguro"
     ],
     "correta": 0,
-    "explicacao": "O firewall fica entre redes (por exemplo, a rede local e a Internet) e aplica regras: o que corresponde a uma regra de permissão passa, o resto é bloqueado. Traduzir nomes é o DNS, e entregar endereços é o DHCP."
+    "explicacao": "O firewall fica entre redes (por exemplo, a rede local e a Internet) e aplica regras: o que corresponde a uma regra de permissão passa, o resto é bloqueado. Traduzir nomes é o DNS, e entregar endereços é o DHCP.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2467,7 +2578,8 @@
         "direita": "O serviço está acessível quando for preciso"
       }
     ],
-    "explicacao": "São os três pilares da segurança da informação. Criptografia protege a confidencialidade, somas de verificação ajudam a integridade, e redundância e backups sustentam a disponibilidade."
+    "explicacao": "São os três pilares da segurança da informação. Criptografia protege a confidencialidade, somas de verificação ajudam a integridade, e redundância e backups sustentam a disponibilidade.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2485,7 +2597,8 @@
       "Uma senha qualquer, guardada em um bilhete colado no monitor"
     ],
     "correta": 0,
-    "explicacao": "Senhas longas e diferentes em cada conta limitam o estrago de um vazamento, e a verificação em duas etapas exige um segundo fator além da senha. Senhas curtas, repetidas ou com dados pessoais são fáceis de adivinhar."
+    "explicacao": "Senhas longas e diferentes em cada conta limitam o estrago de um vazamento, e a verificação em duas etapas exige um segundo fator além da senha. Senhas curtas, repetidas ou com dados pessoais são fáceis de adivinhar.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2503,7 +2616,8 @@
       "Restaurar o sistema a partir de uma cópia confiável",
       "Registrar o que aconteceu"
     ],
-    "explicacao": "Primeiro se contém o problema, para que não se espalhe. Depois se identifica e remove a ameaça, restaura-se o sistema a partir de uma cópia confiável e, por fim, registra-se o incidente para evitar que se repita."
+    "explicacao": "Primeiro se contém o problema, para que não se espalhe. Depois se identifica e remove a ameaça, restaura-se o sistema a partir de uma cópia confiável e, por fim, registra-se o incidente para evitar que se repita.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2517,7 +2631,8 @@
     "resposta": 3,
     "unidade": "cópias",
     "dica": "O primeiro número da regra 3-2-1.",
-    "explicacao": "A regra 3-2-1 diz: 3 cópias dos dados (a original e duas de backup), em 2 tipos de mídia diferentes, com 1 cópia guardada fora do local."
+    "explicacao": "A regra 3-2-1 diz: 3 cópias dos dados (a original e duas de backup), em 2 tipos de mídia diferentes, com 1 cópia guardada fora do local.",
+    "modulo": 0
   },
   {
     "nivel": 13,
@@ -2535,7 +2650,8 @@
       "Remove vírus que já estejam instalados no computador"
     ],
     "correta": 0,
-    "explicacao": "A VPN (rede privada virtual) protege os dados em trânsito com criptografia, o que é útil em redes públicas ou para acessar a rede da empresa. Ela não aumenta a velocidade nem substitui um antivírus."
+    "explicacao": "A VPN (rede privada virtual) protege os dados em trânsito com criptografia, o que é útil em redes públicas ou para acessar a rede da empresa. Ela não aumenta a velocidade nem substitui um antivírus.",
+    "modulo": 3
   },
   {
     "nivel": 13,
@@ -2553,6 +2669,7 @@
       "As atualizações mudam o endereço IP do equipamento para um mais seguro"
     ],
     "correta": 0,
-    "explicacao": "Quando uma falha é descoberta, o fabricante publica a correção, e os atacantes passam a procurar equipamentos que ainda não a aplicaram. Atualizar fecha essa porta."
+    "explicacao": "Quando uma falha é descoberta, o fabricante publica a correção, e os atacantes passam a procurar equipamentos que ainda não a aplicaram. Atualizar fecha essa porta.",
+    "modulo": 0
   }
 ]

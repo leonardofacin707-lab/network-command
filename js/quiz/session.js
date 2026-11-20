@@ -1,6 +1,7 @@
 // Uma partida de um nível: desenha cada desafio, repassa as respostas ao tipo certo e acumula os pontos.
 import { $, esc, reduzMovimento } from '../core/ui.js';
 import { pararMapa } from './map.js';
+import { rotuloModulo } from './treino.js';
 import pergunta from './types/pergunta.js';
 import ligar from './types/ligar.js';
 import classificar from './types/classificar.js';
@@ -39,6 +40,7 @@ export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
         </div>
         <article class="painel card">
           <p class="tipo">${TIPOS[q.tipo].rotulo} · ${run.i + 1} de ${total}</p>
+          ${Number.isInteger(q.modulo) && ctx.catalogo?.modulos?.length ? `<p class="modulo-curso">${esc(rotuloModulo(ctx.catalogo.modulos, q.modulo))}</p>` : ''}
           <h2>${esc(q.enunciado)}</h2>
           <div id="area"></div>
           <div id="feedback" aria-live="polite"></div>

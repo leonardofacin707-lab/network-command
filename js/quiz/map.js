@@ -34,6 +34,7 @@ export function desenharMapa({ app, catalogo, store }) {
       </div>
     </section>`;
   pararMapa();
+  posicionarMapa(niveis, status); // já na primeira pintura (o observador só reage depois, de forma assíncrona)
   observador = new ResizeObserver(() => posicionarMapa(niveis, status));
   observador.observe($('#trilha'));
 }

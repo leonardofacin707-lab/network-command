@@ -4,6 +4,7 @@ import { statusDoNivel } from '../quiz/unlock.js';
 import { listaRevisao, estatisticas, foiPerfeita } from '../quiz/historico.js';
 import { dominioPorHabilidade, desempenhoPorAssunto, pontosFracos, resumoPratica } from './dominio.js';
 import { CONQUISTAS } from './conquistas-regras.js';
+import { diaLocal, sequenciaAtual } from '../quiz/diario.js';
 
 export default {
   id: 'dashboard',
@@ -68,7 +69,8 @@ export default {
           ${fracos.length ? `<ul>${fracos.map(a => `<li>${esc(a.assunto)}: ${Math.round(a.taxa * 100)}% de acertos de primeira (${a.tentativas} ${a.tentativas === 1 ? 'tentativa' : 'tentativas'})</li>`).join('')}</ul>`
             : `<p class="vazio-msg">${historico.length ? 'Nenhum assunto abaixo de 100% de acertos de primeira.' : 'Responda alguns desafios e os assuntos mais difíceis aparecem aqui.'}</p>`}
           <div class="acoes">${revisao.length ? `<a class="btn-sec" data-teste="revisao" href="#/conhecimento/revisao">Revisar ${revisao.length} ${revisao.length === 1 ? 'desafio' : 'desafios'}</a>` : ''}
-            <a class="btn-sec" href="#/conhecimento/assuntos">Desempenho por assunto</a></div>
+            <a class="btn-sec" href="#/conhecimento/assuntos">Desempenho por assunto</a>
+            <a class="btn-sec" data-teste="diario" href="#/conhecimento/treino">${estado.diario?.ultimoDia === diaLocal() ? 'Desafio do dia feito ✓' : 'Desafio do dia'}${sequenciaAtual(estado.diario, diaLocal()) ? ` · sequência de ${sequenciaAtual(estado.diario, diaLocal())}` : ''}</a></div>
         </article>
 
         <article class="painel">

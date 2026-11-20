@@ -2,7 +2,8 @@
 import { esc, dataHora } from '../core/ui.js';
 import { listaRevisao, ultimaPorPergunta, estatisticas, foiPerfeita } from './historico.js';
 import { desempenhoPorAssunto } from '../hub/dominio.js';
-import { desafiosLiberados, TAMANHO_TREINO } from './treino.js';
+import { desafiosLiberados, TAMANHO_TREINO, resumoPorModulo } from './treino.js';
+import { diaLocal, sequenciaAtual, TAMANHO_DIARIO } from './diario.js';
 
 const resumo = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
 const rotuloResultado = r => (foiPerfeita(r) ? '<span class="ok-txt">✓ De primeira</span>'
@@ -70,11 +71,28 @@ export function telaAssuntos(app, { catalogo, store }) {
 }
 
 export function telaTreino(app, { catalogo, store }) {
-  const pool = desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor);
+  const { melhor, historico } = store.obter().quiz;
+  const pool = desafiosLiberados(catalogo.niveis, melhor);
   const quantos = Math.min(TAMANHO_TREINO, pool.length);
+  const resumo = resumoPorModulo(catalogo.niveis, melhor, historico, catalogo.modulos);
+  const diario = store.obter().diario, hoje = diaLocal(), feito = diario?.ultimoDia === hoje, seq = sequenciaAtual(diario, hoje);
   app.innerHTML = `<section class="band"><div class="wrap painel">
-    <h2>Treino misto</h2>
-    <p>Sorteia ${quantos} desafios entre os ${pool.length} dos níveis que você já liberou, de assuntos variados. Não vale pontos nem estrelas, mas as respostas entram no histórico: o que você errar vai para a revisão de erros.</p>
-    <div class="acoes"><button class="btn" data-acao="treinar" ${quantos ? '' : 'disabled'}>Começar treino (${quantos})</button></div>
+    <h2>Treino</h2>
+    <div class="diario" id="diario">
+      <h3>Desafio do dia</h3>
+      <p>${TAMANHO_DIARIO} desafios rápidos, os mesmos o dia todo, sorteados entre os níveis liberados. Bom para uma pausa curta.</p>
+      <p><b>${feito ? 'Feito hoje ✓' : 'Ainda não feito hoje'}</b> · sequência: ${seq} ${seq === 1 ? 'dia' : 'dias'}${diario?.melhor ? ` (recorde: ${diario.melhor})` : ''}</p>
+      <div class="acoes"><button class="btn" data-acao="diario" ${pool.length ? '' : 'disabled'}>${feito ? 'Refazer o de hoje' : 'Fazer o desafio do dia'}</button></div>
+    </div>
+    <h3>Treino livre</h3>
+    <p>Sorteia até ${TAMANHO_TREINO} desafios dos níveis que você já liberou. Não vale pontos nem estrelas, mas as respostas entram no histórico: o que você errar vai para a revisão de erros.</p>
+    <div class="acoes"><button class="btn" data-acao="treinar" ${quantos ? '' : 'disabled'}>Treino misto (${quantos})</button></div>
+    <h3>Por módulo do curso</h3>
+    <p>Treine só um módulo do curso Conceitos Básicos de Redes, enquanto estuda ele no NetAcad. "Dominados" são os desafios cuja última tentativa foi certa de primeira.</p>
+    <table class="tabela modulos"><thead><tr><th scope="col">Módulo</th><th scope="col">Dominados</th><th scope="col"><span class="sr-only">Ação</span></th></tr></thead><tbody>
+      ${resumo.map(m => `<tr data-modulo="${m.id}"><th scope="row">${m.id ? `<small>Módulo ${m.id}</small><br>` : ''}${esc(m.nome)}</th>
+        <td>${m.dominados} de ${m.total}${m.liberados < m.total ? `<br><small class="motivo">${m.total - m.liberados} em níveis bloqueados</small>` : ''}</td>
+        <td><button class="btn-sec" data-acao="treinar-modulo" data-modulo="${m.id}" ${m.liberados ? '' : 'disabled'} aria-label="Treinar ${m.id ? 'o módulo ' + m.id : 'o bônus'} (${Math.min(TAMANHO_TREINO, m.liberados)} desafios)">Treinar (${Math.min(TAMANHO_TREINO, m.liberados)})</button></td></tr>`).join('')}
+    </tbody></table>
   </div></section>`;
 }

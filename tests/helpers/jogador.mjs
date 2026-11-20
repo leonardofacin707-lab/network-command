@@ -100,3 +100,27 @@ export const nosSobrepostos = pagina => pagina.evaluate(() => {
   }
   return c;
 });
+
+/** Resolve um desafio do formato atual (data/questions.json) pela interface. */
+export async function resolverAtual(pagina, q) {
+  switch (q.tipo) {
+    case 'pergunta': await pagina.locator('.op').filter({ hasText: exato(q.alternativas[q.correta]) }).click(); break;
+    case 'ligar':
+      for (const p of q.pares) {
+        await pagina.locator('[data-esq]').filter({ hasText: exato(p.esquerda) }).click();
+        await pagina.locator('[data-dir]').filter({ hasText: exato(p.direita) }).click();
+      }
+      break;
+    case 'classificar':
+      for (const i of q.itens) {
+        await pagina.locator('#pool .chip').filter({ hasText: exato(i.texto) }).click();
+        await pagina.locator(`.grupo-cab[data-grupo="${i.grupo}"]`).first().click();
+      }
+      break;
+    case 'ordenar': for (const t of q.itens) await pagina.locator('[data-ord]').filter({ hasText: exato(t) }).click(); break;
+    case 'numero':
+      await pagina.fill('#resp-num', String(q.resposta));
+      await pagina.locator('#form-num button[type=submit]').click(); break;
+    default: throw new Error('tipo ' + q.tipo);
+  }
+}

@@ -2,10 +2,11 @@ import { esc } from '../core/ui.js';
 import { xpDoEstado, cargoDe } from '../core/progression.js';
 import { maximoDoNivel, estrelasPorPontos, registrarResultado } from './scoring.js';
 import { statusDoNivel } from './unlock.js';
+import { registrarDia } from './diario.js';
 
 /** Grava o resultado da partida no estado e mostra a tela de resultado. */
 export function telaResultado({ app, catalogo, store }, run) {
-  if (run.nivel.revisao) return telaResultadoRevisao(app, run);
+  if (run.nivel.revisao) return telaResultadoRevisao(app, run, store);
   const n = run.nivel;
   const maximo = maximoDoNivel(n.desafios.length);
   const estrelas = estrelasPorPontos(run.pts, maximo);
@@ -43,18 +44,20 @@ export function telaResultado({ app, catalogo, store }, run) {
 }
 
 /** Revisão de erros: não vale pontos nem estrelas, só atualiza o histórico (feito a cada resposta). */
-function telaResultadoRevisao(app, run) {
+function telaResultadoRevisao(app, run, store) {
   const total = run.nivel.desafios.length;
   const perfeitas = run.perfeitas;
+  const diario = run.nivel.diario ? (store.alterar(e => ({ ...e, diario: registrarDia(e.diario, run.nivel.diario) })), store.obter().diario) : null;
   app.innerHTML = `<section class="band"><div class="jogo">
     <article class="painel resultado">
       <span class="mods">${esc(run.nivel.nome)}</span>
       <h2>${perfeitas === total ? (run.nivel.treino ? 'Treino perfeito!' : 'Tudo certo agora!') : (run.nivel.treino ? 'Treino concluído' : 'Revisão concluída')}</h2>
       <p>Você acertou de primeira ${perfeitas} de ${total} desafios ${run.nivel.treino ? 'do treino' : 'revisados'}.</p>
+      ${diario ? `<p class="cargo-novo">Sequência: ${diario.sequencia} ${diario.sequencia === 1 ? 'dia' : 'dias'} seguidos (recorde: ${diario.melhor}). Volte amanhã para um novo desafio.</p>` : ''}
       <p>${run.nivel.treino ? 'Os desafios com erro foram para a revisão de erros.' : perfeitas === total ? 'Nenhum deles volta para a lista de revisão.' : 'Os que ainda tiveram erro continuam na lista de revisão.'}</p>
       <div class="acoes">
-        ${run.nivel.treino ? '<button class="btn" data-acao="treinar">Novo treino</button>' : ''}
-        <button class="${run.nivel.treino ? 'btn-sec' : 'btn'}" data-acao="mapa">Voltar ao mapa</button>
+        ${run.nivel.diario ? '' : run.nivel.treino ? (run.nivel.modulo === null || run.nivel.modulo === undefined ? '<button class="btn" data-acao="treinar">Novo treino</button>' : `<button class="btn" data-acao="treinar-modulo" data-modulo="${run.nivel.modulo}">Treinar este módulo de novo</button>`) : ''}
+        <button class="${run.nivel.treino && !run.nivel.diario ? 'btn-sec' : 'btn'}" data-acao="mapa">Voltar ao mapa</button>
       </div>
     </article>
   </div></section>`;

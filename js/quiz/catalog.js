@@ -5,20 +5,20 @@ export async function carregarCatalogo(base = new URL('../../data/', import.meta
     if (!r.ok) throw new Error(`Falha ao carregar ${nome} (HTTP ${r.status})`);
     return r.json();
   };
-  const [perguntas, niveis, categorias, habilidades] = await Promise.all([
-    ler('questions.json'), ler('levels.json'), ler('categories.json'), ler('skills.json')
+  const [perguntas, niveis, categorias, habilidades, modulos] = await Promise.all([
+    ler('questions.json'), ler('levels.json'), ler('categories.json'), ler('skills.json'), ler('modulos.json')
   ]);
-  return montarCatalogo({ perguntas, niveis, categorias, habilidades });
+  return montarCatalogo({ perguntas, niveis, categorias, habilidades, modulos });
 }
 
 /** Monta o catálogo a partir dos dados já lidos (também usado nos testes). */
-export function montarCatalogo({ perguntas, niveis, categorias, habilidades }) {
+export function montarCatalogo({ perguntas, niveis, categorias, habilidades, modulos = [] }) {
   const porId = new Map(perguntas.map(p => [p.id, p]));
   const niveisMontados = niveis.map(n => n.desafios
     ? { ...n, desafios: n.desafios.map(id => porId.get(id)) }
     : { ...n });
   return {
-    perguntas, categorias, habilidades,
+    perguntas, categorias, habilidades, modulos,
     niveis: niveisMontados,
     jogaveis: niveisMontados.filter(n => n.desafios),
     /** pontos máximos por id de nível, usado para validar o estado salvo */

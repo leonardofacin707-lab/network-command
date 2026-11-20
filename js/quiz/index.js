@@ -3,12 +3,13 @@ import { desenharMapa, pararMapa } from './map.js';
 import { criarSessao } from './session.js';
 import { telaResultado } from './resultado.js';
 import { telaRevisao, telaHistorico, telaAssuntos, telaTreino } from './abas.js';
-import { desafiosLiberados, sortearTreino } from './treino.js';
+import { desafiosLiberados, sortearTreino, rotuloModulo } from './treino.js';
+import { desafiosDoDia, diaLocal } from './diario.js';
 import { registrarResposta, listaRevisao } from './historico.js';
 import { statusDoNivel } from './unlock.js';
 import { limparHash } from '../app/router.js';
 
-const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino misto'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
+const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
 
 export default {
   id: 'conhecimento',
@@ -36,9 +37,10 @@ export default {
       if (desafios.length) jogar({ id: 'revisao', nome: 'Revisão de erros', revisao: true, desafios });
     };
 
-    const treinar = () => {
-      const desafios = sortearTreino(desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor));
-      if (desafios.length) jogar({ id: 'treino', nome: 'Treino misto', revisao: true, treino: true, desafios });
+    const treinar = (modulo = null) => {
+      const desafios = sortearTreino(desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor, modulo));
+      const nome = modulo === null ? 'Treino misto' : `Treino · ${rotuloModulo(catalogo.modulos, modulo)}`;
+      if (desafios.length) jogar({ id: 'treino', nome, revisao: true, treino: true, modulo, desafios });
     };
 
     const cliques = e => {
@@ -53,6 +55,13 @@ export default {
       if (acao === 'jogar') return jogarId(Number(alvo.dataset.nivel));
       if (acao === 'revisar') return revisar();
       if (acao === 'treinar') return treinar();
+      if (acao === 'diario') {
+        const dia = diaLocal();
+        const desafios = desafiosDoDia(desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor), dia);
+        if (desafios.length) jogar({ id: 'diario', nome: 'Desafio do dia', revisao: true, treino: true, diario: dia, modulo: null, desafios });
+        return;
+      }
+      if (acao === 'treinar-modulo') return treinar(Number(alvo.dataset.modulo));
       if (acao === 'proximo') return sessao.proximo();
       sessao.clique(alvo);
     };
