@@ -7,6 +7,7 @@ import { criarSimulacao, NOMES_PORTAS, caminhoFisico } from '../sim/motor.js';
 import { reduzMovimento } from '../core/ui.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
+import { executarIos, sessaoInicial, prompt as promptIos } from '../sim/cli-ios.js';
 import { diagnosticar } from '../sim/diagnostico.js';
 import { exemploLan, exemploDuasRedes } from './exemplos.js';
 
@@ -206,7 +207,8 @@ export function criarEditor(raiz, opcoes) {
   function renderTerm() {
     const alvo = $('#lab-term');
     const d = sel ? dispositivo(topo, sel) : null;
-    if (!d || d.tipo !== 'pc') { alvo.innerHTML = ''; return; }
+    if (!d) { alvo.innerHTML = ''; return; }
+    if (d.tipo !== 'pc') { renderConsole(alvo, d); return; }
     if (!saidas.has(d.id)) saidas.set(d.id, ['Terminal simulado. Digite help para ver os comandos.']);
     alvo.innerHTML = `<div class="painel terminal">
       <h3>Terminal de ${esc(d.nome)}</h3>
@@ -216,6 +218,37 @@ export function criarEditor(raiz, opcoes) {
       <label class="captura-liga"><input type="checkbox" id="captura-ligada"${capturaLigada ? ' checked' : ''}> Capturar pacotes (estilo Wireshark) a cada comando</label>
       <div id="captura" aria-live="polite">${tabelaCaptura()}</div>
     </div>`;
+  }
+
+  // Console estilo Cisco IOS de roteadores e switches: cada dispositivo guarda o próprio modo (>, #, (config)#...).
+  const sessoesIos = new Map();
+  function renderConsole(alvo, d) {
+    if (!saidas.has(d.id)) saidas.set(d.id, [`Console de ${d.nome} (estilo Cisco IOS, simplificado). Digite ? para ver os comandos.`, '']);
+    const sessao = sessoesIos.get(d.id) ?? sessaoInicial();
+    alvo.innerHTML = `<div class="painel terminal">
+      <h3>Console de ${esc(d.nome)}</h3>
+      <div class="term-saida" id="term-saida" role="log" aria-live="polite" tabindex="0" aria-label="Saída do console"><pre>${esc(saidas.get(d.id).join('\n'))}</pre></div>
+      <form id="form-term" class="term-linha" autocomplete="off"><label for="term-entrada" class="term-prompt" id="term-prompt">${esc(promptIos(d, sessao))}</label>
+        <input id="term-entrada" class="campo term-entrada" spellcheck="false" autocapitalize="off" aria-label="Comando do console"></form>
+      <p class="motivo">Aceita abreviações (en, conf t, int g0/0, sh ip int br). O que você configura aqui aparece no painel e vale para a simulação.</p>
+    </div>`;
+  }
+
+  function rodarIos(d, linha) {
+    const sessao = sessoesIos.get(d.id) ?? sessaoInicial();
+    const antes = promptIos(d, sessao);
+    const r = executarIos(topo, sim, d.id, linha, sessao);
+    sessoesIos.set(d.id, r.sessao);
+    if (linha.trim()) historicos.set(d.id, [...(historicos.get(d.id) ?? []), linha].slice(-50));
+    posHist.set(d.id, null);
+    if (r.topologia) aplicar({ topologia: r.topologia });
+    const atual = dispositivo(topo, d.id);
+    saidas.set(d.id, [...(saidas.get(d.id) ?? []), `${antes}${linha}`, ...r.linhas].slice(-400));
+    $('#term-saida pre').textContent = saidas.get(d.id).join('\n');
+    $('#term-prompt').textContent = promptIos(atual, r.sessao);
+    if (r.topologia) $('#lab-term h3').textContent = `Console de ${atual.nome}`;
+    const caixa = $('#term-saida'); caixa.scrollTop = caixa.scrollHeight;
+    opcoes.aoSimular?.({ dispositivo: d.id, comando: linha, linhas: r.linhas });
   }
 
   function tabelaCaptura() {
@@ -233,6 +266,7 @@ export function criarEditor(raiz, opcoes) {
 
   function rodarComando(linha) {
     const d = dispositivo(topo, sel);
+    if (d.tipo !== 'pc') { rodarIos(d, linha); return; }
     const saida = saidas.get(d.id) ?? [];
     const { resultado: r, pacotes } = sim.capturar(() => executar(sim, d.id, linha));
     if (linha.trim() && !r.limpar) ultimaCaptura = { comando: linha.trim(), origem: d.nome, pacotes };

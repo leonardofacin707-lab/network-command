@@ -154,9 +154,10 @@ test('terminal: histórico com setas, cls e comando desconhecido', async () => {
   assert.equal(await pagina.inputValue('#term-entrada'), '');
   await comando('cls');
   assert.equal((await saida()).trim(), '');
-  // switch não tem terminal
+  // o switch tem console estilo Cisco IOS (não o Prompt do Windows)
   await disp('sw1').click();
-  assert.equal(await pagina.locator('#term-entrada').count(), 0);
+  assert.match(await pagina.locator('#lab-term h3').innerText(), /Console de SW1/);
+  assert.equal(await pagina.locator('#term-prompt').innerText(), 'SW1>');
   await contexto.close();
 });
 
@@ -304,6 +305,27 @@ test('animação do pacote: aparece com movimento liberado e não aparece com "r
   await s.pagina.press('#term-entrada', 'Enter');
   await s.pagina.locator('.pacote-anim').waitFor({ state: 'attached' });
   await s.pagina.locator('.pacote-anim').waitFor({ state: 'detached', timeout: 8000 });
+  assert.deepEqual(s.erros, []);
+  await s.contexto.close();
+});
+
+test('console estilo Cisco IOS: configurar o roteador pelo console muda o painel e faz o ping funcionar', async () => {
+  const s = await novaPagina(navegador);
+  await s.pagina.goto(servidor.url + '/index.html#/missoes/duas-redes-um-roteador');
+  await s.pagina.locator('.disp').first().waitFor();
+  await s.pagina.locator('.disp[data-id="r1"]').click();
+  assert.match(await s.pagina.locator('#lab-term h3').innerText(), /Console de R1/);
+  assert.equal(await s.pagina.locator('#term-prompt').innerText(), 'R1>');
+  const cmd = async c => { await s.pagina.fill('#term-entrada', c); await s.pagina.press('#term-entrada', 'Enter'); };
+  for (const c of ['en', 'conf t', 'int g0/0', 'ip address 192.168.1.1 255.255.255.0']) await cmd(c);
+  assert.equal(await s.pagina.locator('#term-prompt').innerText(), 'R1(config-if)#');
+  assert.equal(await s.pagina.locator('#cfg-ip-gi0').inputValue(), '192.168.1.1', 'o painel reflete o console');
+  await cmd('ip address 999.1.1.1 255.255.255.0');
+  assert.match(await s.pagina.locator('#term-saida').innerText(), /% Endereço inválido|% .*inválid/i);
+  await cmd('end'); await cmd('show ip interface brief');
+  assert.match(await s.pagina.locator('#term-saida').innerText(), /GigabitEthernet0\/0\s+192\.168\.1\.1\s+YES manual up/);
+  await s.pagina.press('#term-entrada', 'ArrowUp');
+  assert.equal(await s.pagina.locator('#term-entrada').inputValue(), 'show ip interface brief', 'histórico com seta para cima');
   assert.deepEqual(s.erros, []);
   await s.contexto.close();
 });
