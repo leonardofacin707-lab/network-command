@@ -70,6 +70,13 @@ export function verificarMissao(missao, topologia) {
       return c.servidor.d === o.roteador ? { id: o.id, texto, ok: true, motivo: '' }
         : { id: o.id, texto, ok: false, motivo: `o endereço veio de outro servidor DHCP (${nome(c.servidor.d)}, ${formatarIPv4(c.servidor.ip)})` };
     }
+    // restrição: o roteador não pode ter rotas estáticas (a missão pede roteamento dinâmico)
+    if (o.tipo === 'sem-rotas-estaticas') {
+      const r = dispositivo(topologia, o.roteador);
+      const texto = `${nome(o.roteador)} aprende as rotas pelo OSPF (sem rotas estáticas)`;
+      if (!r) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
+      return (r.rotas ?? []).length ? { id: o.id, texto, ok: false, motivo: 'há rota estática configurada: nesta missão as rotas devem vir do OSPF' } : { id: o.id, texto, ok: true, motivo: '' };
+    }
     // o ponto de acesso precisa usar WPA2/WPA3 com senha forte (12+ caracteres, não óbvia)
     if (o.tipo === 'wifi-seguro') {
       const ap = dispositivo(topologia, o.ap);
@@ -141,10 +148,12 @@ export function validarMissao(m) {
     && ((o.tipo === 'sem-rota-privada' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
       || (o.tipo === 'dhcp-de' && dispositivo(topologia, o.pc)?.tipo === 'pc' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
       || (o.tipo === 'wifi-seguro' && dispositivo(topologia, o.ap)?.tipo === 'ap')
+      || (o.tipo === 'sem-rotas-estaticas' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
       || (!o.tipo && dispositivo(topologia, o.de) && (dispositivo(topologia, o.para) || nomeValido(o.nome))))).map(o => {
     if (o.tipo === 'sem-rota-privada') return { id: o.id, tipo: 'sem-rota-privada', roteador: o.roteador };
     if (o.tipo === 'dhcp-de') return { id: o.id, tipo: 'dhcp-de', pc: o.pc, roteador: o.roteador };
     if (o.tipo === 'wifi-seguro') return { id: o.id, tipo: 'wifi-seguro', ap: o.ap };
+    if (o.tipo === 'sem-rotas-estaticas') return { id: o.id, tipo: 'sem-rotas-estaticas', roteador: o.roteador };
     let base;
     if (nomeValido(o.nome)) base = { id: o.id, de: o.de, nome: o.nome, ...(dispositivo(topologia, o.para) ? { para: o.para } : {}) };
     else if (o.ipv6 === true) base = { id: o.id, de: o.de, para: o.para, ipv6: true };

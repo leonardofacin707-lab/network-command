@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6, configurarWifiAp, configurarWifiPc } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6, configurarWifiAp, configurarWifiPc, adicionarNetworkOspf, removerNetworkOspf } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 40);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 43);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -560,4 +560,26 @@ test('Wi-Fi: rede aberta — WPA2 com senha forte e clientes atualizados; senha 
   assert.equal(verificarMissao(x, com(forte)).todosOk, true);
   assert.match(verificarMissao(x, com(fraca)).objetivos[0].motivo, /curta ou óbvia/);
   assert.deepEqual(verificarMissao(x, wifiAp(t0, { ssid: 'Clinica', seguranca: 'wpa3', senha: forte, banda: 'ambas' })).objetivos.map(o => o.ok), [true, false, false], 'trocar só o AP derruba os clientes');
+});
+
+// ---- OSPF ----
+const ospfNet = (t, r, rede, wildcard, area = '0') => ok(adicionarNetworkOspf(t, r, { rede, wildcard, area }));
+test('OSPF: três roteadores do zero; rotas estáticas não valem', () => {
+  const x = m('ospf-tres-roteadores'), t0 = x.topologia;
+  assert.equal(verificarMissao(x, t0).todosOk, false);
+  let t = t0;
+  for (const [r, l] of Object.entries({ r1: [['192.168.1.0', '0.0.0.255'], ['10.0.12.0', '0.0.0.3']], r2: [['10.0.0.0', '0.255.255.255']], r3: [['10.0.23.0', '0.0.0.3'], ['192.168.3.0', '0.0.0.255']] })) for (const [rede, w] of l) t = ospfNet(t, r, rede, w);
+  assert.equal(verificarMissao(x, t).todosOk, true);
+  const estatico = rotaEst(rotaEst(rotaEst(rotaEst(t0, 'r1', '0.0.0.0', '/0', '10.0.12.2'), 'r2', '192.168.3.0', '/24', '10.0.23.2'), 'r2', '192.168.1.0', '/24', '10.0.12.1'), 'r3', '0.0.0.0', '/0', '10.0.23.1');
+  const r = verificarMissao(x, estatico);
+  assert.deepEqual(r.objetivos.map(o => o.ok), [true, true, false, false, false], 'o ping funciona, mas a missão pede OSPF');
+});
+
+test('OSPF: área errada no R2 e wildcard errada no R3', () => {
+  const b = m('ospf-area-errada');
+  assert.equal(verificarMissao(b, b.topologia).todosOk, false);
+  assert.equal(verificarMissao(b, ospfNet(ok(removerNetworkOspf(b.topologia, 'r2', 0)), 'r2', '10.0.12.0', '0.0.0.3', '0')).todosOk, true);
+  const c = m('ospf-wildcard-errada');
+  assert.equal(verificarMissao(c, c.topologia).todosOk, false);
+  assert.equal(verificarMissao(c, ospfNet(ok(removerNetworkOspf(c.topologia, 'r3', 1)), 'r3', '192.168.3.0', '0.0.0.255')).todosOk, true);
 });

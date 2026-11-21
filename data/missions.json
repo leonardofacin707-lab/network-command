@@ -5838,6 +5838,636 @@
     }
   },
   {
+    "id": "ospf-tres-roteadores",
+    "modulo": "missoes",
+    "titulo": "OSPF em três roteadores",
+    "dificuldade": 3,
+    "xp": 320,
+    "habilidades": [
+      "roteamento.pratica"
+    ],
+    "cenario": "PC1 (192.168.1.0/24) e PC2 (192.168.3.0/24) estão separados por três roteadores ligados por enlaces /30. Em vez de rotas estáticas, a empresa quer roteamento dinâmico: configure o OSPF (área 0) nos três.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      },
+      {
+        "id": "s1",
+        "tipo": "sem-rotas-estaticas",
+        "roteador": "r1"
+      },
+      {
+        "id": "s2",
+        "tipo": "sem-rotas-estaticas",
+        "roteador": "r2"
+      },
+      {
+        "id": "s3",
+        "tipo": "sem-rotas-estaticas",
+        "roteador": "r3"
+      }
+    ],
+    "dicas": [
+      "No OSPF, cada roteador anuncia as redes das interfaces que entram no processo. O comando é network REDE WILDCARD area 0. A wildcard é o inverso da máscara: /24 vira 0.0.0.255 e /30 vira 0.0.0.3.",
+      "R1: network 192.168.1.0 0.0.0.255 area 0 e network 10.0.12.0 0.0.0.3 area 0. Faça o mesmo raciocínio no R2 (os dois enlaces) e no R3.",
+      "Confira com show ip ospf neighbor (vizinhos em FULL) e show ip route (rotas marcadas com O) no console de cada roteador."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 70,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 250,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.12.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 450,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.12.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.23.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "r3",
+          "tipo": "roteador",
+          "nome": "R3",
+          "x": 650,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.23.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.3.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 830,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.3.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.3.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r3",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r3",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ospf-area-errada",
+    "modulo": "missoes",
+    "titulo": "Vizinhos que não se falam",
+    "dificuldade": 3,
+    "xp": 240,
+    "habilidades": [
+      "roteamento.diagnostico"
+    ],
+    "cenario": "O OSPF está configurado nos três roteadores, mas PC1 e PC2 não se alcançam. O R2 vê o R3 como vizinho, mas não vê o R1.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "No console do R1 e do R2, rode show ip ospf neighbor. O estado da vizinhança entre eles diz o motivo.",
+      "Dois roteadores só formam vizinhança se a interface do enlace estiver na mesma área nos dois lados. Compare os comandos network do enlace 10.0.12.0/30.",
+      "No R2, o enlace com o R1 está na área 1. Remova esse network e crie de novo com area 0 (no console: router ospf 1, no network 10.0.12.0 0.0.0.3 area 1, network 10.0.12.0 0.0.0.3 area 0)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 70,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 250,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.12.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ospf": {
+            "redes": [
+              {
+                "rede": "192.168.1.0",
+                "wildcard": "0.0.0.255",
+                "area": 0
+              },
+              {
+                "rede": "10.0.12.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 450,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.12.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.23.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ospf": {
+            "redes": [
+              {
+                "rede": "10.0.12.0",
+                "wildcard": "0.0.0.3",
+                "area": 1
+              },
+              {
+                "rede": "10.0.23.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "r3",
+          "tipo": "roteador",
+          "nome": "R3",
+          "x": 650,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.23.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.3.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ospf": {
+            "redes": [
+              {
+                "rede": "10.0.23.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              },
+              {
+                "rede": "192.168.3.0",
+                "wildcard": "0.0.0.255",
+                "area": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 830,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.3.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.3.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r3",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r3",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ospf-wildcard-errada",
+    "modulo": "missoes",
+    "titulo": "A máscara no lugar da wildcard",
+    "dificuldade": 3,
+    "xp": 240,
+    "habilidades": [
+      "roteamento.diagnostico"
+    ],
+    "cenario": "Os três roteadores são vizinhos em FULL, mas a rede do PC2 (192.168.3.0/24) não aparece nas tabelas do R1 e do R2.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Rode show ip route no R1: há rota O para 10.0.23.0, mas não para 192.168.3.0. Então o R3 não está anunciando a LAN dele.",
+      "Olhe os comandos network do R3. O segundo usa 255.255.255.0, que é uma máscara. O comando network espera uma wildcard, que é o inverso.",
+      "No R3, troque por network 192.168.3.0 0.0.0.255 area 0."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 70,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.1.1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 250,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "192.168.1.1",
+              "mascara": "255.255.255.0"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.12.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ospf": {
+            "redes": [
+              {
+                "rede": "192.168.1.0",
+                "wildcard": "0.0.0.255",
+                "area": 0
+              },
+              {
+                "rede": "10.0.12.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 450,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.12.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "10.0.23.1",
+              "mascara": "255.255.255.252"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ospf": {
+            "redes": [
+              {
+                "rede": "10.0.12.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              },
+              {
+                "rede": "10.0.23.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "r3",
+          "tipo": "roteador",
+          "nome": "R3",
+          "x": 650,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "10.0.23.2",
+              "mascara": "255.255.255.252"
+            },
+            {
+              "id": "gi1",
+              "ip": "192.168.3.1",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ospf": {
+            "redes": [
+              {
+                "rede": "10.0.23.0",
+                "wildcard": "0.0.0.3",
+                "area": 0
+              },
+              {
+                "rede": "192.168.3.0",
+                "wildcard": "255.255.255.0",
+                "area": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 830,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.3.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "192.168.3.1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r3",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r3",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "filial-fora-do-ar",
     "modulo": "missoes",
     "titulo": "Filial fora do ar: três defeitos",

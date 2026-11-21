@@ -251,3 +251,11 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Aba **Simulado** no Conhecimento (`js/quiz/simulado.js`): prova geral (20 questões dos módulos 1 a 17) ou por módulo (até 10), 90 s por questão, vale o acerto de primeira, aprovação com 70%, melhor nota e tentativas salvas em `simulados` (normalizado). Tempo esgotado encerra a prova e conta as não respondidas como erradas.
 - Não dá XP nem estrelas; os erros entram no histórico e vão para a revisão. A tela diz que é simulado de estudo, não o exame oficial do NetAcad.
 - Testes: `tests/unit/simulado.test.mjs` (4) e 1 e2e (aprovação com 100% e tempo esgotado com relógio controlado). Total: 289 unitários, 102 e2e (1 ignorado).
+
+## OSPF simplificado
+
+- `js/sim/ospf.js`: comandos `network REDE WILDCARD area N` (wildcard = inverso da máscara); vizinhança no mesmo enlace exige mesma sub-rede/máscara e mesma área (estados FULL, área diferente, máscara diferente); SPF com custo 1 por enlace; rotas "O" com distância 110 (perdem para conectada e estática do mesmo prefixo), aplicadas só na topologia da simulação.
+- Console IOS: `router ospf 1` (modo config-router), `network ... area N` (avisa quando parece máscara), `no network`, `no router ospf 1`, `show ip ospf neighbor`, rotas O no `show ip route`, seção no `show running-config`. Painel OSPF no roteador com vizinhos e rotas aprendidas.
+- Missões (3): OSPF em três roteadores (prática, com objetivo `sem-rotas-estaticas`), área errada e máscara no lugar da wildcard.
+- 🧪 Não simulado: timers, DR/BDR, router-id, LSAs e áreas reais (várias áreas viram um domínio), custo por banda, ECMP, autenticação, interface passiva.
+- Testes: `tests/unit/ospf.test.mjs` (7), 2 de missão e 1 e2e. Total: 298 unitários, 103 e2e (1 ignorado). Varredura de 84 rotas e axe sem problemas.

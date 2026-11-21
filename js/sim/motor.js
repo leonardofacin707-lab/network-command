@@ -10,6 +10,7 @@ import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from '
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
 import { anunciosSlaac, aplicarSlaac, enviarPacote6 } from './motor6.js';
 import { associacoesWifi, aplicarWifi } from './wifi.js';
+import { calcularOspf, aplicarOspf } from './ospf.js';
 
 export const TTL_INICIAL = { pc: 128, roteador: 255, switch: 255 };
 const MAX_SALTOS = 16;
@@ -268,6 +269,14 @@ export function escolherRota(t, roteador, ipDest) {
     const saida = interfacesConfiguradas(roteador).find(i => temLink(t, roteador.id, i.p) && mesmaRede(i.ip, via, i.mascara));
     if (saida) melhor = { porta: saida.p, proximo: via, ip: saida.ip, prefixo, tipo: 'estatica' };
   }
+  // OSPF (distância administrativa 110): só vence com prefixo mais longo que o das conectadas e estáticas
+  for (const r of roteador.rotasOspf ?? []) {
+    if (!mesmaRede(r.rede, ipDest, r.mascara)) continue;
+    const prefixo = prefixoDeMascara(r.mascara);
+    if (melhor && prefixo <= melhor.prefixo) continue;
+    const saida = interfacesConfiguradas(roteador).find(i => i.p === r.porta);
+    if (saida && temLink(t, roteador.id, saida.p)) melhor = { porta: saida.p, proximo: r.via, ip: saida.ip, prefixo, tipo: 'ospf' };
+  }
   return melhor;
 }
 
@@ -335,7 +344,8 @@ function aplicarConcessoes(t, concessoes) {
 export function criarSimulacao(original) {
   const wifi = associacoesWifi(original), comWifi = aplicarWifi(original, wifi);
   const concessoes = concessoesDhcp(comWifi), comDhcp = aplicarConcessoes(comWifi, concessoes);
-  const slaac = anunciosSlaac(comDhcp), t = aplicarSlaac(comDhcp, slaac);
+  const slaac = anunciosSlaac(comDhcp), comSlaac = aplicarSlaac(comDhcp, slaac);
+  const ospf = calcularOspf(comSlaac), t = aplicarOspf(comSlaac, ospf);
   const arp = new Map(); // dispositivoId -> Map(ipNum -> mac)
   const aprenderUm = (d, ip, mac) => { if (!arp.has(d)) arp.set(d, new Map()); arp.get(d).set(ip, mac); };
   const aprender = lista => { for (const a of lista ?? []) if (a.mac) aprenderUm(a.d, a.ip, a.mac); };
@@ -384,7 +394,7 @@ export function criarSimulacao(original) {
   }
 
   const sim = {
-    topologia: t, concessoes, slaac, wifi,
+    topologia: t, concessoes, slaac, wifi, ospf,
     ping6,
     rastrear6: (origemId, dest) => { const r = enviar6(origemId, dest, { tipo: 'echo-request' }); aprender6(r.aprendizado); return r; },
     vizinhos6: id => [...(arp.get(id) ?? [])].filter(([k]) => typeof k === 'string' && k.startsWith('v6:')).map(([k, mac]) => ({ ip: BigInt(k.slice(3)), mac })),

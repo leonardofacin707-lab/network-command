@@ -2,7 +2,7 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos, configurarInterface6, configurarGateway6, configurarSlaac, configurarRoteamento6, adicionarRota6, removerRota6, configurarWifiAp, configurarWifiPc, SEGURANCAS_WIFI, BANDAS_WIFI } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos, configurarInterface6, configurarGateway6, configurarSlaac, configurarRoteamento6, adicionarRota6, removerRota6, configurarWifiAp, configurarWifiPc, SEGURANCAS_WIFI, BANDAS_WIFI, adicionarNetworkOspf, removerNetworkOspf } from '../sim/topologia.js';
 import { criarSimulacao, NOMES_PORTAS, caminhoFisico } from '../sim/motor.js';
 import { reduzMovimento } from '../core/ui.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
@@ -10,6 +10,7 @@ import { executar, MOTIVO_DHCP, MOTIVO_SLAAC } from '../sim/terminal.js';
 import { formatarIPv6 } from '../sim/ipv6.js';
 import { enderecosDaInterface } from '../sim/motor6.js';
 import { MOTIVO_WIFI } from '../sim/wifi.js';
+import { prefixoOspf } from '../sim/ospf.js';
 import { executarIos, sessaoInicial, prompt as promptIos } from '../sim/cli-ios.js';
 import { diagnosticar } from '../sim/diagnostico.js';
 import { exemploLan, exemploDuasRedes } from './exemplos.js';
@@ -132,6 +133,22 @@ export function criarEditor(raiz, opcoes) {
   const PORTAS_COMUNS = [21, 22, 23, 25, 80, 443];
   const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : redePrefixo(rede, mascara));
   const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
+  /** Painel OSPF: comandos network (rede, wildcard, área), vizinhos e rotas aprendidas. */
+  function fieldsetOspf(d) {
+    if (d.tipo !== 'roteador') return '';
+    const viz = sim.ospf?.vizinhos.get(d.id) ?? [], rotas = dispositivo(sim.topologia, d.id)?.rotasOspf ?? [];
+    const ESTADO = { FULL: 'vizinhança completa (FULL)', 'area-diferente': 'sem vizinhança: áreas diferentes', 'mascara-diferente': 'sem vizinhança: máscara ou sub-rede diferente' };
+    return `<fieldset class="iface" id="ospf-roteador"><legend>OSPF</legend>
+      ${(d.ospf?.redes ?? []).length ? `<ol class="regras" aria-label="Comandos network do OSPF de ${esc(d.nome)}">${d.ospf.redes.map((n, i) => `<li class="regra"><span class="regra-txt">network ${esc(n.rede)} ${esc(n.wildcard)} <b>area</b> ${n.area}</span>
+        <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-ospf="${i}" aria-label="Remover o comando network ${esc(n.rede)}">Remover</button></span></li>`).join('')}</ol>` : '<p>OSPF desligado: nenhum comando network.</p>'}
+      ${viz.length ? `<p class="motivo" role="status">Vizinhos: ${viz.map(v => `${esc(dispositivo(topo, v.vizinho).nome)} (${ESTADO[v.estado]})`).join('; ')}.</p>` : ''}
+      ${rotas.length ? `<p class="motivo">Rotas aprendidas: ${rotas.map(r => `${esc(formatarIPv4(r.rede))}/${prefixoOspf(r.mascara)} via ${esc(formatarIPv4(r.via))} (custo ${r.custo})`).join('; ')}.</p>` : ''}
+      <label for="cfg-ospf-rede">Novo network: rede</label><input id="cfg-ospf-rede" class="campo" name="ospf-rede" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.0">
+      <label for="cfg-ospf-wc">Wildcard (inverso da máscara)</label><input id="cfg-ospf-wc" class="campo" name="ospf-wc" inputmode="decimal" autocomplete="off" placeholder="ex.: 0.0.0.255 para /24">
+      <label for="cfg-ospf-area">Área</label><input id="cfg-ospf-area" class="campo qtd" name="ospf-area" inputmode="numeric" autocomplete="off" placeholder="0">
+      <p class="motivo">Simplificação: custo 1 por enlace, sem DR/BDR, timers ou várias áreas de verdade. A interface entra no OSPF quando o IP dela casa com um network.</p></fieldset>`;
+  }
+
   /** Painel Wi-Fi: rede do ponto de acesso, ou a conexão sem fio do computador. Senhas daqui são de laboratório. */
   function fieldsetWifi(d) {
     const aviso = '<p class="motivo">Use só senhas inventadas para o laboratório: o que você digita aqui fica salvo neste navegador.</p>';
@@ -235,6 +252,7 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-rota-m">Máscara da rede</label><input id="cfg-rota-m" class="campo" name="rota-m" autocomplete="off" placeholder="ex.: 255.255.255.0 ou /24 (/0 = rota padrão)">
         <label for="cfg-rota-via">Próximo salto</label><input id="cfg-rota-via" class="campo" name="rota-via" inputmode="decimal" autocomplete="off" placeholder="ex.: 10.0.0.2 (o roteador vizinho)">
         <p class="motivo">Preencha os três campos e use Aplicar para acrescentar a rota.</p></fieldset>` : ''}
+      ${fieldsetOspf(d)}
       ${d.tipo === 'roteador' ? `<fieldset class="iface" id="nat-roteador"><legend>NAT</legend>
         <label for="cfg-nat-dentro">Interface de dentro (rede privada)</label><select id="cfg-nat-dentro" class="campo" name="nat-dentro"><option value="">(NAT desligado)</option>${d.interfaces.map(i => `<option value="${i.id}"${d.nat?.dentro === i.id ? ' selected' : ''}>${esc(rotuloDaPorta(d, i.id))}</option>`).join('')}</select>
         <label for="cfg-nat-fora">Interface de fora (lado do provedor)</label><select id="cfg-nat-fora" class="campo" name="nat-fora"><option value="">(NAT desligado)</option>${d.interfaces.map(i => `<option value="${i.id}"${d.nat?.fora === i.id ? ' selected' : ''}>${esc(rotuloDaPorta(d, i.id))}</option>`).join('')}</select>
@@ -480,6 +498,8 @@ export function criarEditor(raiz, opcoes) {
       aplicar(removerFiltro(topo, sel, Number(b.dataset.removerFiltro)), 'Regra removida.');
     } else if (b.dataset.moverFiltro !== undefined) {
       aplicar(moverFiltro(topo, sel, Number(b.dataset.moverFiltro), Number(b.dataset.delta)), 'Regra movida.');
+    } else if (b.dataset.removerOspf !== undefined) {
+      aplicar(removerNetworkOspf(topo, sel, Number(b.dataset.removerOspf)), 'Comando network removido.');
     } else if (b.dataset.removerRota6 !== undefined) {
       aplicar(removerRota6(topo, sel, Number(b.dataset.removerRota6)), 'Rota IPv6 removida.');
     } else if (b.dataset.removerRota !== undefined) {
@@ -542,6 +562,10 @@ export function criarEditor(raiz, opcoes) {
           const vlan = f.get(`vlan-${p.id}`) || (atual.modo === 'access' ? atual.vlan : 1);
           passos.push(t => configurarPortaSwitch(t, sel, p.id, { modo, vlan }));
         }
+      }
+      if (alvoCfg.tipo === 'roteador') {
+        const on = { rede: String(f.get('ospf-rede') ?? '').trim(), wildcard: String(f.get('ospf-wc') ?? '').trim(), area: String(f.get('ospf-area') ?? '').trim() };
+        if (on.rede || on.wildcard || on.area) passos.push(t => adicionarNetworkOspf(t, sel, on));
       }
       if (alvoCfg.tipo === 'ap') passos.push(t => configurarWifiAp(t, sel, { ssid: f.get('ssid'), seguranca: f.get('seg'), senha: f.get('wsenha'), banda: f.get('banda'), oculto: f.get('oculto') === 'on' }));
       if (alvoCfg.tipo === 'pc') passos.push(t => configurarWifiPc(t, sel, { ssid: f.get('wssid'), senha: f.get('wpc'), so24: f.get('so24') === 'on' }));

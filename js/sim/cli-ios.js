@@ -7,7 +7,8 @@ import { lerIPv4, lerMascara, formatarIPv4, prefixoDeMascara, enderecoDeRede } f
 import { TIPOS, dispositivo, renomear, configurarInterface, adicionarRotaEstatica, removerRotaEstatica, configurarPortaSwitch,
   configDaPortaSwitch } from './topologia.js';
 import { configDaInterface, temLink } from './motor.js';
-import { configurarInterface6, configurarRoteamento6, adicionarRota6, removerRota6 } from './topologia.js';
+import { configurarInterface6, configurarRoteamento6, adicionarRota6, removerRota6, adicionarNetworkOspf, removerNetworkOspf, removerOspf } from './topologia.js';
+import { prefixoOspf } from './ospf.js';
 import { lerIPv6, formatarIPv6, lerPrefixo6 } from './ipv6.js';
 import { enderecosDaInterface } from './motor6.js';
 
@@ -28,7 +29,7 @@ export function lerInterface(d, texto) {
 }
 
 export function prompt(d, sessao) {
-  return { usuario: `${d.nome}>`, priv: `${d.nome}#`, config: `${d.nome}(config)#`, if: `${d.nome}(config-if)#` }[sessao.modo];
+  return { usuario: `${d.nome}>`, priv: `${d.nome}#`, config: `${d.nome}(config)#`, if: `${d.nome}(config-if)#`, ospf: `${d.nome}(config-router)#` }[sessao.modo];
 }
 
 // Palavra digitada casa com a palavra-chave se for um prefixo dela (abreviação), com tamanho mínimo.
@@ -38,7 +39,7 @@ const INCOMPLETO = ['% Incomplete command.'];
 
 const AJUDA = {
   usuario: ['enable                 entra no modo privilegiado', 'ping ip                testa a conexão', 'show ip interface brief', 'show ip route', 'exit'],
-  priv: ['configure terminal     entra no modo de configuração', 'show ip interface brief', 'show ip route', 'show ipv6 interface brief', 'show ipv6 route', 'show running-config', 'show vlan brief (switch)',
+  priv: ['configure terminal     entra no modo de configuração', 'show ip interface brief', 'show ip route', 'show ip ospf neighbor', 'show ipv6 interface brief', 'show ipv6 route', 'show running-config', 'show vlan brief (switch)',
     'ping ip', 'copy running-config startup-config', 'disable                volta ao modo usuário', 'exit'],
   config: ['hostname NOME', 'interface NOME          ex.: interface g0/0 (roteador) ou interface f0/1 (switch)', 'ip route REDE MÁSCARA PRÓXIMO-SALTO',
     'no ip route REDE MÁSCARA PRÓXIMO-SALTO', 'ipv6 unicast-routing   liga o roteamento IPv6', 'ipv6 route PREFIXO/N PRÓXIMO-SALTO', 'no ipv6 route PREFIXO/N PRÓXIMO-SALTO', 'end / exit'],
@@ -57,13 +58,13 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
   if (w[0] === '?' || casa(w[0], 'help', 4)) return res(AJUDA[sessao.modo]);
 
   // comandos que valem em qualquer modo
-  if (casa(w[0], 'end', 3) && (sessao.modo === 'config' || sessao.modo === 'if')) return res([], { modo: 'priv', interface: null });
+  if (casa(w[0], 'end', 3) && ['config', 'if', 'ospf'].includes(sessao.modo)) return res([], { modo: 'priv', interface: null });
   if (casa(w[0], 'exit', 3)) {
-    const volta = { usuario: null, priv: 'usuario', config: 'priv', if: 'config' }[sessao.modo];
+    const volta = { usuario: null, priv: 'usuario', config: 'priv', if: 'config', ospf: 'config' }[sessao.modo];
     return volta ? res([], { modo: volta, interface: null }) : res(['Sessão encerrada. Pressione Enter para começar de novo.'], sessaoInicial());
   }
   // "do" executa comandos do modo privilegiado dentro da configuração, como no IOS
-  if ((sessao.modo === 'config' || sessao.modo === 'if') && w[0].toLowerCase() === 'do') {
+  if (['config', 'if', 'ospf'].includes(sessao.modo) && w[0].toLowerCase() === 'do') {
     return { ...executarIos(t, sim, id, w.slice(1).join(' '), { modo: 'priv', interface: null }), sessao };
   }
 
@@ -75,7 +76,7 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
       return res(['Digite os comandos de configuração, um por linha. Termine com end.'], { modo: 'config', interface: null });
     }
     if (casa(w[0], 'ping', 2)) return res(pingIos(t, sim, d, w[1]));
-    if (casa(w[0], 'show', 2)) return res(show(t, d, w.slice(1), sessao.modo));
+    if (casa(w[0], 'show', 2)) return res(show(t, d, w.slice(1), sessao.modo, sim));
     if (sessao.modo === 'priv' && (casa(w[0], 'copy', 2) || casa(w[0], 'write', 2))) return res(['Building configuration...', '[OK]', '(No simulador a configuração já fica salva sozinha neste navegador.)']);
     return res(INVALIDO);
   }
@@ -90,6 +91,12 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
       return res([], { modo: 'if', interface: p });
     }
     const nao = w[0].toLowerCase() === 'no', v = nao ? w.slice(1) : w;
+    if (casa(v[0], 'router', 3) && casa(v[1], 'ospf', 2)) {
+      if (d.tipo !== 'roteador') return res(INVALIDO);
+      if (!/^\d+$/.test(v[2] ?? '')) return res(INCOMPLETO);
+      if (nao) return mudar(removerOspf(t, id));
+      return res([], { modo: 'ospf', interface: null });
+    }
     if (casa(v[0], 'ipv6', 4) && casa(v[1], 'unicast-routing', 2)) {
       if (d.tipo !== 'roteador') return res(INVALIDO);
       return mudar(configurarRoteamento6(t, id, !nao));
@@ -113,6 +120,24 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
       return i === -1 ? res(['% Rota não encontrada.']) : mudar(removerRotaEstatica(t, id, i));
     }
     return res(INVALIDO);
+  }
+
+  if (sessao.modo === 'ospf') {
+    const nao = w[0].toLowerCase() === 'no', v = nao ? w.slice(1) : w;
+    if (casa(v[0], 'network', 3)) {
+      if (v.length < 5 || !casa(v[3], 'area', 1)) return res(INCOMPLETO);
+      const campos = { rede: v[1], wildcard: v[2], area: v[4] };
+      if (!nao) {
+        const r = adicionarNetworkOspf(t, id, campos);
+        if (!r.erro && lerMascara(v[2]) !== null && lerMascara(v[2]) !== 0 && lerIPv4(v[2]) > 0x00ffffff) return { ...mudar(r, ['% Atenção: isso parece uma máscara. O comando network usa wildcard (o inverso): para /24, 0.0.0.255.']) };
+        return mudar(r);
+      }
+      const i = (d.ospf?.redes ?? []).findIndex(n => lerIPv4(n.rede) === lerIPv4(v[1]) && lerIPv4(n.wildcard) === lerIPv4(v[2]));
+      return i === -1 ? res(['% Comando network não encontrado.']) : mudar(removerNetworkOspf(t, id, i));
+    }
+    if (casa(v[0], 'router-id', 7) || casa(v[0], 'passive-interface', 3) || casa(v[0], 'auto-cost', 4)) return res(['% Aceito, mas este comando não é simulado aqui.']);
+    const global = executarIos(t, sim, id, linha, { modo: 'config', interface: null });
+    return global.linhas[0] === INVALIDO[0] ? res(INVALIDO) : global;
   }
 
   // modo de interface
@@ -159,12 +184,14 @@ function pingIos(t, sim, d, alvo) {
     `Success rate is ${n * 20} percent (${n}/5)${n ? ', round-trip min/avg/max = 1/1/1 ms' : ''}`];
 }
 
-function show(t, d, args, modo) {
+function show(t, d, args, modo, sim) {
+  const visto = sim?.topologia ? dispositivo(sim.topologia, d.id) ?? d : d; // com as rotas OSPF calculadas
   const a = args.map(x => x.toLowerCase());
   if (casa(a[0], 'ipv6', 4) && casa(a[1], 'interface', 3) && casa(a[2], 'brief', 2)) return ipv6IntBrief(t, d);
   if (casa(a[0], 'ipv6', 4) && casa(a[1], 'route', 2)) return ipv6Route(t, d);
   if (casa(a[0], 'ip', 2) && casa(a[1], 'interface', 3) && casa(a[2], 'brief', 2)) return ipIntBrief(t, d);
-  if (casa(a[0], 'ip', 2) && casa(a[1], 'route', 2)) return ipRoute(t, d);
+  if (casa(a[0], 'ip', 2) && casa(a[1], 'ospf', 2) && casa(a[2], 'neighbor', 3)) return ospfVizinhos(t, d, sim);
+  if (casa(a[0], 'ip', 2) && casa(a[1], 'route', 2)) return ipRoute(t, visto);
   if (casa(a[0], 'running-config', 3)) return modo === 'priv' ? runningConfig(t, d) : ['% Comando disponível só no modo privilegiado (use enable).'];
   if (casa(a[0], 'vlan', 2)) return d.tipo === 'switch' ? vlanBrief(t, d) : INVALIDO;
   return INVALIDO;
@@ -207,10 +234,20 @@ function ipv6Route(t, d) {
   return l;
 }
 
+function ospfVizinhos(t, d, sim) {
+  if (d.tipo !== 'roteador') return INVALIDO;
+  if (!d.ospf) return ['% OSPF não está configurado neste roteador (router ospf 1).'];
+  const lista = sim?.ospf?.vizinhos.get(d.id) ?? [];
+  if (!lista.length) return ['Nenhum vizinho OSPF.', '(Confira: o vizinho também roda OSPF nessa interface? A wildcard do comando network casa com o IP da interface?)'];
+  const ESTADO = { FULL: 'FULL', 'area-diferente': 'DOWN (áreas diferentes)', 'mascara-diferente': 'DOWN (máscaras/sub-redes diferentes)' };
+  return ['Neighbor ID     State                          Address         Interface',
+    ...lista.map(v => `${(t.dispositivos.find(x => x.id === v.vizinho)?.nome ?? v.vizinho).padEnd(16)}${ESTADO[v.estado].padEnd(31)}${formatarIPv4(v.ipVizinho).padEnd(16)}${nomeLongo(d, v.porta)}`)];
+}
+
 function ipRoute(t, d) {
   if (d.tipo !== 'roteador') return ['% O switch desta simulação não roteia (só camada 2).'];
   const padrao = (d.rotas ?? []).find(r => r.rede === '0.0.0.0' && r.mascara === '0.0.0.0');
-  const linhas = ['Codes: L - local, C - connected, S - static, * - candidate default', '', `Gateway of last resort is ${padrao ? `${padrao.via} to network 0.0.0.0` : 'not set'}`, ''];
+  const linhas = ['Codes: L - local, C - connected, S - static, O - OSPF, * - candidate default', '', `Gateway of last resort is ${padrao ? `${padrao.via} to network 0.0.0.0` : 'not set'}`, ''];
   for (const i of d.interfaces) {
     const cfg = configDaInterface(d, i.id);
     if (!cfg || !temLink(t, d.id, i.id)) continue;
@@ -219,6 +256,7 @@ function ipRoute(t, d) {
       `L        ${formatarIPv4(cfg.ip)}/32 is directly connected, ${nomeLongo(d, i.id)}`);
   }
   for (const r of d.rotas ?? []) linhas.push(`S${r.rede === '0.0.0.0' && r.mascara === '0.0.0.0' ? '*' : ' '}       ${r.rede}/${prefixoDeMascara(lerMascara(r.mascara))} [1/0] via ${r.via}`);
+  for (const r of d.rotasOspf ?? []) linhas.push(`O        ${formatarIPv4(r.rede)}/${prefixoOspf(r.mascara)} [110/${r.custo}] via ${formatarIPv4(r.via)}, ${nomeLongo(d, r.porta)}`);
   return linhas;
 }
 
@@ -240,6 +278,7 @@ function runningConfig(t, d) {
   }
   for (const r of d.rotas ?? []) l.push(`ip route ${r.rede} ${r.mascara} ${r.via}`);
   if (d.ipv6Roteamento) l.splice(4, 0, 'ipv6 unicast-routing', '!');
+  if (d.ospf) l.push('router ospf 1', ...d.ospf.redes.map(n => ` network ${n.rede} ${n.wildcard} area ${n.area}`), '!');
   for (const r of d.rotas6 ?? []) l.push(`ipv6 route ${r.rede}/${r.prefixo} ${r.via}`);
   if ((d.filtros ?? []).length || (d.pools ?? []).length) l.push('! (filtros e pools DHCP: configure pelo painel do roteador)');
   l.push('!', 'end');

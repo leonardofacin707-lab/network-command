@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 40 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 43 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 40);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 40 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 43);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 43 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(6).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 40 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 43 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -535,6 +535,26 @@ test('Wi-Fi pela interface: rede aberta, senha fraca recusada pelo objetivo, WPA
   await pagina.locator('#m-verificar').click();
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+220 XP/);
   assert.equal((await salvo()).missoes['wifi-rede-aberta'].topologia.dispositivos.find(d => d.id === 'ap1').wifi.seguranca, 'wpa2');
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('OSPF pela interface: wildcard errada vista no painel, corrigida pelo console do R3, conclusão (240 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/ospf-wildcard-errada');
+  await disp('r1').click();
+  assert.match(await pagina.locator('#ospf-roteador').innerText(), /Vizinhos: R2 \(vizinhança completa \(FULL\)\)/);
+  assert.doesNotMatch(await pagina.locator('#ospf-roteador').innerText(), /192\.168\.3\.0/);
+  await disp('r3').click();
+  const cmd = async c => { await pagina.fill('#term-entrada', c); await pagina.press('#term-entrada', 'Enter'); };
+  for (const c of ['en', 'conf t', 'router ospf 1', 'no network 192.168.3.0 255.255.255.0 area 0', 'network 192.168.3.0 0.0.0.255 area 0', 'end']) await cmd(c);
+  assert.equal(await pagina.locator('#term-prompt').innerText(), 'R3#');
+  await disp('r1').click();
+  assert.match(await pagina.locator('#ospf-roteador').innerText(), /192\.168\.3\.0\/24 via 10\.0\.12\.2 \(custo 3\)/);
+  await cmd('en'); await cmd('show ip route');
+  assert.match(await pagina.locator('#term-saida').innerText(), /O\s+192\.168\.3\.0\/24 \[110\/3\]/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+240 XP/);
+  assert.equal((await salvo()).missoes['ospf-wildcard-errada'].topologia.dispositivos.find(d => d.id === 'r3').ospf.redes[1].wildcard, '0.0.0.255');
   assert.deepEqual(erros, []);
   await contexto.close();
 });
