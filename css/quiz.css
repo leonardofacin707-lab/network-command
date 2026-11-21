@@ -93,3 +93,4 @@
 .passos{margin:8px 0 0;padding-left:20px}
 .passos li{margin:4px 0}
 .placar{color:var(--suave);min-height:1.5em;margin:8px 0 0}
+.relogio{font-variant-numeric:tabular-nums}.relogio.acabando{color:var(--erro)}.erradas{margin:6px 0 10px;padding-left:20px}.erradas li{margin:4px 0}

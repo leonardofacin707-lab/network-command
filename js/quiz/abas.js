@@ -4,6 +4,7 @@ import { revisaoDeHoje, ultimaPorPergunta, estatisticas, foiPerfeita, INTERVALOS
 import { desempenhoPorAssunto } from '../hub/dominio.js';
 import { desafiosLiberados, TAMANHO_TREINO, resumoPorModulo } from './treino.js';
 import { diaLocal, sequenciaAtual, TAMANHO_DIARIO } from './diario.js';
+import { opcoesSimulado, NOTA_APROVACAO, SEGUNDOS_POR_QUESTAO, formatarTempo } from './simulado.js';
 
 const resumo = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
 const rotuloResultado = r => (foiPerfeita(r) ? '<span class="ok-txt">✓ De primeira</span>'
@@ -98,6 +99,21 @@ export function telaTreino(app, { catalogo, store }) {
       ${resumo.map(m => `<tr data-modulo="${m.id}"><th scope="row">${m.id ? `<small>Módulo ${m.id}</small><br>` : ''}${esc(m.nome)}</th>
         <td>${m.dominados} de ${m.total}${m.liberados < m.total ? `<br><small class="motivo">${m.total - m.liberados} em níveis bloqueados</small>` : ''}</td>
         <td><button class="btn-sec" data-acao="treinar-modulo" data-modulo="${m.id}" ${m.liberados ? '' : 'disabled'} aria-label="Treinar ${m.id ? 'o módulo ' + m.id : 'o bônus'} (${Math.min(TAMANHO_TREINO, m.liberados)} desafios)">Treinar (${Math.min(TAMANHO_TREINO, m.liberados)})</button></td></tr>`).join('')}
+    </tbody></table>
+  </div></section>`;
+}
+
+export function telaSimulado(app, { catalogo, store }) {
+  const feitos = store.obter().simulados ?? {};
+  const opcoes = opcoesSimulado(catalogo.perguntas, catalogo.modulos);
+  app.innerHTML = `<section class="band"><div class="wrap painel">
+    <h2>Simulado com tempo</h2>
+    <p>Prova cronometrada no estilo dos exames de módulo: ${formatarTempo(SEGUNDOS_POR_QUESTAO)} por questão, vale só o acerto de primeira e a aprovação é com ${Math.round(NOTA_APROVACAO * 100)}%. Inclui desafios de níveis ainda bloqueados no mapa.</p>
+    <p class="motivo">Simulado de estudo, com perguntas escritas para o jogo: <b>não</b> é o exame oficial do NetAcad e não vale certificado. Não dá XP; os erros vão para a revisão.</p>
+    <table class="tabela modulos"><thead><tr><th scope="col">Prova</th><th scope="col">Melhor nota</th><th scope="col"><span class="sr-only">Ação</span></th></tr></thead><tbody>
+      ${opcoes.map(o => { const f = feitos[o.chave]; return `<tr data-simulado="${o.chave}"><th scope="row">${esc(o.nome)}<br><small>${o.total} questões · ${formatarTempo(o.total * SEGUNDOS_POR_QUESTAO)}</small></th>
+        <td>${f ? `${f.melhor}% ${f.melhor >= NOTA_APROVACAO * 100 ? '<span class="ok-txt">✓ aprovado</span>' : ''}<br><small>${f.tentativas} ${f.tentativas === 1 ? 'tentativa' : 'tentativas'}</small>` : '<small>não feito</small>'}</td>
+        <td><button class="btn-sec" data-acao="simular" data-chave="${o.chave}" aria-label="Começar ${esc(o.nome)}">Começar</button></td></tr>`; }).join('')}
     </tbody></table>
   </div></section>`;
 }

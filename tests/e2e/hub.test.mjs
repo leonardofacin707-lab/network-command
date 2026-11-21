@@ -202,6 +202,38 @@ test('exercícios sem fim: acerta, erra (mostra a resposta e os passos), dica e 
   await contexto.close();
 });
 
+test('simulado: lista as provas, aprova com 100% no módulo 1 e o tempo esgotado encerra a prova', async () => {
+  const perguntas = JSON.parse(readFileSync(new URL('../../data/questions.json', import.meta.url), 'utf8'));
+  const { pagina, erros, salvo, contexto } = await abrir('conhecimento/simulado');
+  await pagina.locator('tr[data-simulado="geral"]').waitFor();
+  assert.match(await pagina.locator('#app').innerText(), /não<\/b>|não é o exame oficial do NetAcad/);
+  assert.match(await pagina.locator('tr[data-simulado="m1"]').innerText(), /6 questões · 9:00[\s\S]*não feito/);
+  await pagina.locator('[data-acao="simular"][data-chave="m1"]').click();
+  for (let i = 0; i < 6; i++) {
+    await pagina.locator('.card h2').waitFor();
+    assert.match(await pagina.locator('#relogio').innerText(), /⏱ \d+:\d{2}/);
+    const texto = (await pagina.locator('.card h2').innerText()).trim();
+    await resolverAtual(pagina, perguntas.find(q => q.enunciado === texto));
+    await pagina.locator('[data-acao="proximo"]').click();
+  }
+  assert.match(await pagina.locator('.resultado').innerText(), /Aprovado no simulado![\s\S]*100%[\s\S]*6 de 6/);
+  assert.equal((await salvo()).simulados.m1.melhor, 100);
+  assert.deepEqual((await salvo()).quiz.melhor, {}, 'não vale estrelas nem XP');
+  await contexto.close();
+
+  // tempo esgotado: o relógio da página é controlado no teste
+  const s2 = await novaPagina(navegador);
+  await s2.pagina.clock.install();
+  await s2.pagina.goto(servidor.url + '/index.html#/conhecimento/simulado');
+  await s2.pagina.locator('[data-acao="simular"][data-chave="m1"]').click();
+  await s2.pagina.locator('.card h2').waitFor();
+  await s2.pagina.clock.runFor(9 * 60 * 1000 + 2000);
+  await s2.pagina.locator('.resultado').waitFor();
+  assert.match(await s2.pagina.locator('.resultado').innerText(), /O tempo acabou com 0 de 6 questões respondidas[\s\S]*0%/);
+  assert.deepEqual([...erros, ...s2.erros], []);
+  await s2.contexto.close();
+});
+
 test('a revisão não dá XP nem estrelas', async () => {
   const { pagina, salvo, contexto } = await abrirComEstado('conhecimento/revisao', ESTADO);
   const antes = (await salvo()).quiz.melhor;
@@ -391,7 +423,7 @@ test('sem rolagem horizontal em nenhuma página, em 360, 768 e 1280 px', async (
 });
 
 test('contraste de texto no tema escuro (WCAG AA) em todas as páginas', async () => {
-  const rotas = [...ROTAS_MENU, 'conhecimento/treino', 'conhecimento/exercicios', 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
+  const rotas = [...ROTAS_MENU, 'conhecimento/treino', 'conhecimento/exercicios', 'conhecimento/simulado', 'conhecimento/revisao', 'conhecimento/historico', 'conhecimento/assuntos', 'missoes/gateway-errado', 'empresa/clinica', 'datacenter/sistema-bancario', 'campus/campus-completo'];
   for (const largura of [1280, 390]) {
     for (const rota of rotas) {
       const { pagina, contexto } = await abrirComEstado(rota, ESTADO, { largura, altura: 900 });

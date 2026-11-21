@@ -245,3 +245,9 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Missões (4, `tools/gerar-wifi.mjs`): senha com maiúsculas erradas, SSID oculto digitado errado, leitor antigo só 2,4 GHz e rede aberta da clínica (objetivo `wifi-seguro`: WPA2/WPA3 e senha de 12+ caracteres, não óbvia).
 - 🧪 Não simulado: alcance e sinal, canais e interferência, roaming, WPA-Enterprise/802.1X, WPS, limite de clientes. O painel avisa para usar só senhas inventadas.
 - Testes: `tests/unit/wifi.test.mjs` (6), 4 de missão e 1 e2e. Varredura de 80 rotas e axe sem problemas.
+
+## Simulado com tempo
+
+- Aba **Simulado** no Conhecimento (`js/quiz/simulado.js`): prova geral (20 questões dos módulos 1 a 17) ou por módulo (até 10), 90 s por questão, vale o acerto de primeira, aprovação com 70%, melhor nota e tentativas salvas em `simulados` (normalizado). Tempo esgotado encerra a prova e conta as não respondidas como erradas.
+- Não dá XP nem estrelas; os erros entram no histórico e vão para a revisão. A tela diz que é simulado de estudo, não o exame oficial do NetAcad.
+- Testes: `tests/unit/simulado.test.mjs` (4) e 1 e2e (aprovação com 100% e tempo esgotado com relógio controlado). Total: 289 unitários, 102 e2e (1 ignorado).

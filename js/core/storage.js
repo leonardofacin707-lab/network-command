@@ -1,5 +1,6 @@
 import { normalizarTopologia, topologiaVazia } from '../sim/topologia.js';
 import { diarioVazio, limparDiario } from '../quiz/diario.js';
+import { limparSimulados } from '../quiz/simulado.js';
 
 // Persistência no localStorage, com formato versionado e validação.
 // Nunca guarda senhas nem dados pessoais além do nome de exibição escolhido pelo jogador.
@@ -20,7 +21,8 @@ export const estadoInicial = () => ({
   missoes: {},                            // { [id]: { topologia, concluida, em, xp, dicas } }
   datacenter: {},                         // { [desafioId]: { unidades: {camada: n}, concluida, em, xp } }
   empresa: {},                            // { [projetoId]: { prefixos: {setor: n}, equip: {item: qtd}, concluida, em, xp } }
-  diario: diarioVazio()                   // desafio do dia: { ultimoDia, sequencia, melhor }
+  diario: diarioVazio(),                  // desafio do dia: { ultimoDia, sequencia, melhor }
+  simulados: {}                           // { geral | m<n>: { melhor (%), em, tentativas } }
 });
 
 const inteiro = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
@@ -135,6 +137,7 @@ export function normalizar(bruto, ref) {
     base.empresa = limparEmpresa(bruto.empresa, ref.empresa ?? new Set());
     base.datacenter = limparDatacenter(bruto.datacenter, ref.datacenter ?? new Set());
     base.diario = limparDiario(bruto.diario);
+    base.simulados = limparSimulados(bruto.simulados);
   }
   return base;
 }

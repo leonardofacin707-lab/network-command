@@ -3,9 +3,12 @@ import { xpDoEstado, cargoDe } from '../core/progression.js';
 import { maximoDoNivel, estrelasPorPontos, registrarResultado } from './scoring.js';
 import { statusDoNivel } from './unlock.js';
 import { registrarDia } from './diario.js';
+import { notaSimulado, registrarSimulado, formatarTempo, NOTA_APROVACAO } from './simulado.js';
+import { rotuloModulo } from './treino.js';
 
 /** Grava o resultado da partida no estado e mostra a tela de resultado. */
 export function telaResultado({ app, catalogo, store }, run) {
+  if (run.nivel.simulado) return telaResultadoSimulado({ app, catalogo, store }, run);
   if (run.nivel.revisao) return telaResultadoRevisao(app, run, store);
   const n = run.nivel;
   const maximo = maximoDoNivel(n.desafios.length);
@@ -58,6 +61,38 @@ function telaResultadoRevisao(app, run, store) {
       <div class="acoes">
         ${run.nivel.diario ? '' : run.nivel.treino ? (run.nivel.modulo === null || run.nivel.modulo === undefined ? '<button class="btn" data-acao="treinar">Novo treino</button>' : `<button class="btn" data-acao="treinar-modulo" data-modulo="${run.nivel.modulo}">Treinar este módulo de novo</button>`) : ''}
         <button class="${run.nivel.treino && !run.nivel.diario ? 'btn-sec' : 'btn'}" data-acao="mapa">Voltar ao mapa</button>
+      </div>
+    </article>
+  </div></section>`;
+  window.scrollTo({ top: 0 });
+}
+
+/** Resultado do simulado: nota pelos acertos de primeira, aprovação com 70% e lista do que errou. Não dá XP. */
+function telaResultadoSimulado({ app, catalogo, store }, run) {
+  const total = run.nivel.desafios.length;
+  const { pct, aprovado } = notaSimulado(run.perfeitas, total);
+  const antes = store.obter().simulados?.[run.nivel.chave]?.melhor;
+  store.alterar(e => ({ ...e, simulados: registrarSimulado(e.simulados, run.nivel.chave, pct) }));
+  const respondidas = run.esgotado ? run.i : total;
+  const tempo = Math.min(run.nivel.limiteSeg, Math.round((Date.now() - run.inicio) / 1000));
+  const ultimas = new Map(store.obter().quiz.historico.map(r => [r.q, r]));
+  const erradas = run.nivel.desafios.filter((q, i) => i >= respondidas || !(ultimas.get(q.id)?.ok && ultimas.get(q.id)?.erros === 0));
+  app.innerHTML = `<section class="band"><div class="jogo">
+    <article class="painel resultado">
+      <span class="mods">${esc(run.nivel.nome)}</span>
+      <h2>${aprovado ? 'Aprovado no simulado!' : 'Ainda não foi desta vez'}</h2>
+      <p>${run.esgotado ? `<b>O tempo acabou</b> com ${respondidas} de ${total} questões respondidas. ` : ''}Nota: acertos de primeira sobre o total. Para passar, ${Math.round(NOTA_APROVACAO * 100)}%.</p>
+      <div class="resumo">
+        <div><small>Nota</small><b>${pct}%</b></div>
+        <div><small>Acertos de primeira</small><b>${run.perfeitas} de ${total}</b></div>
+        <div><small>Tempo</small><b>${formatarTempo(tempo)}</b></div>
+      </div>
+      ${antes !== undefined && pct > antes ? '<p><b>Novo recorde neste simulado!</b></p>' : ''}
+      ${erradas.length ? `<h3>Para revisar</h3><ul class="erradas">${erradas.map(q => `<li>${esc(q.enunciado)} <small>(${esc(rotuloModulo(catalogo.modulos, q.modulo))})</small></li>`).join('')}</ul>` : ''}
+      <p class="motivo">Simulado de estudo: não é o exame oficial do NetAcad, não dá XP nem certificado. Os erros já foram para a revisão de erros.</p>
+      <div class="acoes">
+        <button class="btn" data-acao="simular" data-chave="${esc(run.nivel.chave)}">Fazer de novo</button>
+        <button class="btn-sec" data-acao="mapa">Voltar ao mapa</button>
       </div>
     </article>
   </div></section>`;

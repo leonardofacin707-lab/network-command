@@ -2,7 +2,8 @@
 import { desenharMapa, pararMapa } from './map.js';
 import { criarSessao } from './session.js';
 import { telaResultado } from './resultado.js';
-import { telaRevisao, telaHistorico, telaAssuntos, telaTreino } from './abas.js';
+import { telaRevisao, telaHistorico, telaAssuntos, telaTreino, telaSimulado } from './abas.js';
+import { montarSimulado } from './simulado.js';
 import { telaExercicios } from './tela-exercicios.js';
 import { desafiosLiberados, sortearTreino, rotuloModulo } from './treino.js';
 import { desafiosDoDia, diaLocal } from './diario.js';
@@ -10,7 +11,7 @@ import { registrarResposta, revisaoDeHoje } from './historico.js';
 import { statusDoNivel } from './unlock.js';
 import { limparHash } from '../app/router.js';
 
-const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino'], ['exercicios', 'Exercícios'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
+const ABAS = [['', 'Mapa de níveis'], ['treino', 'Treino'], ['exercicios', 'Exercícios'], ['simulado', 'Simulado'], ['revisao', 'Revisão de erros'], ['historico', 'Histórico'], ['assuntos', 'Por assunto']];
 
 export default {
   id: 'conhecimento',
@@ -56,6 +57,7 @@ export default {
       if (acao === 'jogar') return jogarId(Number(alvo.dataset.nivel));
       if (acao === 'revisar') return revisar();
       if (acao === 'treinar') return treinar();
+      if (acao === 'simular') { const prova = montarSimulado(alvo.dataset.chave, catalogo.perguntas, catalogo.modulos); if (prova) jogar(prova); return; }
       if (acao === 'diario') {
         const dia = diaLocal();
         const desafios = desafiosDoDia(desafiosLiberados(catalogo.niveis, store.obter().quiz.melhor), dia);
@@ -72,6 +74,7 @@ export default {
 
     if (aba === 'treino') telaTreino(tela, ctx);
     else if (aba === 'exercicios') telaExercicios(tela);
+    else if (aba === 'simulado') telaSimulado(tela, ctx);
     else if (aba === 'revisao') telaRevisao(tela, ctx);
     else if (aba === 'historico') telaHistorico(tela, ctx);
     else if (aba === 'assuntos') telaAssuntos(tela, ctx);

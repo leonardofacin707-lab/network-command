@@ -2,6 +2,7 @@
 import { $, esc, reduzMovimento } from '../core/ui.js';
 import { pararMapa } from './map.js';
 import { rotuloModulo } from './treino.js';
+import { formatarTempo } from './simulado.js';
 import pergunta from './types/pergunta.js';
 import ligar from './types/ligar.js';
 import classificar from './types/classificar.js';
@@ -13,6 +14,8 @@ const TIPOS = { pergunta, ligar, classificar, ordenar, numero };
 export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
   const { app } = ctx;
   let run = null; // { nivel, i, pts, acertos, erros, fim, est }
+  let relogio = null; // simulado: contagem regressiva
+  const pararRelogio = () => { if (relogio) clearInterval(relogio); relogio = null; };
 
   const atual = () => run.nivel.desafios[run.i];
   const api = { finalizar };
@@ -20,8 +23,18 @@ export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
   function iniciar(nivel) {
     if (!nivel || !nivel.desafios) return;
     pararMapa();
-    run = { nivel, i: 0, pts: 0, acertos: 0, perfeitas: 0 };
+    pararRelogio();
+    run = { nivel, i: 0, pts: 0, acertos: 0, perfeitas: 0, inicio: Date.now() };
     telaDesafio();
+    if (nivel.limiteSeg) {
+      relogio = setInterval(() => {
+        if (!run) return pararRelogio();
+        const resta = Math.max(0, nivel.limiteSeg - Math.floor((Date.now() - run.inicio) / 1000));
+        const el = document.getElementById('relogio');
+        if (el) { el.textContent = `⏱ ${formatarTempo(resta)}`; el.classList.toggle('acabando', resta <= 60); }
+        if (resta === 0) { pararRelogio(); run.esgotado = true; const r = run; aoTerminar(r); }
+      }, 1000);
+    }
   }
 
   function telaDesafio() {
@@ -36,7 +49,7 @@ export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
           <button class="btn-sec" data-acao="mapa">← Mapa</button>
           <div><b>${run.nivel.revisao ? '' : `Nível ${run.nivel.id} · `}${esc(run.nivel.nome)}</b>
             <div class="prog" role="progressbar" aria-label="Progresso no nível" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${run.i}"><i style="width:${run.i / total * 100}%"></i></div></div>
-          <span class="pts">${run.pts} pts</span>
+          ${run.nivel.limiteSeg ? `<span class="pts relogio" id="relogio" role="timer" aria-label="Tempo restante">⏱ ${formatarTempo(Math.max(0, run.nivel.limiteSeg - Math.floor((Date.now() - run.inicio) / 1000)))}</span>` : `<span class="pts">${run.pts} pts</span>`}
         </div>
         <article class="painel card">
           <p class="tipo">${TIPOS[q.tipo].rotulo} · ${run.i + 1} de ${total}</p>
@@ -60,7 +73,7 @@ export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
     aoResponder({ q: q.id, ok: acertou, erros: acertou ? run.erros : Math.max(run.erros, 1), pts });
     const ultimo = run.i === run.nivel.desafios.length - 1;
     const titulo = !acertou ? 'Não foi dessa vez' : run.erros === 0 ? 'Perfeito!' : run.erros === 1 ? 'Certo, com um tropeço' : 'Concluído';
-    $('.pts').textContent = run.pts + ' pts';
+    if (!run.nivel.limiteSeg) $('.pts').textContent = run.pts + ' pts';
     $('#feedback').innerHTML = `<div class="fb ${acertou ? 'bom' : 'ruim'}">
       <b>${titulo}</b> <span>+${pts} pts</span>
       <p>${esc(q.explicacao)}</p>
@@ -74,7 +87,7 @@ export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
     iniciar,
     ativa: () => run !== null,
     resultadoAtual: () => run,
-    encerrar() { run = null; },
+    encerrar() { pararRelogio(); run = null; },
     clique(alvo) {
       if (!run || run.fim) return;
       const q = atual();
@@ -87,8 +100,9 @@ export function criarSessao(ctx, aoTerminar, aoResponder = () => {}) {
     },
     proximo() {
       if (!run) return;
+      if (run.esgotado) return;
       run.i++;
-      if (run.i < run.nivel.desafios.length) telaDesafio(); else aoTerminar(run);
+      if (run.i < run.nivel.desafios.length) telaDesafio(); else { pararRelogio(); aoTerminar(run); }
     }
   };
 }
