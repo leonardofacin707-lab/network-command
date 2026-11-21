@@ -78,3 +78,24 @@ test('desenvolvimento: sem a marca de publicação, nenhum service worker é reg
   assert.equal(await s.pagina.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), 0);
   await s.contexto.close(); await dev.fechar();
 });
+
+test('publicado: quando sai uma versão nova, ela assume sozinha e o jogador é avisado', async () => {
+  const { writeFileSync } = await import('node:fs');
+  const { pagina, erros, contexto } = await abrir('index.html#/dashboard');
+  await pagina.locator('#app h2').first().waitFor();
+  await pagina.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await pagina.reload();
+  await pagina.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  const antes = await pagina.evaluate(() => caches.keys());
+  // "publica" uma versão nova: só muda a versão do service worker
+  const sw = DIST + 'sw.js';
+  writeFileSync(sw, readFileSync(sw, 'utf8').replace(/const VERSAO = '[^']+'/, "const VERSAO = 'teste-nova'"));
+  await pagina.reload();
+  await pagina.locator('#avisos', { hasText: 'versão nova do jogo' }).waitFor({ timeout: 10000 });
+  await pagina.waitForFunction(async () => (await caches.keys()).join() === 'network-command-teste-nova', null, { timeout: 5000 });
+  const depois = await pagina.evaluate(() => caches.keys());
+  assert.notDeepEqual(antes, depois, 'o cache antigo foi apagado');
+  assert.deepEqual(erros, []);
+  await contexto.close();
+  await construir(); // devolve o dist/ ao estado normal
+});

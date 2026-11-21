@@ -74,5 +74,8 @@ iniciar();
 
 // Modo offline (PWA): só na versão publicada (dist/, marcada pelo build). Em desenvolvimento e na prévia nada é registrado.
 if ('serviceWorker' in navigator && document.querySelector('meta[name="nc-publicado"]')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  const jaTinhaVersao = !!navigator.serviceWorker.controller;
+  // quando uma versão nova assume (depois de publicada), avisa uma vez: o jogo atual continua funcionando até recarregar
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (jaTinhaVersao) avisar('Há uma versão nova do jogo. Recarregue a página para usar.'); });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {}));
 }

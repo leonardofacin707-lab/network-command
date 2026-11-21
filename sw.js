@@ -5,7 +5,8 @@ const ARQUIVOS = ['__ARQUIVOS__'];
 const CACHE = `network-command-${VERSAO}`;
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARQUIVOS)).then(() => self.skipWaiting()));
+  // cache: 'reload' busca direto no servidor, sem misturar arquivos velhos do cache HTTP com a versão nova
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARQUIVOS.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

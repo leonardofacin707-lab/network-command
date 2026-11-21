@@ -267,3 +267,10 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **🧪 Simplificações:** sem mensagens SOLICIT/ADVERTISE/REQUEST/REPLY, sem DHCPv6 sem estado, o DHCPv6 não entrega DNS; no console IOS os pools DHCPv6 não têm comando (só pelo painel).
 - **Missões (2):** endereços pelo DHCPv6 e o portal que só respondia por IPv4 (registro AAAA). Total: 51 cenários.
 - **Testes:** 2 unitários de IPv6, 2 de missão e 1 e2e. Total: 302 unitários, 104 e2e (1 ignorado). Varredura de 86 rotas e axe sem problemas.
+
+## Divulgação, alertas do CodeQL e atualização do modo offline
+
+- README com GIF de demonstração (`docs/img/demo.gif`: ping animado e captura) e link para jogar; projeto 06 no repositório `portfolio-redes`.
+- CodeQL apontou 3 alertas fora do código do jogo (escape incompleto num teste e corrida de arquivo em dois scripts de geração): corrigidos (escape completo; gravação com flag `wx` em vez de checar e depois gravar). SECURITY.md com link do relato privado e prazos (critério do Scorecard).
+- Alertas do Scorecard que não dependem de código: revisão por outra pessoa (projeto de um mantenedor só), "Maintained" (repositório com menos de 90 dias), fuzzing e selo CII Best Practices (exige cadastro do mantenedor em bestpractices.dev).
+- Modo offline: o service worker baixa a versão nova sem passar pelo cache HTTP (`cache: 'reload'`, `updateViaCache: 'none'`) e o jogo avisa "Há uma versão nova do jogo. Recarregue a página para usar." Teste e2e simula uma publicação nova.
