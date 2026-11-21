@@ -229,3 +229,19 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **Missões (5, `tools/gerar-ipv6.mjs`):** primeiros passos, roteador sem ipv6 unicast-routing, SLAAC, prefixo digitado errado e rotas IPv6 entre dois roteadores. Objetivo novo `{ de, para, ipv6: true }`.
 - **🧪 Não simulado:** DHCPv6, DNS AAAA, filtros e NAT em IPv6, identificadores aleatórios de privacidade, MTU/fragmentação, mensagens ICMPv6 de erro além das usadas no ping/tracert.
 - **Testes:** `tests/unit/ipv6.test.mjs` (10), 5 testes de missão, console IOS e 1 e2e (SLAAC pela interface). Total: 275 unitários, 100 e2e (1 ignorado). Varredura de 76 rotas e axe sem problemas.
+
+## Segurança do repositório (GitHub)
+
+- Repositório público `leonardofacin707-lab/network-command`, site em https://leonardofacin707-lab.github.io/network-command/ (GitHub Pages pelo fluxo de Actions).
+- Ações fixadas pelo hash do commit, `persist-credentials: false`, permissões mínimas; fila de publicação só no job de publicar.
+- CodeQL (`security-extended`) a cada mudança e semanal; OpenSSF Scorecard semanal com selo; selos no README.
+- Configurações: regra "Proteger main" (sem envio forçado, sem exclusão, histórico linear), varredura de segredos com bloqueio no envio, relato privado de vulnerabilidade, grafo de dependências, alertas do Dependabot (incluindo malware) e atualizações de segurança automáticas.
+
+## Wi-Fi no simulador
+
+- Novo dispositivo **ponto de acesso** (`ap`): ponte de camada 2 com SSID, segurança (aberta, WPA2-Personal, WPA3-Personal), senha (8 a 63 caracteres no WPA), banda (2,4, 5 ou ambas) e SSID oculto.
+- Computador com **conexão Wi-Fi** (SSID, senha, adaptador antigo só 2,4 GHz). `js/sim/wifi.js` decide a associação (SSID idêntico, senha igual no WPA, banda compatível; o cabo tem prioridade) e cria cabos sem fio virtuais só na topologia da simulação (tracejados no desenho).
+- Terminal: `netsh wlan show networks` (ocultos não aparecem) e `netsh wlan show interfaces` (estado e motivo); `ipconfig` mostra "Adaptador de Rede sem Fio".
+- Missões (4, `tools/gerar-wifi.mjs`): senha com maiúsculas erradas, SSID oculto digitado errado, leitor antigo só 2,4 GHz e rede aberta da clínica (objetivo `wifi-seguro`: WPA2/WPA3 e senha de 12+ caracteres, não óbvia).
+- 🧪 Não simulado: alcance e sinal, canais e interferência, roaming, WPA-Enterprise/802.1X, WPS, limite de clientes. O painel avisa para usar só senhas inventadas.
+- Testes: `tests/unit/wifi.test.mjs` (6), 4 de missão e 1 e2e. Varredura de 80 rotas e axe sem problemas.

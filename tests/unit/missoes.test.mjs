@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6 } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6, configurarWifiAp, configurarWifiPc } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 36);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 40);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -525,4 +525,39 @@ test('IPv6: rotas estáticas nos dois roteadores (rota só de ida não basta)', 
   const ida = ok(adicionarRota6(t0, 'r1', { rede: '2001:db8:b::/64', via: '2001:db8:ff::2' }));
   assert.equal(verificarMissao(x, ida).todosOk, false);
   assert.equal(verificarMissao(x, ok(adicionarRota6(ida, 'r2', { rede: '::/0', via: '2001:db8:ff::1' }))).todosOk, true);
+});
+
+// ---- Wi-Fi ----
+const idDe = (t, nome) => t.dispositivos.find(d => d.nome === nome).id;
+const wifiPc = (t, nome, w) => ok(configurarWifiPc(t, idDe(t, nome), w));
+const wifiAp = (t, w) => ok(configurarWifiAp(t, idDe(t, 'AP1'), w));
+
+test('Wi-Fi: senha com maiúsculas erradas; corrigir resolve', () => {
+  const x = m('wifi-senha-errada');
+  const r0 = verificarMissao(x, x.topologia);
+  assert.deepEqual(r0.objetivos.map(o => o.ok), [true, false]);
+  assert.match(r0.objetivos[1].motivo, /não conectou ao Wi-Fi: a senha não confere/);
+  assert.equal(verificarMissao(x, wifiPc(x.topologia, 'Notebook2', { ssid: 'Escritorio', senha: 'Cafe-com-Leite-2026' })).todosOk, true);
+});
+
+test('Wi-Fi: SSID oculto com maiúscula diferente; escrever o nome exato resolve', () => {
+  const x = m('wifi-ssid-oculto');
+  assert.match(verificarMissao(x, x.topologia).objetivos[0].motivo, /nenhuma rede com esse nome/);
+  assert.equal(verificarMissao(x, wifiPc(x.topologia, 'Notebook1', { ssid: 'Diretoria', senha: 'Reuniao-Sexta-9h' })).todosOk, true);
+});
+
+test('Wi-Fi: leitor só 2,4 GHz; AP em ambas as bandas resolve e mantém o Caixa', () => {
+  const x = m('wifi-leitor-antigo');
+  assert.match(verificarMissao(x, x.topologia).objetivos[1].motivo, /só transmite em 5 GHz/);
+  assert.equal(verificarMissao(x, wifiAp(x.topologia, { ssid: 'Loja', seguranca: 'wpa2', senha: 'Vitrine-Azul-77', banda: 'ambas' })).todosOk, true);
+});
+
+test('Wi-Fi: rede aberta — WPA2 com senha forte e clientes atualizados; senha fraca não basta', () => {
+  const x = m('wifi-rede-aberta'), t0 = x.topologia;
+  assert.deepEqual(verificarMissao(x, t0).objetivos.map(o => o.ok), [false, true, true]);
+  const forte = 'Jaleco-Verde-2031!', fraca = '12345678';
+  const com = senha => ['Recepcao', 'Consultorio'].reduce((t, n) => wifiPc(t, n, { ssid: 'Clinica', senha }), wifiAp(t0, { ssid: 'Clinica', seguranca: 'wpa2', senha, banda: 'ambas' }));
+  assert.equal(verificarMissao(x, com(forte)).todosOk, true);
+  assert.match(verificarMissao(x, com(fraca)).objetivos[0].motivo, /curta ou óbvia/);
+  assert.deepEqual(verificarMissao(x, wifiAp(t0, { ssid: 'Clinica', seguranca: 'wpa3', senha: forte, banda: 'ambas' })).objetivos.map(o => o.ok), [true, false, false], 'trocar só o AP derruba os clientes');
 });

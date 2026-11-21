@@ -126,6 +126,522 @@
     }
   },
   {
+    "id": "wifi-senha-errada",
+    "modulo": "missoes",
+    "titulo": "Um notebook não entra no Wi-Fi",
+    "dificuldade": 1,
+    "xp": 140,
+    "habilidades": [
+      "fundamentos.diagnostico"
+    ],
+    "cenario": "No escritório, o Notebook1 acessa o Servidor (192.168.1.10) pelo Wi-Fi \"Escritorio\", mas o Notebook2 não conecta. Os dois foram configurados pela mesma pessoa.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc2",
+        "para": "pc1"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "No terminal do Notebook2, rode netsh wlan show interfaces. Qual é o motivo da desconexão?",
+      "A senha do Wi-Fi diferencia maiúsculas de minúsculas. Compare a senha do Notebook2 com a configurada no AP1.",
+      "No Notebook2, use a senha exatamente como está no AP1: Cafe-com-Leite-2026."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 560,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "ap1",
+          "tipo": "ap",
+          "nome": "AP1",
+          "x": 340,
+          "y": 230,
+          "interfaces": [],
+          "wifi": {
+            "ssid": "Escritorio",
+            "seguranca": "wpa2",
+            "senha": "Cafe-com-Leite-2026",
+            "banda": "ambas",
+            "oculto": false
+          }
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Notebook1",
+          "x": 100,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.21",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "Escritorio",
+            "senha": "Cafe-com-Leite-2026"
+          }
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Notebook2",
+          "x": 100,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.22",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "Escritorio",
+            "senha": "cafe-com-leite-2026"
+          }
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "ap1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wifi-ssid-oculto",
+    "modulo": "missoes",
+    "titulo": "A rede que não aparece",
+    "dificuldade": 2,
+    "xp": 160,
+    "habilidades": [
+      "fundamentos.diagnostico",
+      "seguranca.diagnostico"
+    ],
+    "cenario": "A rede da diretoria tem o SSID oculto. O Notebook1 tem a senha certa, mas não conecta, e a rede nem aparece na lista.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc2",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Rode netsh wlan show networks: redes com SSID oculto não aparecem na lista. Para entrar, é preciso digitar o nome exato.",
+      "Veja o SSID no AP1 e compare com o do Notebook1, letra por letra. O SSID diferencia maiúsculas de minúsculas.",
+      "No Notebook1, escreva o SSID como Diretoria (com D maiúsculo). Lembre: esconder o SSID não é segurança, ele aparece nos pacotes. O que protege a rede é o WPA3 com senha forte."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 560,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "ap1",
+          "tipo": "ap",
+          "nome": "AP1",
+          "x": 340,
+          "y": 230,
+          "interfaces": [],
+          "wifi": {
+            "ssid": "Diretoria",
+            "seguranca": "wpa3",
+            "senha": "Reuniao-Sexta-9h",
+            "banda": "ambas",
+            "oculto": true
+          }
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Notebook1",
+          "x": 100,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.21",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "diretoria",
+            "senha": "Reuniao-Sexta-9h"
+          }
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "ap1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wifi-leitor-antigo",
+    "modulo": "missoes",
+    "titulo": "O leitor antigo não acha a rede",
+    "dificuldade": 2,
+    "xp": 170,
+    "habilidades": [
+      "fundamentos.diagnostico"
+    ],
+    "cenario": "A loja trocou o ponto de acesso e configurou a rede \"Loja\" só em 5 GHz. O Caixa funciona, mas o leitor de código de barras, um aparelho antigo, não conecta.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc2",
+        "para": "pc1"
+      },
+      {
+        "id": "o2",
+        "de": "pc3",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "No Leitor, rode netsh wlan show networks e netsh wlan show interfaces. O adaptador dele é de qual banda?",
+      "Adaptadores antigos só funcionam em 2,4 GHz. A rede está transmitindo só em 5 GHz.",
+      "No AP1, mude a banda para \"2,4 e 5 GHz\": o Caixa continua funcionando e o Leitor passa a enxergar a rede."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 560,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "ap1",
+          "tipo": "ap",
+          "nome": "AP1",
+          "x": 340,
+          "y": 230,
+          "interfaces": [],
+          "wifi": {
+            "ssid": "Loja",
+            "seguranca": "wpa2",
+            "senha": "Vitrine-Azul-77",
+            "banda": "5",
+            "oculto": false
+          }
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Caixa",
+          "x": 100,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.21",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "Loja",
+            "senha": "Vitrine-Azul-77"
+          }
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Leitor",
+          "x": 100,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.22",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "Loja",
+            "senha": "Vitrine-Azul-77",
+            "so24": true
+          }
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "ap1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wifi-rede-aberta",
+    "modulo": "missoes",
+    "titulo": "Feche o Wi-Fi aberto da clínica",
+    "dificuldade": 2,
+    "xp": 220,
+    "habilidades": [
+      "seguranca.pratica",
+      "fundamentos.pratica"
+    ],
+    "cenario": "A clínica usa um Wi-Fi aberto, sem senha: qualquer pessoa na calçada entra na rede e o tráfego não tem criptografia. Coloque WPA2 ou WPA3 com uma senha forte e reconecte os dois computadores.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "tipo": "wifi-seguro",
+        "ap": "ap1"
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1"
+      },
+      {
+        "id": "o3",
+        "de": "pc3",
+        "para": "pc1"
+      }
+    ],
+    "dicas": [
+      "Rode netsh wlan show networks em um dos computadores: a autenticação aparece como \"Aberta (sem criptografia!)\".",
+      "No AP1, escolha WPA2-Personal ou WPA3-Personal e uma senha de 12 caracteres ou mais, difícil de adivinhar (nada de 12345678 ou o nome da rede).",
+      "Ao trocar a senha do AP, os computadores desconectam: atualize a senha na conexão Wi-Fi de cada um. Use uma senha inventada para o jogo, não uma senha real."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 560,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "ap1",
+          "tipo": "ap",
+          "nome": "AP1",
+          "x": 340,
+          "y": 230,
+          "interfaces": [],
+          "wifi": {
+            "ssid": "Clinica",
+            "seguranca": "aberta",
+            "senha": "",
+            "banda": "ambas",
+            "oculto": false
+          }
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Recepcao",
+          "x": 100,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.21",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "Clinica",
+            "senha": ""
+          }
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Consultorio",
+          "x": 100,
+          "y": 350,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.22",
+              "mascara": "255.255.255.0"
+            }
+          ],
+          "gateway": "",
+          "wifi": {
+            "ssid": "Clinica",
+            "senha": ""
+          }
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "ap1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "dois-switches",
     "modulo": "missoes",
     "titulo": "Dois switches, uma rede só",

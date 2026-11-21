@@ -9,6 +9,7 @@
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
 import { anunciosSlaac, aplicarSlaac, enviarPacote6 } from './motor6.js';
+import { associacoesWifi, aplicarWifi } from './wifi.js';
 
 export const TTL_INICIAL = { pc: 128, roteador: 255, switch: 255 };
 const MAX_SALTOS = 16;
@@ -49,7 +50,7 @@ export function dominioL2(t, origemId, origemPorta) {
   while (fila.length) {
     const { d, p, vlan } = fila.shift();
     const dev = dispositivo(t, d);
-    if (dev.tipo === 'switch') {
+    if (dev.tipo === 'switch' || dev.tipo === 'ap') { // o ponto de acesso é uma ponte de camada 2 (todas as portas na VLAN 1)
       const entrada = configDaPortaSwitch(dev, p);
       const v = entrada.modo === 'access' ? entrada.vlan : (vlan ?? 1); // trunk: usa a marca; sem marca é a VLAN nativa
       const chave = `${d}:${v}`;
@@ -234,7 +235,7 @@ export function caminhoFisico(t, { de, porta, para }) {
   while (fila.length) {
     const rota = fila.shift(), atual = rota.at(-1);
     if (atual === para) return rota;
-    if (dispositivo(t, atual)?.tipo !== 'switch') continue;
+    if (!['switch', 'ap'].includes(dispositivo(t, atual)?.tipo)) continue;
     for (const v of vizinhos(t, atual)) if (!vistos.has(v.outro.d)) { vistos.add(v.outro.d); fila.push([...rota, v.outro.d]); }
   }
   return null;
@@ -332,7 +333,8 @@ function aplicarConcessoes(t, concessoes) {
 }
 
 export function criarSimulacao(original) {
-  const concessoes = concessoesDhcp(original), comDhcp = aplicarConcessoes(original, concessoes);
+  const wifi = associacoesWifi(original), comWifi = aplicarWifi(original, wifi);
+  const concessoes = concessoesDhcp(comWifi), comDhcp = aplicarConcessoes(comWifi, concessoes);
   const slaac = anunciosSlaac(comDhcp), t = aplicarSlaac(comDhcp, slaac);
   const arp = new Map(); // dispositivoId -> Map(ipNum -> mac)
   const aprenderUm = (d, ip, mac) => { if (!arp.has(d)) arp.set(d, new Map()); arp.get(d).set(ip, mac); };
@@ -382,7 +384,7 @@ export function criarSimulacao(original) {
   }
 
   const sim = {
-    topologia: t, concessoes, slaac,
+    topologia: t, concessoes, slaac, wifi,
     ping6,
     rastrear6: (origemId, dest) => { const r = enviar6(origemId, dest, { tipo: 'echo-request' }); aprender6(r.aprendizado); return r; },
     vizinhos6: id => [...(arp.get(id) ?? [])].filter(([k]) => typeof k === 'string' && k.startsWith('v6:')).map(([k, mac]) => ({ ip: BigInt(k.slice(3)), mac })),

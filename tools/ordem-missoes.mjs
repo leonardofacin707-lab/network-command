@@ -1,6 +1,6 @@
 // Ordem de aprendizagem das missões em data/missions.json, compartilhada pelos geradores (o que não estiver aqui vai para o fim).
 export const ORDEM_MISSOES = [
-  'primeira-rede', 'dois-switches', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
+  'primeira-rede', 'wifi-senha-errada', 'wifi-ssid-oculto', 'wifi-leitor-antigo', 'wifi-rede-aberta', 'dois-switches', 'cabo-esquecido', 'ip-duplicado', 'mascara-errada', 'gateway-errado', 'interface-sem-ip', 'duas-redes-um-roteador',
   'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas',
   'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
   'filtro-convidado', 'filtro-ordem', 'filtro-resposta',

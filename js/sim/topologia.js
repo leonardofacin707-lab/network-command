@@ -9,7 +9,8 @@ export const MAX_DISPOSITIVOS = 16;
 export const TIPOS = {
   pc: { rotulo: 'Computador', prefixo: 'PC', idPrefixo: 'pc', portas: [{ id: 'eth0', rotulo: 'Ethernet0', ip: true }] },
   switch: { rotulo: 'Switch', prefixo: 'SW', idPrefixo: 'sw', portas: Array.from({ length: 8 }, (_, i) => ({ id: `fa${i + 1}`, rotulo: `Fa0/${i + 1}`, ip: false })) },
-  roteador: { rotulo: 'Roteador', prefixo: 'R', idPrefixo: 'r', portas: [{ id: 'gi0', rotulo: 'Gi0/0', ip: true }, { id: 'gi1', rotulo: 'Gi0/1', ip: true }] }
+  roteador: { rotulo: 'Roteador', prefixo: 'R', idPrefixo: 'r', portas: [{ id: 'gi0', rotulo: 'Gi0/0', ip: true }, { id: 'gi1', rotulo: 'Gi0/1', ip: true }] },
+  ap: { rotulo: 'Ponto de acesso', prefixo: 'AP', idPrefixo: 'ap', portas: [{ id: 'eth0', rotulo: 'Ethernet0', ip: false }] }
 };
 
 export const topologiaVazia = () => ({ dispositivos: [], cabos: [] });
@@ -45,6 +46,7 @@ function novoDispositivo(t, tipo, pos) {
   if (tipo === 'pc') d.gateway = '';
   if (tipo === 'roteador') { d.rotas = []; d.pools = []; d.filtros = []; d.nat = null; } // nat: { dentro, fora } (portas) // filtros: [{ acao, origem, origemM, destino, destinoM }]; rotas estáticas: [{ rede, mascara, via }]; pools DHCP: [{ porta, inicio, fim }]
   if (tipo === 'switch') d.portas = {}; // configuração das portas, só o que foge do padrão (access, VLAN 1)
+  if (tipo === 'ap') d.wifi = { ssid: `Rede-${d.nome}`, seguranca: 'wpa2', senha: 'senha-de-laboratorio', banda: '2.4', oculto: false };
   return d;
 }
 
@@ -169,6 +171,47 @@ export function removerRota6(t, id, indice) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'roteador' || !Number.isInteger(indice) || indice < 0 || indice >= (d.rotas6 ?? []).length) return { erro: 'Rota IPv6 não encontrada.' };
   return { topologia: trocar(t, id, x => { const r = x.rotas6.filter((_, i) => i !== indice); const { rotas6: _, ...resto } = x; return r.length ? { ...resto, rotas6: r } : resto; }) };
+}
+
+// ---------- Wi-Fi ----------
+export const SEGURANCAS_WIFI = { aberta: 'Aberta (sem senha)', wpa2: 'WPA2-Personal', wpa3: 'WPA3-Personal' };
+export const BANDAS_WIFI = { '2.4': '2,4 GHz', 5: '5 GHz', ambas: '2,4 e 5 GHz' };
+const SSID_VALIDO = /^[\x20-\x7E]{1,32}$/;
+
+function lerWifiAp({ ssid, seguranca, senha, banda, oculto }) {
+  const s = String(ssid ?? '').trim();
+  if (!SSID_VALIDO.test(s)) return { erro: 'SSID inválido: use de 1 a 32 caracteres (letras sem acento, números e símbolos comuns).' };
+  if (!SEGURANCAS_WIFI[seguranca]) return { erro: 'Escolha a segurança: aberta, WPA2 ou WPA3.' };
+  const b = String(banda ?? '2.4');
+  if (!BANDAS_WIFI[b]) return { erro: 'Escolha a banda: 2,4 GHz, 5 GHz ou as duas.' };
+  const pw = String(senha ?? '');
+  if (seguranca !== 'aberta' && (pw.length < 8 || pw.length > 63 || !/^[\x20-\x7E]+$/.test(pw))) return { erro: 'No WPA2 e no WPA3 a senha precisa ter de 8 a 63 caracteres (sem acentos).' };
+  return { wifi: { ssid: s, seguranca, senha: seguranca === 'aberta' ? '' : pw, banda: b, oculto: oculto === true } };
+}
+
+function lerWifiPc({ ssid, senha, so24 }) {
+  const s = String(ssid ?? '').trim();
+  if (!s) return { wifi: null };
+  if (!SSID_VALIDO.test(s)) return { erro: 'SSID inválido: use de 1 a 32 caracteres.' };
+  const pw = String(senha ?? '');
+  if (pw.length > 63) return { erro: 'A senha do Wi-Fi tem no máximo 63 caracteres.' };
+  return { wifi: { ssid: s, senha: pw, ...(so24 === true ? { so24: true } : {}) } };
+}
+
+/** Configura a rede sem fio de um ponto de acesso. As senhas aqui são de laboratório: não use senhas reais. */
+export function configurarWifiAp(t, id, campos) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'ap') return { erro: 'Só pontos de acesso transmitem uma rede Wi-Fi.' };
+  const w = lerWifiAp(campos); if (w.erro) return w;
+  return { topologia: trocar(t, id, x => ({ ...x, wifi: w.wifi })) };
+}
+
+/** Liga o computador a uma rede Wi-Fi (SSID vazio = sem Wi-Fi). Com cabo na Ethernet0, o cabo tem prioridade. */
+export function configurarWifiPc(t, id, campos) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores se conectam ao Wi-Fi nesta simulação.' };
+  const w = lerWifiPc(campos); if (w.erro) return w;
+  return { topologia: trocar(t, id, x => { const { wifi: _, ...r } = x; return w.wifi ? { ...r, wifi: w.wifi } : r; }) };
 }
 
 export const VLAN_MIN = 1, VLAN_MAX = 4094;
@@ -514,6 +557,8 @@ export function normalizarTopologia(bruto) {
         d.pools.push({ porta: q.porta, inicio: formatarIPv4(iN), fim: formatarIPv4(fN) });
       }
     }
+    if (b.tipo === 'ap') { const w = lerWifiAp(b.wifi ?? {}); d.wifi = w.erro ? { ssid: `Rede-${nome}`, seguranca: 'wpa2', senha: 'senha-de-laboratorio', banda: '2.4', oculto: false } : w.wifi; }
+    if (b.tipo === 'pc' && b.wifi && typeof b.wifi === 'object') { const w = lerWifiPc(b.wifi); if (!w.erro && w.wifi) d.wifi = w.wifi; }
     if (b.tipo === 'switch') {
       d.portas = {};
       if (b.portas && typeof b.portas === 'object' && !Array.isArray(b.portas)) {

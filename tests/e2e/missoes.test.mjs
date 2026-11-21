@@ -24,12 +24,12 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 36 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 40 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 36);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 36 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 40);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 40 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
-  assert.match(await pagina.locator('.missao a').nth(2).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
+  assert.match(await pagina.locator('.missao a').nth(6).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
   assert.match(await pagina.locator('.menu a[aria-current=page]').innerText(), /Missões/);
   assert.deepEqual(erros, []);
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 36 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 40 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -505,6 +505,36 @@ test('IPv6 pela interface: SLAAC sem anúncio, IPv6 no roteador, clientes se con
   await pagina.locator('#m-verificar').click();
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+220 XP/);
   assert.equal((await salvo()).missoes['ipv6-slaac'].topologia.dispositivos.find(d => d.id === 'r1').interfaces[0].ip6, '2001:db8:1::1');
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('Wi-Fi pela interface: rede aberta, senha fraca recusada pelo objetivo, WPA2 forte nos três e conclusão (220 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/wifi-rede-aberta');
+  const aplicar = () => pagina.locator('#form-cfg button[type=submit]').click();
+  assert.equal(await pagina.locator('.cabo-wifi').count(), 2, 'dois clientes associados à rede aberta');
+  await disp('pc2').click();
+  await pagina.fill('#term-entrada', 'netsh wlan show networks');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /SSID 1 : Clinica[\s\S]*Aberta \(sem criptografia!\)/);
+  await disp('ap1').click();
+  assert.match(await pagina.locator('#wifi-ap').innerText(), /Conectados: Recepcao, Consultorio/);
+  await pagina.selectOption('#cfg-seg', 'wpa2'); await pagina.fill('#cfg-wsenha', 'curta');
+  await aplicar();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /8 a 63 caracteres/);
+  await pagina.fill('#cfg-wsenha', 'Jaleco-Verde-2031!');
+  await aplicar();
+  assert.equal(await pagina.locator('.cabo-wifi').count(), 0, 'trocar a senha derruba os clientes');
+  for (const id of ['pc2', 'pc3']) {
+    await disp(id).click();
+    assert.match(await pagina.locator('#wifi-pc').innerText(), /Desconectado: a senha não confere/);
+    await pagina.fill('#cfg-wpc', 'Jaleco-Verde-2031!');
+    await aplicar();
+  }
+  assert.equal(await pagina.locator('.cabo-wifi').count(), 2);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+220 XP/);
+  assert.equal((await salvo()).missoes['wifi-rede-aberta'].topologia.dispositivos.find(d => d.id === 'ap1').wifi.seguranca, 'wpa2');
   assert.deepEqual(erros, []);
   await contexto.close();
 });

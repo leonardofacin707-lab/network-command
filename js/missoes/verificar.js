@@ -3,6 +3,7 @@ import { criarSimulacao, configDaInterface, NOMES_PORTAS } from '../sim/motor.js
 import { dispositivo, normalizarTopologia } from '../sim/topologia.js';
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4 } from '../sim/ipv4.js';
 import { primeiroGlobal6 } from '../sim/motor6.js';
+import { senhaWifiForte, MOTIVO_WIFI } from '../sim/wifi.js';
 
 export const PENALIDADE_DICA = 0.2;  // cada dica usada tira 20% do XP...
 export const XP_MINIMO = 0.4;        // ...até um mínimo de 40%
@@ -35,7 +36,8 @@ const MOTIVO = {
   descartado: 'o pacote foi descartado',
   timeout: 'o pacote chegou, mas a resposta não voltou',
   recusada: 'a porta está fechada no destino (nenhum serviço escutando)',
-  'sem-roteamento6': 'um roteador recebeu o pacote, mas não está roteando IPv6 (falta ipv6 unicast-routing)'
+  'sem-roteamento6': 'um roteador recebeu o pacote, mas não está roteando IPv6 (falta ipv6 unicast-routing)',
+  'sem-wifi': 'a origem não está conectada ao Wi-Fi'
 };
 
 const MOTIVO6 = {
@@ -67,6 +69,14 @@ export function verificarMissao(missao, topologia) {
       if (!c?.ok) return { id: o.id, texto, ok: false, motivo: `${nome(o.pc)} não recebeu endereço por DHCP` };
       return c.servidor.d === o.roteador ? { id: o.id, texto, ok: true, motivo: '' }
         : { id: o.id, texto, ok: false, motivo: `o endereço veio de outro servidor DHCP (${nome(c.servidor.d)}, ${formatarIPv4(c.servidor.ip)})` };
+    }
+    // o ponto de acesso precisa usar WPA2/WPA3 com senha forte (12+ caracteres, não óbvia)
+    if (o.tipo === 'wifi-seguro') {
+      const ap = dispositivo(topologia, o.ap);
+      const texto = `${nome(o.ap)} usa WPA2 ou WPA3 com senha forte (12 caracteres ou mais, não óbvia)`;
+      if (!ap?.wifi) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
+      if (ap.wifi.seguranca === 'aberta') return { id: o.id, texto, ok: false, motivo: 'a rede está aberta: qualquer um por perto entra e lê o tráfego' };
+      return senhaWifiForte(ap.wifi) ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: 'a senha é curta ou óbvia demais' };
     }
     // restrição: o roteador (do provedor) não pode ter rotas estáticas para redes privadas; força a solução por NAT
     if (o.tipo === 'sem-rota-privada') {
@@ -108,6 +118,8 @@ export function verificarMissao(missao, topologia) {
       if (ip === null) return { id: o.id, texto, ok: false, motivo: `${nome(o.para)} não tem IP configurado` };
     }
     const r = porta !== null ? sim.conectar(o.de, ip, porta) : sim.ping(o.de, ip);
+    const assoc = sim.wifi.get(o.de);
+    if (r.status === 'sem-link' && assoc && !assoc.ok && !isolar) return { id: o.id, texto, ok: false, motivo: `a origem não conectou ao Wi-Fi: ${MOTIVO_WIFI[assoc.motivo]}` };
     const entregue = r.status === 'entregue';
     if (isolar) return entregue ? { id: o.id, texto, ok: false, motivo: 'ainda se comunicam, mas deveriam estar isolados' } : { id: o.id, texto, ok: true, motivo: '' };
     return entregue ? { id: o.id, texto, ok: true, motivo: '' } : { id: o.id, texto, ok: false, motivo: MOTIVO[r.status] ?? 'sem resposta' };
@@ -128,9 +140,11 @@ export function validarMissao(m) {
   const objetivos = (Array.isArray(m.objetivos) ? m.objetivos : []).filter(o => o && typeof o.id === 'string'
     && ((o.tipo === 'sem-rota-privada' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
       || (o.tipo === 'dhcp-de' && dispositivo(topologia, o.pc)?.tipo === 'pc' && dispositivo(topologia, o.roteador)?.tipo === 'roteador')
+      || (o.tipo === 'wifi-seguro' && dispositivo(topologia, o.ap)?.tipo === 'ap')
       || (!o.tipo && dispositivo(topologia, o.de) && (dispositivo(topologia, o.para) || nomeValido(o.nome))))).map(o => {
     if (o.tipo === 'sem-rota-privada') return { id: o.id, tipo: 'sem-rota-privada', roteador: o.roteador };
     if (o.tipo === 'dhcp-de') return { id: o.id, tipo: 'dhcp-de', pc: o.pc, roteador: o.roteador };
+    if (o.tipo === 'wifi-seguro') return { id: o.id, tipo: 'wifi-seguro', ap: o.ap };
     let base;
     if (nomeValido(o.nome)) base = { id: o.id, de: o.de, nome: o.nome, ...(dispositivo(topologia, o.para) ? { para: o.para } : {}) };
     else if (o.ipv6 === true) base = { id: o.id, de: o.de, para: o.para, ipv6: true };

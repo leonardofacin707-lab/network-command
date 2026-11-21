@@ -2,13 +2,14 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos, configurarInterface6, configurarGateway6, configurarSlaac, configurarRoteamento6, adicionarRota6, removerRota6 } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos, configurarInterface6, configurarGateway6, configurarSlaac, configurarRoteamento6, adicionarRota6, removerRota6, configurarWifiAp, configurarWifiPc, SEGURANCAS_WIFI, BANDAS_WIFI } from '../sim/topologia.js';
 import { criarSimulacao, NOMES_PORTAS, caminhoFisico } from '../sim/motor.js';
 import { reduzMovimento } from '../core/ui.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
 import { executar, MOTIVO_DHCP, MOTIVO_SLAAC } from '../sim/terminal.js';
 import { formatarIPv6 } from '../sim/ipv6.js';
 import { enderecosDaInterface } from '../sim/motor6.js';
+import { MOTIVO_WIFI } from '../sim/wifi.js';
 import { executarIos, sessaoInicial, prompt as promptIos } from '../sim/cli-ios.js';
 import { diagnosticar } from '../sim/diagnostico.js';
 import { exemploLan, exemploDuasRedes } from './exemplos.js';
@@ -16,9 +17,10 @@ import { exemploLan, exemploDuasRedes } from './exemplos.js';
 const ICONE = {
   pc: '<rect x="-26" y="-22" width="52" height="34" rx="4"/><path d="M-12 22h24M0 12v10"/>',
   switch: '<rect x="-36" y="-12" width="72" height="24" rx="4"/><path d="M-24 0h.01M-12 0h.01M0 0h.01M12 0h.01M24 0h.01"/>',
-  roteador: '<circle r="26"/><path d="M0-14v28M-14 0h28M-5-9l5-5 5 5M-5 9l5 5 5-5M-9-5l-5 5 5 5M9-5l5 5-5 5"/>'
+  roteador: '<circle r="26"/><path d="M0-14v28M-14 0h28M-5-9l5-5 5 5M-5 9l5 5 5-5M-9-5l-5 5 5 5M9-5l5 5-5 5"/>',
+  ap: '<rect x="-26" y="2" width="52" height="16" rx="4"/><path d="M0 2v-14M-10-14a14 14 0 0 1 20 0M-17-21a24 24 0 0 1 34 0"/>'
 };
-const TIPO_ROTULO = { pc: 'computador', switch: 'switch', roteador: 'roteador' };
+const TIPO_ROTULO = { pc: 'computador', switch: 'switch', roteador: 'roteador', ap: 'ponto de acesso' };
 
 /**
  * opcoes: { topologia, aoMudar(t), restricoes: { dispositivos: bool, exemplos: bool }, aoSimular? }
@@ -38,7 +40,7 @@ export function criarEditor(raiz, opcoes) {
 
   raiz.innerHTML = `<div class="lab">
     <div class="lab-barra" role="toolbar" aria-label="Ferramentas do laboratório">
-      ${livre ? `<span class="lab-grupo"><button class="btn-sec" data-add="pc">+ Computador</button><button class="btn-sec" data-add="switch">+ Switch</button><button class="btn-sec" data-add="roteador">+ Roteador</button></span>` : ''}
+      ${livre ? `<span class="lab-grupo"><button class="btn-sec" data-add="pc">+ Computador</button><button class="btn-sec" data-add="switch">+ Switch</button><button class="btn-sec" data-add="roteador">+ Roteador</button><button class="btn-sec" data-add="ap">+ Ponto de acesso</button></span>` : ''}
       <span class="lab-grupo" role="group" aria-label="Modo">
         <button class="btn-sec" data-modo="mover" aria-pressed="true">Mover</button>
         <button class="btn-sec" data-modo="conectar" aria-pressed="false">Conectar cabo</button>
@@ -106,6 +108,8 @@ export function criarEditor(raiz, opcoes) {
       if (vl.some(v => v !== 1) || trunks) vlanTxt = [vl.length ? `VLAN ${vl.join(',')}` : '', trunks ? `trunk×${trunks}` : ''].filter(Boolean).join(' · ');
       if (vlanTxt) ips.push(vlanTxt);
     }
+    if (d.tipo === 'ap') ips.push(`((( ${d.wifi.ssid}${d.wifi.oculto ? ' (oculto)' : ''}`);
+    if (d.tipo === 'pc' && d.wifi) ips.push(sim.wifi?.get(d.id)?.ok ? `Wi-Fi: ${d.wifi.ssid}` : 'Wi-Fi: desconectado');
     const ligado = vizinhos(topo, d.id).length > 0;
     return `<g class="disp tipo-${d.tipo}${sel === d.id ? ' sel' : ''}${origemCabo === d.id ? ' origem' : ''}" data-id="${d.id}" transform="translate(${d.x} ${d.y})"
         role="button" tabindex="0" aria-label="${esc(d.nome)}${ips.length ? ' ' + ips.join(' ') : ''}, ${TIPO_ROTULO[d.tipo]}${ips.length ? '' : ', sem IP'}${ligado ? '' : ', sem cabo'}">
@@ -117,7 +121,8 @@ export function criarEditor(raiz, opcoes) {
   }
 
   function desenhar() {
-    svg.innerHTML = `<g class="cabos">${desenharCabos()}</g>${topo.dispositivos.map(desenharDispositivo).join('')}`;
+    const semFio = sim.topologia.cabos.filter(c => c.semFio).map(c => { const [x1, y1] = centro(c.a.d), [x2, y2] = centro(c.b.d); return `<line class="cabo-wifi" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }).join('');
+    svg.innerHTML = `<g class="cabos">${semFio}${desenharCabos()}</g>${topo.dispositivos.map(desenharDispositivo).join('')}`;
     $('#lab-avisos').innerHTML = diagnosticar(sim.topologia).map(a => `<li>${esc(a.texto)}</li>`).join('');
     renderCfg();
   }
@@ -127,9 +132,34 @@ export function criarEditor(raiz, opcoes) {
   const PORTAS_COMUNS = [21, 22, 23, 25, 80, 443];
   const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : redePrefixo(rede, mascara));
   const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
+  /** Painel Wi-Fi: rede do ponto de acesso, ou a conexão sem fio do computador. Senhas daqui são de laboratório. */
+  function fieldsetWifi(d) {
+    const aviso = '<p class="motivo">Use só senhas inventadas para o laboratório: o que você digita aqui fica salvo neste navegador.</p>';
+    if (d.tipo === 'ap') {
+      const w = d.wifi, clientes = [...(sim.wifi ?? [])].filter(([, a]) => a.ok && a.ap === d.id).map(([id]) => dispositivo(topo, id).nome);
+      return `<fieldset class="iface" id="wifi-ap"><legend>Rede Wi-Fi</legend>
+        <label for="cfg-ssid">Nome da rede (SSID)</label><input id="cfg-ssid" class="campo" name="ssid" maxlength="32" autocomplete="off" spellcheck="false" value="${esc(w.ssid)}">
+        <label for="cfg-seg">Segurança</label><select id="cfg-seg" class="campo" name="seg">${Object.entries(SEGURANCAS_WIFI).map(([k, v]) => `<option value="${k}"${w.seguranca === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>
+        <label for="cfg-wsenha">Senha (8 a 63 caracteres)</label><input id="cfg-wsenha" class="campo" name="wsenha" maxlength="63" autocomplete="off" spellcheck="false" value="${esc(w.senha)}">
+        <label for="cfg-banda">Banda</label><select id="cfg-banda" class="campo" name="banda">${Object.entries(BANDAS_WIFI).map(([k, v]) => `<option value="${k}"${w.banda === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>
+        <label class="opcao"><input type="checkbox" name="oculto"${w.oculto ? ' checked' : ''}> SSID oculto (não aparece na lista de redes)</label>
+        <p class="motivo" role="status">${clientes.length ? `Conectados: ${esc(clientes.join(', '))}.` : 'Nenhum computador conectado.'}</p>
+        ${aviso}
+        <p class="motivo">Simplificação: sem alcance, canais, interferência ou WPA-Enterprise. Ligue a porta Ethernet0 do ponto de acesso a um switch.</p></fieldset>`;
+    }
+    if (d.tipo !== 'pc') return '';
+    const a = sim.wifi?.get(d.id);
+    return `<fieldset class="iface" id="wifi-pc"><legend>Conexão Wi-Fi</legend>
+      <label for="cfg-wssid">Rede (SSID)</label><input id="cfg-wssid" class="campo" name="wssid" maxlength="32" autocomplete="off" spellcheck="false" placeholder="vazio = usar cabo" value="${esc(d.wifi?.ssid ?? '')}">
+      <label for="cfg-wpc">Senha</label><input id="cfg-wpc" class="campo" name="wpc" maxlength="63" autocomplete="off" spellcheck="false" value="${esc(d.wifi?.senha ?? '')}">
+      <label class="opcao"><input type="checkbox" name="so24"${d.wifi?.so24 ? ' checked' : ''}> Adaptador antigo (só 2,4 GHz)</label>
+      ${d.wifi ? `<p class="motivo" role="status">${a?.ok ? `Conectado a ${esc(dispositivo(topo, a.ap).nome)} (${esc(a.banda)}).` : `Desconectado: ${esc(MOTIVO_WIFI[a?.motivo] ?? '')}.`}</p>` : ''}
+      ${aviso}</fieldset>`;
+  }
+
   /** Painel IPv6: endereço global e prefixo por interface, link-local automático, gateway e SLAAC (PC) ou roteamento e rotas (roteador). */
   function fieldsetIPv6(d) {
-    if (d.tipo === 'switch') return '';
+    if (d.tipo === 'switch' || d.tipo === 'ap') return '';
     const efetivo = dispositivo(sim.topologia, d.id) ?? d;
     const ll = p => enderecosDaInterface(efetivo, p).find(e => e.tipo === 'link-local');
     const campos = i => `<label for="cfg-ip6-${i.id}">Endereço IPv6 de ${esc(rotuloDaPorta(d, i.id))}</label><input id="cfg-ip6-${i.id}" class="campo" name="ip6-${i.id}" autocomplete="off" spellcheck="false" placeholder="ex.: 2001:db8:1::10 (vazio = sem IPv6 global)" value="${esc(i.ip6 ?? '')}">
@@ -185,6 +215,7 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-pool-fim-${i.id}">Pool DHCP: último endereço</label><input id="cfg-pool-fim-${i.id}" class="campo" name="pool-fim-${i.id}" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.200" value="${esc(poolDe(d, i.id)?.fim ?? '')}">` : ''}
       </fieldset>`).join('')}
       ${d.tipo === 'pc' ? `<fieldset class="iface" data-fixo${d.dhcp ? ' disabled' : ''}><legend>Gateway</legend><label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}"></fieldset>` : ''}
+      ${fieldsetWifi(d)}
       ${fieldsetIPv6(d)}
       ${d.tipo === 'pc' ? `<fieldset class="iface" id="dns-pc"><legend>DNS</legend>
         <label for="cfg-dns">Servidor DNS (IP)</label><input id="cfg-dns" class="campo" name="dns" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.50" value="${esc(d.dns ?? '')}">
@@ -242,6 +273,7 @@ export function criarEditor(raiz, opcoes) {
     const alvo = $('#lab-term');
     const d = sel ? dispositivo(topo, sel) : null;
     if (!d) { alvo.innerHTML = ''; return; }
+    if (d.tipo === 'ap') { alvo.innerHTML = ''; return; }
     if (d.tipo !== 'pc') { renderConsole(alvo, d); return; }
     if (!saidas.has(d.id)) saidas.set(d.id, ['Terminal simulado. Digite help para ver os comandos.']);
     alvo.innerHTML = `<div class="painel terminal">
@@ -511,7 +543,9 @@ export function criarEditor(raiz, opcoes) {
           passos.push(t => configurarPortaSwitch(t, sel, p.id, { modo, vlan }));
         }
       }
-      if (alvoCfg.tipo !== 'switch') {
+      if (alvoCfg.tipo === 'ap') passos.push(t => configurarWifiAp(t, sel, { ssid: f.get('ssid'), seguranca: f.get('seg'), senha: f.get('wsenha'), banda: f.get('banda'), oculto: f.get('oculto') === 'on' }));
+      if (alvoCfg.tipo === 'pc') passos.push(t => configurarWifiPc(t, sel, { ssid: f.get('wssid'), senha: f.get('wpc'), so24: f.get('so24') === 'on' }));
+      if (alvoCfg.tipo !== 'switch' && alvoCfg.tipo !== 'ap') {
         const auto = alvoCfg.tipo === 'pc' && f.get('slaac') === 'on';
         if (alvoCfg.tipo === 'pc') passos.push(t => configurarSlaac(t, sel, auto));
         if (alvoCfg.tipo === 'roteador') passos.push(t => configurarRoteamento6(t, sel, f.get('rot6') === 'on'));

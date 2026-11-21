@@ -6,6 +6,8 @@ import { configDaInterface, conflitosDeIp, macDe, temLink, interfacesConfigurada
 import { dispositivo, rotuloDaPorta } from './topologia.js';
 import { lerIPv6, formatarIPv6 } from './ipv6.js';
 import { enderecosDaInterface, primeiroGlobal6, conflitos6 } from './motor6.js';
+import { MOTIVO_WIFI } from './wifi.js';
+import { SEGURANCAS_WIFI, BANDAS_WIFI } from './topologia.js';
 
 const AJUDA = [
   'Comandos disponíveis:',
@@ -17,6 +19,8 @@ const AJUDA = [
   '  tnc destino porta   testa uma conexão TCP com um serviço (ex.: tnc 192.168.1.60 80)',
   '  arp -a              mostra os endereços MAC já descobertos (IPv4)',
   '  netsh interface ipv6 show neighbors   vizinhos IPv6 descobertos (NDP)',
+  '  netsh wlan show networks     redes Wi-Fi visíveis',
+  '  netsh wlan show interfaces   estado da conexão Wi-Fi deste computador',
   '  hostname            mostra o nome desta máquina',
   '  cls                 limpa a tela',
   '  help                mostra esta lista'
@@ -79,12 +83,14 @@ function renovar(t, sim, d) {
   return ['Concessão DHCP obtida.', '', ...ipconfig(t, sim, d, false).slice(2)];
 }
 
+const vizinhosSemFio = (t, d) => t.cabos.some(c => !c.semFio && (c.a.d === d.id || c.b.d === d.id));
+
 function ipconfig(t, sim, d, tudo) {
   const linhas = ['Configuração de IP do Windows', ''];
   if (tudo) linhas.push(campo('Nome do Host', d.nome), '');
   for (const i of d.interfaces) {
     const rotulo = rotuloDaPorta(d, i.id);
-    linhas.push(`Adaptador Ethernet ${rotulo}:`, '');
+    linhas.push(d.wifi && !vizinhosSemFio(t, d) ? `Adaptador de Rede sem Fio Wi-Fi:` : `Adaptador Ethernet ${rotulo}:`, '');
     if (!temLink(t, d.id, i.id)) { linhas.push(campo('Estado da mídia', 'mídia desconectada'), ''); continue; }
     const conc = d.dhcp ? sim.concessoes?.get(d.id) : null;
     if (tudo) linhas.push(campo('Endereço Físico', macDe(d.id, i.id).toUpperCase()), campo('DHCP Habilitado', d.dhcp ? 'Sim' : 'Não'));
@@ -200,6 +206,26 @@ function tracert6(sim, d, alvo) {
   return [...linhas, '', 'Rastreamento concluído.'];
 }
 
+/** Redes visíveis: SSIDs ocultos não aparecem; um adaptador só de 2,4 GHz não vê redes só de 5 GHz. */
+function redesWifi(t, d) {
+  const aps = t.dispositivos.filter(a => a.tipo === 'ap' && a.wifi && !a.wifi.oculto && !(d.wifi?.so24 && a.wifi.banda === '5'));
+  if (!aps.length) return ['Nenhuma rede sem fio visível.', ...(t.dispositivos.some(a => a.tipo === 'ap' && a.wifi?.oculto) ? ['(Redes com SSID oculto não aparecem na lista, mas aceitam quem digita o nome exato.)'] : [])];
+  const l = [`Há ${aps.length} ${aps.length === 1 ? 'rede visível' : 'redes visíveis'}.`, ''];
+  aps.forEach((a, i) => l.push(`SSID ${i + 1} : ${a.wifi.ssid}`, `    Autenticação           : ${a.wifi.seguranca === 'aberta' ? 'Aberta (sem criptografia!)' : SEGURANCAS_WIFI[a.wifi.seguranca]}`,
+    `    Banda                  : ${BANDAS_WIFI[a.wifi.banda]}`, ''));
+  return l;
+}
+
+function interfaceWifi(t, sim, d) {
+  if (!d.wifi) return ['Wi-Fi não configurado neste computador (ele usa cabo).'];
+  const a = sim.wifi?.get(d.id);
+  const l = ['Nome                   : Wi-Fi', `Tipo de adaptador      : ${d.wifi.so24 ? 'antigo (só 2,4 GHz)' : '2,4 e 5 GHz'}`];
+  if (!a?.ok) return [...l, 'Estado                 : desconectado', `SSID configurado       : ${d.wifi.ssid}`, `Motivo                 : ${MOTIVO_WIFI[a?.motivo] ?? 'sem rede'}`];
+  const ap = t.dispositivos.find(x => x.id === a.ap);
+  return [...l, 'Estado                 : conectado', `SSID                   : ${ap.wifi.ssid}`, `Ponto de acesso        : ${ap.nome}`,
+    `Autenticação           : ${ap.wifi.seguranca === 'aberta' ? 'Aberta (sem criptografia!)' : SEGURANCAS_WIFI[ap.wifi.seguranca]}`, `Banda                  : ${a.banda}`];
+}
+
 function vizinhos6(sim, d) {
   const lista = sim.vizinhos6(d.id);
   if (!lista.length) return ['Nenhum vizinho IPv6 descoberto ainda. Faça um ping IPv6 primeiro.'];
@@ -260,7 +286,13 @@ export function executar(sim, dispositivoId, linhaDigitada) {
     case 'nslookup': return { linhas: nslookup(t, sim, d, args), limpar: false };
     case 'tnc': case 'test-netconnection': return { linhas: tnc(t, sim, d, args.filter(a => a.toLowerCase() !== '-port')), limpar: false };
     case 'arp': return { linhas: arp(t, sim, d, args), limpar: false };
-    case 'netsh': return { linhas: args.map(a => a.toLowerCase()).join(' ') === 'interface ipv6 show neighbors' ? vizinhos6(sim, d) : ['Uso: netsh interface ipv6 show neighbors'], limpar: false };
+    case 'netsh': {
+      const sub = args.map(a => a.toLowerCase()).join(' ');
+      if (sub === 'interface ipv6 show neighbors') return { linhas: vizinhos6(sim, d), limpar: false };
+      if (sub === 'wlan show networks') return { linhas: redesWifi(t, d), limpar: false };
+      if (sub === 'wlan show interfaces') return { linhas: interfaceWifi(t, sim, d), limpar: false };
+      return { linhas: ['Uso: netsh interface ipv6 show neighbors | netsh wlan show networks | netsh wlan show interfaces'], limpar: false };
+    }
     case 'hostname': return { linhas: [d.nome], limpar: false };
     case 'cls': return { linhas: [], limpar: true };
     case 'help': case 'ajuda': return { linhas: AJUDA, limpar: false };
