@@ -1,14 +1,12 @@
 // Converte o conteúdo original da v0.1 (tests/fixtures/legado.json) para o formato de dados do Network Command.
 // Rode uma única vez: depois disso os arquivos em data/ passam a ser editados à mão.
 // Por segurança, recusa sobrescrever data/questions.json sem --forcar.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 const raiz = new URL('../', import.meta.url);
 const destinoPerguntas = new URL('data/questions.json', raiz);
-if (existsSync(destinoPerguntas) && !process.argv.includes('--forcar')) {
-  console.error('data/questions.json já existe. Use --forcar para sobrescrever (edições manuais serão perdidas).');
-  process.exit(1);
-}
+// Sem --forcar, a gravação usa a flag 'wx' (falha se o arquivo já existe), sem checar antes e gravar depois.
+const FLAG = process.argv.includes('--forcar') ? 'w' : 'wx';
 
 const legado = JSON.parse(readFileSync(new URL('tests/fixtures/legado.json', raiz), 'utf8'));
 
@@ -57,6 +55,12 @@ for (const nivel of legado) {
   niveis.push(entrada);
 }
 
-writeFileSync(destinoPerguntas, JSON.stringify(perguntas, null, 2) + '\n');
-writeFileSync(new URL('data/levels.json', raiz), JSON.stringify(niveis, null, 2) + '\n');
+try {
+  writeFileSync(destinoPerguntas, JSON.stringify(perguntas, null, 2) + '\n', { flag: FLAG });
+  writeFileSync(new URL('data/levels.json', raiz), JSON.stringify(niveis, null, 2) + '\n', { flag: FLAG });
+} catch (e) {
+  if (e.code !== 'EEXIST') throw e;
+  console.error('data/questions.json já existe. Use --forcar para sobrescrever (edições manuais serão perdidas).');
+  process.exit(1);
+}
 console.log(`Perguntas: ${perguntas.length} | Níveis: ${niveis.length}`);

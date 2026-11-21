@@ -1,10 +1,11 @@
 // Gera data/missions.json a partir de cenários montados pela API do simulador (assim as topologias são sempre válidas).
 // Rode uma vez; o JSON gerado é a fonte dos dados. Não sobrescreve sem --forcar.
-import { writeFileSync, existsSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { topologiaVazia, adicionarDispositivo, conectar, configurarInterface, configurarGateway } from '../js/sim/topologia.js';
 
 const destino = new URL('../data/missions.json', import.meta.url);
-if (existsSync(destino) && !process.argv.includes('--forcar')) { console.error('data/missions.json já existe. Use --forcar para sobrescrever.'); process.exit(1); }
+// Sem --forcar, a gravação usa a flag 'wx' (falha se o arquivo já existe), sem checar antes e gravar depois.
+const FLAG = process.argv.includes('--forcar') ? 'w' : 'wx';
 
 const montar = (disp, cabos, cfg, gws = {}) => {
   let t = topologiaVazia();
@@ -45,5 +46,6 @@ const missoes = [
     dicas: ['Os computadores estão certos. Olhe as duas interfaces do roteador, uma de cada vez.', 'O gateway do PC2 aponta para um endereço que o roteador precisa ter na interface ligada à rede do PC2.'],
     topologia: montar(duasRedes, cabosDuasRedes, [['r1', 'gi0', '192.168.1.1', '/24'], ['pc1', 'eth0', '192.168.1.10', '/24'], ['pc2', 'eth0', '10.0.0.10', '/24']], { pc1: '192.168.1.1', pc2: '10.0.0.1' }) }
 ];
-writeFileSync(destino, JSON.stringify(missoes, null, 2) + '\n');
+try { writeFileSync(destino, JSON.stringify(missoes, null, 2) + '\n', { flag: FLAG }); }
+catch (e) { if (e.code === 'EEXIST') { console.error('data/missions.json já existe. Use --forcar para sobrescrever.'); process.exit(1); } throw e; }
 console.log(`${missoes.length} missões gravadas em data/missions.json`);

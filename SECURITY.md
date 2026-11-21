@@ -18,6 +18,13 @@
 - O Dependabot avisa sobre atualizações.
 - O formato do progresso salvo tem número de versão: mudanças de formato precisam de conversão, para não apagar o progresso de ninguém.
 
-## Como relatar um problema
+## Como relatar uma vulnerabilidade
 
-Abra uma issue no repositório sem incluir dados pessoais, ou use o recurso de relato privado de vulnerabilidade do GitHub (aba Security).
+Use o relato privado do GitHub: **https://github.com/leonardofacin707-lab/network-command/security/advisories/new** (só o mantenedor vê). Não abra issue pública para falhas de segurança e não inclua dados pessoais.
+
+- Resposta inicial: até 7 dias.
+- Correção: priorizada conforme a gravidade; o relato é creditado, se você quiser, quando a correção for publicada.
+
+## Versões com suporte
+
+Só a versão publicada no GitHub Pages (a branch `main`) recebe correções.

@@ -219,7 +219,7 @@ test('nível 9 (ARP e roteamento): rota mais específica, TTL e direto/gateway c
   const casam = rotas.filter(x => ip.enderecoDeRede(destino, ip.mascaraDePrefixo(x.p)) === x.rede);
   assert.equal(casam.length, 3, 'as três rotas correspondem');
   const q3 = porId.get('roteamento-003');
-  assert.match(q3.alternativas[q3.correta], new RegExp('^' + casam.sort((a, b) => b.p - a.p)[0].r.replace(/\./g, '\\.')));
+  assert.match(q3.alternativas[q3.correta], new RegExp('^' + casam.sort((a, b) => b.p - a.p)[0].r.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')));
   // destinos na mesma rede do host /24 vão direto; os demais, ao gateway
   const q4 = porId.get('roteamento-004');
   const host = ip.lerIPv4('192.168.1.10'), m24 = ip.mascaraDePrefixo(24);
