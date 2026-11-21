@@ -98,9 +98,14 @@ export function verificarMissao(missao, topologia) {
     const porNome = typeof o.nome === 'string'; // objetivo "de alcança o nome X": resolve pelo DNS e depois faz o ping
     const porta = Number.isInteger(o.porta) ? o.porta : null; // objetivo de serviço: conexão TCP nessa porta
     if (o.ipv6) {
-      const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${nome(o.para)} por IPv6`;
-      if (!dispositivo(topologia, o.de) || !dispositivo(topologia, o.para)) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
-      const ip6 = primeiroGlobal6(dispositivo(sim.topologia, o.para));
+      const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${porNome ? `${o.nome} (pelo nome, registro AAAA)` : nome(o.para)} por IPv6`;
+      if (!dispositivo(topologia, o.de) || (!porNome && !dispositivo(topologia, o.para))) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
+      let ip6;
+      if (porNome) {
+        const res = sim.resolver(o.de, o.nome, 'AAAA');
+        if (!res.ok) return { id: o.id, texto, ok: isolar, motivo: isolar ? '' : (res.motivo === 'nome-inexistente' ? 'o servidor DNS não tem registro AAAA (IPv6) para esse nome' : MOTIVO_DNS[res.motivo]) };
+        ip6 = res.ip;
+      } else ip6 = primeiroGlobal6(dispositivo(sim.topologia, o.para));
       if (ip6 === null) return { id: o.id, texto, ok: isolar, motivo: isolar ? '' : `${nome(o.para)} não tem endereço IPv6 global` };
       const r6 = sim.ping6(o.de, ip6), chegou = r6.status === 'entregue';
       if (isolar) return { id: o.id, texto, ok: !chegou, motivo: chegou ? 'ainda se comunicam, mas deveriam estar isolados' : '' };
@@ -155,7 +160,7 @@ export function validarMissao(m) {
     if (o.tipo === 'wifi-seguro') return { id: o.id, tipo: 'wifi-seguro', ap: o.ap };
     if (o.tipo === 'sem-rotas-estaticas') return { id: o.id, tipo: 'sem-rotas-estaticas', roteador: o.roteador };
     let base;
-    if (nomeValido(o.nome)) base = { id: o.id, de: o.de, nome: o.nome, ...(dispositivo(topologia, o.para) ? { para: o.para } : {}) };
+    if (nomeValido(o.nome)) base = { id: o.id, de: o.de, nome: o.nome, ...(dispositivo(topologia, o.para) ? { para: o.para } : {}), ...(o.ipv6 === true ? { ipv6: true } : {}) };
     else if (o.ipv6 === true) base = { id: o.id, de: o.de, para: o.para, ipv6: true };
     else base = { id: o.id, de: o.de, para: o.para, ...(Number.isInteger(o.porta) && o.porta >= 1 && o.porta <= 65535 ? { porta: o.porta } : {}) };
     return o.esperado === 'falha' ? { ...base, esperado: 'falha' } : base;

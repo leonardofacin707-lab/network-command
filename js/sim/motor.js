@@ -8,7 +8,8 @@
 // (router-on-a-stick), STP, roteamento dinâmico, firewall com estado, retransmissão e janelas do TCP.
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
-import { anunciosSlaac, aplicarSlaac, enviarPacote6 } from './motor6.js';
+import { lerIPv6 } from './ipv6.js';
+import { anunciosSlaac, aplicarSlaac, enviarPacote6, concessoesDhcp6 } from './motor6.js';
 import { associacoesWifi, aplicarWifi } from './wifi.js';
 import { calcularOspf, aplicarOspf } from './ospf.js';
 
@@ -205,7 +206,7 @@ function descreverL4(l4) {
   const nome = p => (NOMES_PORTAS[p] ? `${p} (${NOMES_PORTAS[p]})` : String(p));
   if (l4.proto === 'icmp') return { protocolo: 'ICMP', info: l4.tipo === 'echo-reply' ? 'Echo (ping) resposta' : 'Echo (ping) pedido' };
   if (l4.proto === 'tcp') return { protocolo: 'TCP', info: `${nome(l4.portaOrigem)} → ${nome(l4.portaDestino)} [${l4.flags ?? 'SYN'}]` };
-  if (l4.dns) return { protocolo: 'DNS', info: l4.resposta ? `Resposta: ${l4.dns.nome} ${l4.dns.ip ? 'A ' + l4.dns.ip : '(nome não existe)'}` : `Consulta: ${l4.dns.nome} (A)` };
+  if (l4.dns) return { protocolo: 'DNS', info: l4.resposta ? `Resposta: ${l4.dns.nome} ${l4.dns.ip ? `${l4.dns.tipo ?? 'A'} ${l4.dns.ip}` : `(sem registro ${l4.dns.tipo ?? 'A'})`}` : `Consulta: ${l4.dns.nome} (${l4.dns.tipo ?? 'A'})` };
   return { protocolo: 'UDP', info: `${nome(l4.portaOrigem)} → ${nome(l4.portaDestino)}` };
 }
 
@@ -344,7 +345,8 @@ function aplicarConcessoes(t, concessoes) {
 export function criarSimulacao(original) {
   const wifi = associacoesWifi(original), comWifi = aplicarWifi(original, wifi);
   const concessoes = concessoesDhcp(comWifi), comDhcp = aplicarConcessoes(comWifi, concessoes);
-  const slaac = anunciosSlaac(comDhcp), comSlaac = aplicarSlaac(comDhcp, slaac);
+  const slaac = anunciosSlaac(comDhcp), dhcp6 = concessoesDhcp6(comDhcp);
+  const comSlaac = aplicarSlaac(comDhcp, new Map([...slaac, ...dhcp6]));
   const ospf = calcularOspf(comSlaac), t = aplicarOspf(comSlaac, ospf);
   const arp = new Map(); // dispositivoId -> Map(ipNum -> mac)
   const aprenderUm = (d, ip, mac) => { if (!arp.has(d)) arp.set(d, new Map()); arp.get(d).set(ip, mac); };
@@ -394,7 +396,7 @@ export function criarSimulacao(original) {
   }
 
   const sim = {
-    topologia: t, concessoes, slaac, wifi, ospf,
+    topologia: t, concessoes, slaac, dhcp6, wifi, ospf,
     ping6,
     rastrear6: (origemId, dest) => { const r = enviar6(origemId, dest, { tipo: 'echo-request' }); aprender6(r.aprendizado); return r; },
     vizinhos6: id => [...(arp.get(id) ?? [])].filter(([k]) => typeof k === 'string' && k.startsWith('v6:')).map(([k, mac]) => ({ ip: BigInt(k.slice(3)), mac })),
@@ -412,24 +414,24 @@ export function criarSimulacao(original) {
      * DNS (simplificado): consulta UDP 53 ao servidor configurado (um computador com registros). Devolve
      * { ok:true, ip, servidor:{ d, ip } } ou { ok:false, motivo }: 'sem-dns' | 'dns-inalcancavel' | 'dns-sem-servico' | 'nome-inexistente'.
      */
-    resolver(origemId, nome) {
+    resolver(origemId, nome, tipo = 'A') {
       const o = dispositivo(t, origemId);
       const dnsN = lerIPv4(o?.dns);
       if (!o || o.tipo !== 'pc' || dnsN === null) return { ok: false, motivo: 'sem-dns' };
       const consulta = String(nome).trim().toLowerCase();
       let achado = null, servico = false;
-      const l4 = { proto: 'udp', portaOrigem: PORTA_CLIENTE, portaDestino: 53, dns: { nome: consulta } };
+      const l4 = { proto: 'udp', portaOrigem: PORTA_CLIENTE, portaDestino: 53, dns: { nome: consulta, tipo } };
       const r = transacao(origemId, dnsN, l4, dest => {
         const srv = dispositivo(t, dest.d);
         servico = srv.tipo === 'pc' && (srv.registros?.length ?? 0) > 0;
         if (!servico) return false;
-        achado = srv.registros.find(x => x.nome === consulta) ?? null;
-        return { ...respostaDe(l4), dns: { nome: consulta, ip: achado?.ip ?? null } };
+        achado = srv.registros.find(x => x.nome === consulta && (x.ip.includes(':') ? 'AAAA' : 'A') === tipo) ?? null;
+        return { ...respostaDe(l4), dns: { nome: consulta, tipo, ip: achado?.ip ?? null } };
       });
       if (r.status === 'recusada' || (r.status === 'entregue' && !servico)) return { ok: false, motivo: 'dns-sem-servico', servidor: { d: r.destino?.d, ip: dnsN } };
       if (r.status !== 'entregue') return { ok: false, motivo: 'dns-inalcancavel', servidor: { ip: dnsN } };
       const servidor = { d: r.destino.d, ip: dnsN };
-      return achado ? { ok: true, ip: lerIPv4(achado.ip), servidor } : { ok: false, motivo: 'nome-inexistente', servidor };
+      return achado ? { ok: true, ip: tipo === 'AAAA' ? lerIPv6(achado.ip) : lerIPv4(achado.ip), tipo, servidor } : { ok: false, motivo: 'nome-inexistente', servidor };
     },
     rastrear: (origemId, ipDest) => { const r = enviar(origemId, ipDest, ICMP_PEDIDO); aprender(r.aprendizado); return r; },
     tabelaArp: id => [...(arp.get(id) ?? [])].filter(([ip]) => typeof ip === 'number').map(([ip, mac]) => ({ ip, mac })).sort((a, b) => a.ip - b.ip),

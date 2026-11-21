@@ -227,7 +227,7 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **Terminal:** `ipconfig` com IPv6 e link-local, `ping` e `tracert` com IPv6 (`-6` para nome de dispositivo), `netsh interface ipv6 show neighbors`. **Console IOS:** `ipv6 unicast-routing`, `ipv6 address X/N`, `ipv6 route P/N via`, `show ipv6 interface brief`, `show ipv6 route`, ping IPv6.
 - **Painel:** quadro IPv6 no PC (SLAAC, endereço, prefixo, gateway, link-local) e no roteador (rotear IPv6, endereços, rotas IPv6). Avisos de duplicado e de roteador sem roteamento IPv6.
 - **Missões (5, `tools/gerar-ipv6.mjs`):** primeiros passos, roteador sem ipv6 unicast-routing, SLAAC, prefixo digitado errado e rotas IPv6 entre dois roteadores. Objetivo novo `{ de, para, ipv6: true }`.
-- **🧪 Não simulado:** DHCPv6, DNS AAAA, filtros e NAT em IPv6, identificadores aleatórios de privacidade, MTU/fragmentação, mensagens ICMPv6 de erro além das usadas no ping/tracert.
+- **🧪 Não simulado:** filtros e NAT em IPv6 (DHCPv6 e AAAA entraram depois), identificadores aleatórios de privacidade, MTU/fragmentação, mensagens ICMPv6 de erro além das usadas no ping/tracert.
 - **Testes:** `tests/unit/ipv6.test.mjs` (10), 5 testes de missão, console IOS e 1 e2e (SLAAC pela interface). Total: 275 unitários, 100 e2e (1 ignorado). Varredura de 76 rotas e axe sem problemas.
 
 ## Segurança do repositório (GitHub)
@@ -259,3 +259,11 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - Missões (3): OSPF em três roteadores (prática, com objetivo `sem-rotas-estaticas`), área errada e máscara no lugar da wildcard.
 - 🧪 Não simulado: timers, DR/BDR, router-id, LSAs e áreas reais (várias áreas viram um domínio), custo por banda, ECMP, autenticação, interface passiva.
 - Testes: `tests/unit/ospf.test.mjs` (7), 2 de missão e 1 e2e. Total: 298 unitários, 103 e2e (1 ignorado). Varredura de 84 rotas e axe sem problemas.
+
+## IPv6 completo: DNS AAAA e DHCPv6
+
+- **AAAA:** o servidor DNS aceita registros IPv6 (um nome pode ter A e AAAA). `sim.resolver(pc, nome, 'AAAA')`; a consulta continua indo ao servidor por IPv4. `nslookup` mostra os dois endereços; `ping` pelo nome prefere IPv6 quando o PC tem IPv6 global e o nome tem AAAA (como no Windows); `-6` força.
+- **DHCPv6 com estado:** pool IPv6 por interface de roteador (`pools6`, dentro do prefixo, até 4096 endereços); PC em modo DHCPv6 (`dhcp6`, exclusivo com SLAAC) recebe o primeiro endereço livre se o roteador anuncia (ipv6 unicast-routing); gateway = link-local do roteador. Motivos: sem link, sem anúncio, sem pool, pool esgotado. Painel com "Como obter o endereço IPv6: manual, SLAAC ou DHCPv6".
+- **🧪 Simplificações:** sem mensagens SOLICIT/ADVERTISE/REQUEST/REPLY, sem DHCPv6 sem estado, o DHCPv6 não entrega DNS; no console IOS os pools DHCPv6 não têm comando (só pelo painel).
+- **Missões (2):** endereços pelo DHCPv6 e o portal que só respondia por IPv4 (registro AAAA). Total: 51 cenários.
+- **Testes:** 2 unitários de IPv6, 2 de missão e 1 e2e. Total: 302 unitários, 104 e2e (1 ignorado). Varredura de 86 rotas e axe sem problemas.

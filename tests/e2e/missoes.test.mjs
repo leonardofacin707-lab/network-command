@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 43 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 45 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 43);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 43 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 45);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 45 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(6).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 43 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 45 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -484,7 +484,7 @@ test('segurança pela interface: captura mostra as duas respostas ARP do gateway
 test('IPv6 pela interface: SLAAC sem anúncio, IPv6 no roteador, clientes se configuram sozinhos e ping IPv6 conclui (220 XP)', async () => {
   const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/ipv6-slaac');
   await disp('pc1').click();
-  assert.equal(await pagina.locator('#cfg-slaac').isChecked(), true);
+  assert.equal(await pagina.locator('#cfg-modo6').inputValue(), 'slaac');
   assert.match(await pagina.locator('#ipv6-cfg').innerText(), /nenhum roteador anunciou um prefixo IPv6/);
   await pagina.fill('#term-entrada', 'ipconfig');
   await pagina.press('#term-entrada', 'Enter');
@@ -555,6 +555,23 @@ test('OSPF pela interface: wildcard errada vista no painel, corrigida pelo conso
   await pagina.locator('#m-verificar').click();
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+240 XP/);
   assert.equal((await salvo()).missoes['ospf-wildcard-errada'].topologia.dispositivos.find(d => d.id === 'r3').ospf.redes[1].wildcard, '0.0.0.255');
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('DHCPv6 pela interface: modo DHCPv6 no cliente, pool no roteador e conclusão (220 XP)', async () => {
+  const { pagina, erros, disp, contexto } = await abrir('missoes/ipv6-dhcpv6');
+  await disp('pc1').click();
+  assert.equal(await pagina.locator('#cfg-modo6').inputValue(), 'dhcp6');
+  assert.match(await pagina.locator('#ipv6-cfg').innerText(), /não tem pool DHCPv6/);
+  await disp('r1').click();
+  await pagina.fill('#cfg-p6i-gi0', '2001:db8:1::100'); await pagina.fill('#cfg-p6f-gi0', '2001:db8:1::1ff');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
+  await disp('pc2').click();
+  assert.match(await pagina.locator('#ipv6-cfg').innerText(), /DHCPv6: 2001:db8:1::101\/64/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+220 XP/);
   assert.deepEqual(erros, []);
   await contexto.close();
 });

@@ -280,14 +280,14 @@ test('árvore de habilidades: Teoria pelo quiz, Prática e Diagnóstico pelas mi
   assert.equal(await pagina.locator('[data-trilha]', { hasText: 'Conteúdo em desenvolvimento' }).count(), 0, 'todas as trilhas já têm conteúdo de teoria');
   assert.match(await pagina.locator('[data-trilha="troubleshooting"]').innerText(), /0 de 9 desafios dominados/);
   assert.equal(await pagina.locator('.degraus li', { hasText: 'Sem conteúdo ainda' }).count(), 0, 'as 16 combinações de Prática/Diagnóstico já têm conteúdo');
-  for (const [trilha, n] of [['fundamentos', 2], ['ethernet-comutacao', 2], ['ip', 5], ['roteamento', 7]]) {
+  for (const [trilha, n] of [['fundamentos', 2], ['ethernet-comutacao', 2], ['ip', 6], ['roteamento', 7]]) {
     assert.match(await pagina.locator(`[data-trilha="${trilha}"] .degraus li`, { hasText: 'Prática' }).innerText(), new RegExp(`0 de ${n} concluído`), `Prática de ${trilha}`);
   }
   assert.match(await pagina.locator('[data-trilha="subnetting"] .degraus li', { hasText: 'Prática' }).innerText(), /0 de 3 concluídos/);
   assert.match(await pagina.locator('[data-trilha="subnetting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 1 concluído/);
   assert.match(await pagina.locator('[data-trilha="roteamento"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 10 concluídos/);
-  assert.match(await pagina.locator('[data-trilha="servicos"] .degraus li', { hasText: 'Prática' }).innerText(), /0 de 4 concluídos/);
-  assert.match(await pagina.locator('[data-trilha="servicos"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 11 concluídos/);
+  assert.match(await pagina.locator('[data-trilha="servicos"] .degraus li', { hasText: 'Prática' }).innerText(), /0 de 5 concluídos/);
+  assert.match(await pagina.locator('[data-trilha="servicos"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 12 concluídos/);
   assert.match(await pagina.locator('[data-trilha="seguranca"] .degraus li', { hasText: 'Prática' }).innerText(), /0 de 3 concluídos/);
   assert.match(await pagina.locator('[data-trilha="seguranca"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 8 concluídos/);
   assert.match(await pagina.locator('[data-trilha="troubleshooting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /0 de 6 concluídos/);
@@ -457,7 +457,7 @@ test('dashboard: card Prática lista os 4 módulos e acompanha a conclusão; a �
   const { pagina, erros, salvo, contexto } = await abrir('dashboard');
   const card = pagina.locator('[data-teste="pratica"]');
   const texto = await card.innerText();
-  assert.match(texto, /Missões · 0 de 43 concluídos · próximo: Sua primeira rede local/);
+  assert.match(texto, /Missões · 0 de 45 concluídos · próximo: Sua primeira rede local/);
   assert.match(texto, /Campus de Redes · 0 de 6 concluídos · próximo: Setores separados por VLAN/);
   assert.match(texto, /Empresa · 0 de 3/);
   assert.match(texto, /Data Center · 0 de 3/);
@@ -471,7 +471,7 @@ test('dashboard: card Prática lista os 4 módulos e acompanha a conclusão; a �
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída/);
   await pagina.locator('.menu a[data-rota="dashboard"]').click();
   await pagina.locator('.menu a[data-rota="dashboard"][aria-current=page]').waitFor();
-  assert.match(await pagina.locator('[data-teste="pratica"]').innerText(), /Missões · 1 de 43 concluídos · próximo: Sua primeira rede local/);
+  assert.match(await pagina.locator('[data-teste="pratica"]').innerText(), /Missões · 1 de 45 concluídos · próximo: Sua primeira rede local/);
   await pagina.locator('.menu a[data-rota="habilidades"]').click();
   await pagina.locator('.menu a[data-rota="habilidades"][aria-current=page]').waitFor();
   assert.match(await pagina.locator('[data-trilha="troubleshooting"] .degraus li', { hasText: 'Diagnóstico' }).innerText(), /1 de 6 concluídos/);

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6, configurarWifiAp, configurarWifiPc, adicionarNetworkOspf, removerNetworkOspf } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6, configurarWifiAp, configurarWifiPc, adicionarNetworkOspf, removerNetworkOspf, configurarPoolDhcp6 } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 43);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 45);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -582,4 +582,19 @@ test('OSPF: área errada no R2 e wildcard errada no R3', () => {
   const c = m('ospf-wildcard-errada');
   assert.equal(verificarMissao(c, c.topologia).todosOk, false);
   assert.equal(verificarMissao(c, ospfNet(ok(removerNetworkOspf(c.topologia, 'r3', 1)), 'r3', '192.168.3.0', '0.0.0.255')).todosOk, true);
+});
+
+// ---- IPv6: DHCPv6 e AAAA ----
+test('DHCPv6: sem pool os clientes ficam sem endereço; com pool no R1 alcançam o servidor', () => {
+  const x = m('ipv6-dhcpv6');
+  assert.match(verificarMissao(x, x.topologia).objetivos[0].motivo, /não tem endereço IPv6 global/);
+  assert.equal(verificarMissao(x, ok(configurarPoolDhcp6(x.topologia, 'r1', 'gi0', { inicio: '2001:db8:1::100', fim: '2001:db8:1::1ff' }))).todosOk, true);
+  assert.equal(verificarMissao(x, ok(configurarPoolDhcp6(x.topologia, 'r1', 'gi0', { inicio: '2001:db8:1::100', fim: '2001:db8:1::100' }))).todosOk, false, 'pool de 1 endereço não atende os 2');
+});
+
+test('AAAA: o nome só tem registro A; o registro AAAA resolve', () => {
+  const x = m('ipv6-registro-aaaa');
+  assert.match(verificarMissao(x, x.topologia).objetivos[0].motivo, /não tem registro AAAA/);
+  assert.equal(verificarMissao(x, ok(adicionarRegistroDns(x.topologia, 'pc3', { nome: 'portal.empresa.local', ip: '2001:db8:1::60' }))).todosOk, true);
+  assert.match(adicionarRegistroDns(x.topologia, 'pc3', { nome: 'portal.empresa.local', ip: '192.168.1.61' }).erro, /Já existe um registro A/);
 });

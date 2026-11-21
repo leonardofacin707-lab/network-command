@@ -130,11 +130,36 @@ export function configurarGateway6(t, id, gateway6) {
   return { topologia: trocar(t, id, x => ({ ...x, gateway6: formatarIPv6(n) })) };
 }
 
+/** DHCPv6 com estado: o computador pede o endereço IPv6 a um servidor (pool numa interface de roteador). */
+export function configurarDhcp6Pc(t, id, ativo) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores são clientes DHCPv6.' };
+  return { topologia: trocar(t, id, x => { const { dhcp6, slaac, ...r } = x; return ativo ? { ...r, dhcp6: true } : (slaac ? { ...r, slaac } : r); }) };
+}
+
+/** Pool DHCPv6 numa interface de roteador com IPv6: primeiro e último endereço, dentro do prefixo da interface. */
+export function configurarPoolDhcp6(t, id, portaId, { inicio, fim }) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores têm servidor DHCPv6 nesta simulação.' };
+  const i = d.interfaces.find(x => x.id === portaId);
+  if (!i) return { erro: 'Interface não encontrada.' };
+  const a = String(inicio ?? '').trim(), b = String(fim ?? '').trim();
+  const sem = x => ({ ...x, pools6: (x.pools6 ?? []).filter(q => q.porta !== portaId) });
+  if (!a && !b) return { topologia: trocar(t, id, x => { const y = sem(x); if (!y.pools6.length) delete y.pools6; return y; }) };
+  if (!i.ip6) return { erro: 'Configure antes o endereço IPv6 desta interface.' };
+  const ini = lerIPv6(a), f = lerIPv6(b), base = lerIPv6(i.ip6);
+  if (ini === null || f === null) return { erro: 'Pool DHCPv6: informe o primeiro e o último endereço IPv6 (ex.: 2001:db8:1::100 e 2001:db8:1::1ff).' };
+  if (ini > f) return { erro: 'Pool DHCPv6: o primeiro endereço precisa vir antes do último.' };
+  if (!mesmaRede6(ini, base, i.prefixo6) || !mesmaRede6(f, base, i.prefixo6)) return { erro: 'Pool DHCPv6: os endereços precisam estar no prefixo da interface.' };
+  if (f - ini > 4095n) return { erro: 'Pool DHCPv6: no máximo 4096 endereços nesta simulação.' };
+  return { topologia: trocar(t, id, x => ({ ...sem(x), pools6: [...sem(x).pools6, { porta: portaId, inicio: formatarIPv6(ini), fim: formatarIPv6(f) }] })) };
+}
+
 /** SLAAC: o computador monta o próprio endereço IPv6 com o prefixo anunciado pelo roteador (Router Advertisement). */
 export function configurarSlaac(t, id, ativo) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'pc') return { erro: 'Só computadores usam SLAAC nesta simulação.' };
-  return { topologia: trocar(t, id, x => { const { slaac, ...r } = x; return ativo ? { ...r, slaac: true } : r; }) };
+  return { topologia: trocar(t, id, x => { const { slaac, ...r } = x; if (ativo) delete r.dhcp6; return ativo ? { ...r, slaac: true } : r; }) };
 }
 
 /** ipv6 unicast-routing: sem ele o roteador não encaminha IPv6 nem anuncia prefixos (como no Cisco IOS). */
@@ -344,17 +369,21 @@ export function configurarDnsPc(t, id, dns) {
 }
 
 /** Acrescenta um registro A (nome → IP) ao serviço DNS de um computador, que passa a funcionar como servidor DNS. */
+/** Registro A (IPv4) ou AAAA (IPv6): um mesmo nome pode ter um de cada. */
+const familiaDe = ip => (String(ip).includes(':') ? 'AAAA' : 'A');
 export function adicionarRegistroDns(t, id, { nome, ip }) {
   const d = dispositivo(t, id);
   if (!d || d.tipo !== 'pc') return { erro: 'Só computadores podem ser servidores DNS nesta simulação.' };
   const nomeL = String(nome ?? '').trim().toLowerCase();
   if (!NOME_DNS.test(nomeL)) return { erro: 'Nome inválido. Use letras, números e hífen, separados por pontos (ex.: www.loja.local).' };
-  const ipN = lerIPv4(String(ip ?? '').trim());
-  if (ipN === null) return { erro: 'Endereço do registro inválido. Use quatro números de 0 a 255 separados por ponto.' };
+  const txt = String(ip ?? '').trim();
+  const v6 = txt.includes(':') ? lerIPv6(txt) : null, ipN = txt.includes(':') ? null : lerIPv4(txt);
+  if (ipN === null && (v6 === null || ehMulticast(v6) || v6 <= 1n)) return { erro: 'Endereço do registro inválido. Use um IPv4 (registro A, ex.: 192.168.1.60) ou um IPv6 (registro AAAA, ex.: 2001:db8:1::60).' };
+  const end = ipN !== null ? formatarIPv4(ipN) : formatarIPv6(v6);
   const regs = d.registros ?? [];
-  if (regs.some(r => r.nome === nomeL)) return { erro: 'Já existe um registro com esse nome. Remova o antigo para trocar o endereço.' };
+  if (regs.some(r => r.nome === nomeL && familiaDe(r.ip) === familiaDe(end))) return { erro: `Já existe um registro ${familiaDe(end)} com esse nome. Remova o antigo para trocar o endereço.` };
   if (regs.length >= MAX_REGISTROS_DNS) return { erro: `Limite de ${MAX_REGISTROS_DNS} registros por servidor.` };
-  return { topologia: trocar(t, id, x => ({ ...x, registros: [...regs, { nome: nomeL, ip: formatarIPv4(ipN) }] })) };
+  return { topologia: trocar(t, id, x => ({ ...x, registros: [...regs, { nome: nomeL, ip: end }] })) };
 }
 
 export function removerRegistroDns(t, id, indice) {
@@ -542,6 +571,7 @@ export function normalizarTopologia(bruto) {
     if (b.tipo === 'pc') { const g = lerIPv4(b.gateway); d.gateway = g === null ? '' : formatarIPv4(g); }
     if (b.tipo === 'pc' && b.dhcp === true) d.dhcp = true;
     if (b.tipo === 'pc' && b.slaac === true) d.slaac = true;
+    else if (b.tipo === 'pc' && b.dhcp6 === true) d.dhcp6 = true;
     if (b.tipo === 'pc') { const g6 = lerIPv6(b.gateway6); if (g6 !== null && !ehMulticast(g6) && g6 > 1n) d.gateway6 = formatarIPv6(g6); }
     if (b.tipo === 'roteador') {
       if (b.ipv6Roteamento === true) d.ipv6Roteamento = true;
@@ -557,6 +587,14 @@ export function normalizarTopologia(bruto) {
         if (!v.erro && nets.length < MAX_NETWORKS_OSPF && !nets.some(x => x.rede === v.network.rede && x.wildcard === v.network.wildcard)) nets.push(v.network);
       }
       if (nets.length) d.ospf = { redes: nets };
+      const p6 = [];
+      for (const q of Array.isArray(b.pools6) ? b.pools6 : []) {
+        const i = d.interfaces.find(x => x.id === q?.porta);
+        const ini = lerIPv6(q?.inicio), f = lerIPv6(q?.fim), base = i?.ip6 ? lerIPv6(i.ip6) : null;
+        if (!i || base === null || ini === null || f === null || ini > f || f - ini > 4095n || !mesmaRede6(ini, base, i.prefixo6) || !mesmaRede6(f, base, i.prefixo6) || p6.some(x => x.porta === q.porta)) continue;
+        p6.push({ porta: q.porta, inicio: formatarIPv6(ini), fim: formatarIPv6(f) });
+      }
+      if (p6.length) d.pools6 = p6;
     }
     if (b.tipo === 'pc') {
       const dnsN = lerIPv4(b.dns);
@@ -564,9 +602,11 @@ export function normalizarTopologia(bruto) {
       const regs = [];
       for (const r of Array.isArray(b.registros) ? b.registros : []) {
         if (regs.length >= MAX_REGISTROS_DNS || !r || typeof r !== 'object' || typeof r.nome !== 'string') continue;
-        const nomeR = r.nome.trim().toLowerCase(), ipN = lerIPv4(r.ip);
-        if (!NOME_DNS.test(nomeR) || ipN === null || regs.some(x => x.nome === nomeR)) continue;
-        regs.push({ nome: nomeR, ip: formatarIPv4(ipN) });
+        const nomeR = r.nome.trim().toLowerCase(), txt = String(r.ip ?? '');
+        const ipN = txt.includes(':') ? null : lerIPv4(txt), v6 = txt.includes(':') ? lerIPv6(txt) : null;
+        const end = ipN !== null ? formatarIPv4(ipN) : v6 !== null && !ehMulticast(v6) && v6 > 1n ? formatarIPv6(v6) : null;
+        if (!NOME_DNS.test(nomeR) || end === null || regs.some(x => x.nome === nomeR && familiaDe(x.ip) === familiaDe(end))) continue;
+        regs.push({ nome: nomeR, ip: end });
       }
       if (regs.length) d.registros = regs;
       const servs = [...new Set((Array.isArray(b.servicos) ? b.servicos : []).filter(p => Number.isInteger(p) && p >= 1 && p <= 65535))].slice(0, MAX_SERVICOS).sort((a, c) => a - c);

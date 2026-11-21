@@ -37,9 +37,15 @@ function resolverDestino(t, sim, d, texto, so6 = false) {
   const disp = t.dispositivos.find(x => x.nome.toLowerCase() === texto.toLowerCase());
   const g6 = disp ? primeiroGlobal6(disp) : null;
   if (g6 !== null && (so6 || !interfacesConfiguradas(disp).length)) return { ip: g6, nome: disp.nome, v6: true };
-  if (so6) return null;
   const primeiro = disp && interfacesConfiguradas(disp)[0];
-  if (primeiro) return { ip: primeiro.ip, nome: disp.nome };
+  if (primeiro && !so6) return { ip: primeiro.ip, nome: disp.nome };
+  if (disp && so6) return null;
+  const temV6 = enderecosDaInterface(d, 'eth0').some(e => e.tipo === 'global');
+  if (so6 || temV6) {
+    const r6 = sim.resolver(d.id, texto, 'AAAA');
+    if (r6.ok) return { ip: r6.ip, nome: texto.toLowerCase(), v6: true };
+  }
+  if (so6) return null;
   const r = sim.resolver(d.id, texto);
   return r.ok ? { ip: r.ip, nome: texto.toLowerCase() } : null;
 }
@@ -58,14 +64,23 @@ function nslookup(t, sim, d, args) {
     return [r.servidor ? `Servidor:  ${formatarIPv4(r.servidor.ip)}` : 'Servidor:  (nenhum)', MOTIVO_DNS[r.motivo], ''];
   }
   const cab = [`Servidor:  ${dispositivo(t, r.servidor.d).nome}`, `Address:  ${formatarIPv4(r.servidor.ip)}`, ''];
-  if (!r.ok) return [...cab, `*** O servidor ${dispositivo(t, r.servidor.d).nome} não encontrou ${nome}: Non-existent domain`, ''];
-  return [...cab, `Nome:    ${nome}`, `Address:  ${formatarIPv4(r.ip)}`, ''];
+  const r6 = sim.resolver(d.id, nome, 'AAAA');
+  const ends = [...(r6.ok ? [formatarIPv6(r6.ip)] : []), ...(r.ok ? [formatarIPv4(r.ip)] : [])];
+  if (!ends.length) return [...cab, `*** O servidor ${dispositivo(t, r.servidor.d).nome} não encontrou ${nome}: Non-existent domain`, ''];
+  return [...cab, `Nome:    ${nome}`, ends.length > 1 ? `Addresses:  ${ends[0]}` : `Address:  ${ends[0]}`, ...ends.slice(1).map(e => `          ${e}`), ''];
 }
 
 export const MOTIVO_SLAAC = {
   'sem-link': 'SLAAC: mídia desconectada.',
   'sem-ra': 'SLAAC: nenhum roteador anunciou um prefixo IPv6 (Router Advertisement). O roteador tem IPv6 na interface e "ipv6 unicast-routing"?',
   'prefixo-nao-64': 'SLAAC: o prefixo anunciado não é /64. A autoconfiguração só funciona com /64.'
+};
+
+export const MOTIVO_DHCP6 = {
+  'sem-link': 'DHCPv6: mídia desconectada.',
+  'sem-ra': 'DHCPv6: nenhum roteador anunciou a rede (o roteador tem IPv6 na interface e "ipv6 unicast-routing"?).',
+  'sem-servidor6': 'DHCPv6: o roteador anuncia a rede, mas não tem pool DHCPv6 nesta interface.',
+  'pool6-esgotado': 'DHCPv6: o pool não tem mais endereços livres.'
 };
 
 export const MOTIVO_DHCP = {
@@ -98,9 +113,10 @@ function ipconfig(t, sim, d, tudo) {
     if (d.dhcp && conc && !conc.ok) linhas.push(`   ${MOTIVO_DHCP[conc.motivo]}`, '');
     const cfg = configDaInterface(d, i.id);
     const ends6 = enderecosDaInterface(d, i.id);
-    for (const e of ends6.filter(x => x.tipo === 'global')) linhas.push(campo(d.slaac ? 'Endereço IPv6 (SLAAC)' : 'Endereço IPv6', `${formatarIPv6(e.ip)}/${e.prefixo}`));
+    for (const e of ends6.filter(x => x.tipo === 'global')) linhas.push(campo(d.slaac ? 'Endereço IPv6 (SLAAC)' : d.dhcp6 ? 'Endereço IPv6 (DHCPv6)' : 'Endereço IPv6', `${formatarIPv6(e.ip)}/${e.prefixo}`));
     for (const e of ends6.filter(x => x.tipo === 'link-local')) linhas.push(campo('Endereço IPv6 de link local', `${formatarIPv6(e.ip)}%1`));
     if (d.slaac && !ends6.some(x => x.tipo === 'global')) linhas.push(`   ${MOTIVO_SLAAC[sim.slaac?.get(d.id)?.motivo] ?? 'SLAAC: sem endereço.'}`);
+    if (d.dhcp6 && !ends6.some(x => x.tipo === 'global')) linhas.push(`   ${MOTIVO_DHCP6[sim.dhcp6?.get(d.id)?.motivo] ?? 'DHCPv6: sem endereço.'}`);
     if (ends6.some(x => x.tipo === 'global') && conflitos6(t).some(c => (c.a.d === d.id && c.a.p === i.id) || (c.b.d === d.id && c.b.p === i.id))) linhas.push('   Aviso: endereço IPv6 duplicado na rede (a detecção de duplicados o marcaria como inválido).');
     linhas.push(campo('Endereço IPv4', cfg ? i.ip : '(não configurado)'));
     linhas.push(campo('Máscara de Sub-rede', cfg ? i.mascara : '(não configurado)'));

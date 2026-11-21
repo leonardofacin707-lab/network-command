@@ -163,3 +163,33 @@ test('terminal: ipconfig mostra IPv6 e link-local; ping e tracert IPv6; vizinhos
   assert.match(executar(slaac, 'pc3', 'ipconfig').linhas.join('\n'), /nenhum roteador anunciou um prefixo IPv6/);
   assert.match(run('ping -n 1 2001:db8:1::99'), /ninguém respondeu à Neighbor Solicitation/);
 });
+
+import { configurarDhcp6Pc, configurarPoolDhcp6, configurarDnsPc, adicionarRegistroDns } from '../../js/sim/topologia.js';
+test('DHCPv6: concessão do pool, gateway link-local, motivos e validações do pool', () => {
+  let t = ok(configurarDhcp6Pc(base(), 'pc3', true));
+  assert.equal(criarSimulacao(t).dhcp6.get('pc3').motivo, 'sem-servidor6');
+  assert.match(configurarPoolDhcp6(t, 'r1', 'gi0', { inicio: '2001:db8:9::1', fim: '2001:db8:9::9' }).erro, /prefixo da interface/);
+  assert.match(configurarPoolDhcp6(t, 'r1', 'gi0', { inicio: '2001:db8:1::9', fim: '2001:db8:1::1' }).erro, /antes do último/);
+  t = ok(configurarPoolDhcp6(t, 'r1', 'gi0', { inicio: '2001:db8:1::10', fim: '2001:db8:1::20' }));
+  const sim = criarSimulacao(t), c = sim.dhcp6.get('pc3');
+  assert.equal(formatarIPv6(c.ip), '2001:db8:1::11', 'pula o ::10 já usado pelo PC1');
+  assert.equal(sim.ping6('pc3', v6('2001:db8:2::10')).status, 'entregue');
+  assert.match(executar(sim, 'pc3', 'ipconfig').linhas.join('\n'), /Endereço IPv6 \(DHCPv6\)[ .]*: 2001:db8:1::11\/64/);
+  assert.equal(dispositivo(ok(configurarSlaac(t, 'pc3', true)), 'pc3').dhcp6, undefined, 'SLAAC e DHCPv6 não ficam ligados juntos');
+  assert.equal(criarSimulacao(ok(configurarRoteamento6(t, 'r1', false))).dhcp6.get('pc3').motivo, 'sem-ra');
+});
+
+test('DNS AAAA: nslookup mostra IPv6 e IPv4; ping pelo nome prefere IPv6 quando há AAAA', () => {
+  let t = base();
+  t = ok(configurarInterface(t, 'pc1', 'eth0', { ip: '192.168.1.10', mascara: '/24' })); t = ok(configurarInterface(t, 'pc3', 'eth0', { ip: '192.168.1.30', mascara: '/24' }));
+  t = ok(configurarInterface6(t, 'pc3', 'eth0', { ip6: '2001:db8:1::30/64' }));
+  t = ok(adicionarRegistroDns(t, 'pc3', { nome: 'web.local', ip: '192.168.1.30' })); t = ok(adicionarRegistroDns(t, 'pc3', { nome: 'web.local', ip: '2001:db8:1::30' }));
+  t = ok(configurarDnsPc(t, 'pc1', '192.168.1.30'));
+  const sim = criarSimulacao(t);
+  const run = l => executar(sim, 'pc1', l).linhas.join('\n');
+  assert.match(run('nslookup web.local'), /Addresses:  2001:db8:1::30\n\s+192\.168\.1\.30/);
+  assert.match(run('ping -n 1 web.local'), /Disparando contra web\.local \[2001:db8:1::30\]/);
+  const { pacotes } = sim.capturar(() => sim.resolver('pc1', 'web.local', 'AAAA'));
+  assert.match(pacotes.find(p => p.protocolo === 'DNS').info, /Consulta: web\.local \(AAAA\)/);
+  assert.match(adicionarRegistroDns(t, 'pc3', { nome: 'x.local', ip: 'ff02::1' }).erro, /registro AAAA/);
+});

@@ -5838,6 +5838,340 @@
     }
   },
   {
+    "id": "ipv6-dhcpv6",
+    "modulo": "missoes",
+    "titulo": "Endereços IPv6 pelo DHCPv6",
+    "dificuldade": 2,
+    "xp": 220,
+    "habilidades": [
+      "ip.pratica",
+      "servicos.pratica"
+    ],
+    "cenario": "A empresa quer controlar quais endereços IPv6 os clientes usam, então eles foram configurados para DHCPv6 (não SLAAC). O R1 já roteia IPv6 e anuncia a rede 2001:db8:1::/64, mas os clientes continuam sem endereço global.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "Rode ipconfig no Cliente1: ele diz que o roteador anuncia a rede, mas não tem pool DHCPv6.",
+      "No DHCPv6 com estado, o servidor (aqui, o R1) entrega o endereço de uma faixa (pool) e o gateway continua vindo do anúncio do roteador.",
+      "No R1, preencha o pool DHCPv6 da Gi0/0, por exemplo de 2001:db8:1::100 até 2001:db8:1::1ff."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp6": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "dhcp6": true
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 270,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 470,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:1::1",
+              "prefixo6": 64
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::1",
+              "prefixo6": 64
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ipv6Roteamento": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 740,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:2::1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ipv6-registro-aaaa",
+    "modulo": "missoes",
+    "titulo": "O portal só responde por IPv4",
+    "dificuldade": 2,
+    "xp": 200,
+    "habilidades": [
+      "servicos.diagnostico",
+      "ip.diagnostico"
+    ],
+    "cenario": "A empresa ligou o IPv6 em toda a rede e quer que o portal.empresa.local seja acessado por IPv6. Os clientes e o Portal (2001:db8:1::60) já têm IPv6, mas pelo nome o acesso continua só por IPv4.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "nome": "portal.empresa.local",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "nome": "portal.empresa.local",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "Rode nslookup portal.empresa.local no Cliente1: aparece só o endereço IPv4.",
+      "No DNS, o registro A guarda um IPv4 e o registro AAAA guarda um IPv6. Um nome pode ter os dois.",
+      "No computador Dns, acrescente o registro portal.empresa.local → 2001:db8:1::60. O ping pelo nome passa a usar IPv6, como no Windows."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 120,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.10",
+              "mascara": "255.255.255.0",
+              "ip6": "2001:db8:1::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "dns": "192.168.1.50"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 120,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.11",
+              "mascara": "255.255.255.0",
+              "ip6": "2001:db8:1::11",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "dns": "192.168.1.50"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 420,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Dns",
+          "x": 740,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.50",
+              "mascara": "255.255.255.0",
+              "ip6": "2001:db8:1::50",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "registros": [
+            {
+              "nome": "portal.empresa.local",
+              "ip": "192.168.1.60"
+            }
+          ]
+        },
+        {
+          "id": "pc4",
+          "tipo": "pc",
+          "nome": "Portal",
+          "x": 740,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "192.168.1.60",
+              "mascara": "255.255.255.0",
+              "ip6": "2001:db8:1::60",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "pc4",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa4"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "ospf-tres-roteadores",
     "modulo": "missoes",
     "titulo": "OSPF em três roteadores",

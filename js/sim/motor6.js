@@ -56,6 +56,41 @@ export function anunciosSlaac(t) {
   return res;
 }
 
+/**
+ * DHCPv6 com estado: o computador com dhcp6 recebe o primeiro endereço livre do pool de um roteador do seu domínio que
+ * anuncia (ipv6 unicast-routing) e tem pool6 na interface; gateway = link-local do roteador (vem do Router Advertisement).
+ * motivos: 'sem-link' | 'sem-ra' | 'sem-servidor6' | 'pool6-esgotado'.
+ */
+export function concessoesDhcp6(t) {
+  const res = new Map(), usados = new Map();
+  for (const pc of t.dispositivos) {
+    if (pc.tipo !== 'pc' || !pc.dhcp6) continue;
+    const dom = dominioL2(t, pc.id, 'eth0');
+    if (dom === null) { res.set(pc.id, { ok: false, motivo: 'sem-link' }); continue; }
+    const fixos = new Set(dom.flatMap(e => enderecosDaInterface(dispositivo(t, e.d), e.p).map(x => x.ip)));
+    let motivo = 'sem-ra';
+    for (const e of dom) {
+      const r = dispositivo(t, e.d);
+      if (r.tipo !== 'roteador' || !r.ipv6Roteamento) continue;
+      const g = enderecosDaInterface(r, e.p).find(x => x.tipo === 'global');
+      if (!g) continue;
+      const pool = (r.pools6 ?? []).find(q => q.porta === e.p);
+      if (!pool) { motivo = 'sem-servidor6'; continue; }
+      const k = `${r.id}/${e.p}`;
+      if (!usados.has(k)) usados.set(k, new Set());
+      let livre = null;
+      for (let n = lerIPv6(pool.inicio), f = lerIPv6(pool.fim); n <= f; n++) if (!fixos.has(n) && !usados.get(k).has(n)) { livre = n; break; }
+      if (livre === null) { motivo = 'pool6-esgotado'; continue; }
+      usados.get(k).add(livre);
+      res.set(pc.id, { ok: true, ip: livre, prefixo: g.prefixo, gateway: linkLocalDe(macDe(r.id, e.p)), roteador: r.id, dhcp6: true });
+      motivo = null;
+      break;
+    }
+    if (motivo) res.set(pc.id, { ok: false, motivo });
+  }
+  return res;
+}
+
 /** Topologia vista com os endereços do SLAAC aplicados (o modelo salvo nunca é alterado). */
 export function aplicarSlaac(t, anuncios) {
   if (!anuncios.size) return t;
@@ -66,7 +101,7 @@ export function aplicarSlaac(t, anuncios) {
     return { ...resto, ...(a.ok ? { gateway6: formatarIPv6(a.gateway) } : {}), interfaces: d.interfaces.map(i => {
       if (i.id !== 'eth0') return i;
       const { ip6: _a, prefixo6: _b, ...r } = i;
-      return a.ok ? { ...r, ip6: formatarIPv6(a.ip), prefixo6: 64 } : r;
+      return a.ok ? { ...r, ip6: formatarIPv6(a.ip), prefixo6: a.prefixo ?? 64 } : r;
     }) };
   }) };
 }
