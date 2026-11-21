@@ -4,6 +4,8 @@
 
 **Jogar agora:** https://leonardofacin707-lab.github.io/network-command/ (funciona no celular e sem internet depois da primeira visita)
 
+![Demonstração: ping no laboratório, o pacote percorrendo a rede e a captura de pacotes](docs/img/demo.gif)
+
 Plataforma gamificada para aprender redes de computadores, feita em **JavaScript puro** (HTML, CSS e ES modules; sem frameworks e sem dependências em produção).
 Projeto de portfólio de Leonardo Facin, baseado nos tópicos do curso *Conceitos Básicos de Redes* (Cisco Networking Academy).
 É um projeto independente de estudo: **não é afiliado à Cisco e não emite certificado oficial**.
