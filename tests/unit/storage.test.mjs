@@ -86,7 +86,7 @@ test('o estado salvo não contém senhas nem campos desconhecidos', () => {
   const e = normalizar({ versao: 2, senha: '123', token: 'abc', perfil: { nome: 'A', email: 'a@b.c' }, quiz: { melhor: {} } }, ref);
   assert.equal(JSON.stringify(e).includes('123'), false);
   assert.equal('email' in e.perfil, false);
-  assert.deepEqual(Object.keys(e).sort(), ['conquistas', 'datacenter', 'diario', 'empresa', 'lab', 'missoes', 'perfil', 'quiz', 'simulados', 'versao']);
+  assert.deepEqual(Object.keys(e).sort(), ['config', 'conquistas', 'datacenter', 'diario', 'empresa', 'lab', 'missoes', 'perfil', 'quiz', 'simulados', 'tutorial', 'versao']);
 });
 
 test('formato v2 (sem histórico nem conquistas) é migrado para o v3', () => {

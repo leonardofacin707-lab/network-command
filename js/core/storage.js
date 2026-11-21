@@ -1,6 +1,7 @@
 import { normalizarTopologia, topologiaVazia } from '../sim/topologia.js';
 import { diarioVazio, limparDiario } from '../quiz/diario.js';
 import { limparSimulados } from '../quiz/simulado.js';
+import { configPadrao, limparConfig } from './config.js';
 
 // Persistência no localStorage, com formato versionado e validação.
 // Nunca guarda senhas nem dados pessoais além do nome de exibição escolhido pelo jogador.
@@ -22,8 +23,20 @@ export const estadoInicial = () => ({
   datacenter: {},                         // { [desafioId]: { unidades: {camada: n}, concluida, em, xp } }
   empresa: {},                            // { [projetoId]: { prefixos: {setor: n}, equip: {item: qtd}, concluida, em, xp } }
   diario: diarioVazio(),                  // desafio do dia: { ultimoDia, sequencia, melhor }
-  simulados: {}                           // { geral | m<n>: { melhor (%), em, tentativas } }
+  simulados: {},                          // { geral | m<n>: { melhor (%), em, tentativas } }
+  tutorial: tutorialVazio(),              // { concluido, em, topologia } (tutorial guiado)
+  config: configPadrao()                  // preferências deste aparelho (não vão na sincronização)
 });
+
+export const tutorialVazio = () => ({ concluido: false, em: null, topologia: topologiaVazia() });
+/** Tutorial: conclusão só vale com data válida; a topologia passa pela mesma validação do laboratório. */
+export function limparTutorial(b) {
+  const t = tutorialVazio();
+  if (!b || typeof b !== 'object' || Array.isArray(b)) return t;
+  if (b.concluido === true && dataValida(b.em)) { t.concluido = true; t.em = b.em; }
+  t.topologia = normalizarTopologia(b.topologia);
+  return t;
+}
 
 const inteiro = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
 const dataValida = s => typeof s === 'string' && !Number.isNaN(Date.parse(s));
@@ -116,7 +129,7 @@ export function limparDatacenter(bruto, conhecidos) {
   return limpo;
 }
 
-/** Converte qualquer coisa lida do disco (v1, v2, v3 ou lixo) em um estado v3 válido. */
+/** Converte qualquer coisa lida do disco (v1 a v4 ou lixo) em um estado v4 válido. */
 export function normalizar(bruto, ref) {
   const base = estadoInicial();
   if (!bruto || typeof bruto !== 'object') return base;
@@ -138,6 +151,8 @@ export function normalizar(bruto, ref) {
     base.datacenter = limparDatacenter(bruto.datacenter, ref.datacenter ?? new Set());
     base.diario = limparDiario(bruto.diario);
     base.simulados = limparSimulados(bruto.simulados);
+    base.tutorial = limparTutorial(bruto.tutorial);
+    base.config = limparConfig(bruto.config);
   }
   return base;
 }

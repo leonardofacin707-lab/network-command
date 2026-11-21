@@ -14,12 +14,14 @@ Projeto de portfólio de Leonardo Facin, baseado nos tópicos do curso *Conceito
 
 | Módulo | O que faz | Estado |
 |---|---|---|
+| Tela inicial e Tutorial | Botão **Jogar** com os modos de jogo; tutorial guiado (cabos, IPs e ping) que se verifica pelo simulador | pronto |
 | Conhecimento | Quiz em 12 níveis mais 1 bônus (117 desafios marcados pelo módulo do curso), desafio do dia, simulado com tempo por módulo, treino por módulo, revisão espaçada e exercícios sem fim de sub-redes e IPv6 | pronto |
 | Laboratório | Editor visual de rede, IPv4 e IPv6 (SLAAC, DHCPv6, DNS AAAA, descoberta de vizinhos), Wi-Fi (WPA2/WPA3), VLANs, rotas estáticas, OSPF, DHCP, filtro por protocolo e porta, DNS, NAT, serviços TCP, captura de pacotes, animação do pacote, terminal (ping, tnc…) e console estilo Cisco IOS, sobre um motor de simulação próprio | protótipo |
 | Missões e Campus | 51 cenários de defeitos e de ataque e defesa (DHCP falso, gateway falso, DNS falso, Telnet), verificados pelo motor | protótipo |
 | Empresa | Planejamento de sub-redes (VLSM), portas e orçamento | protótipo |
 | Data Center | Disponibilidade em série e paralelo, custo e portas | protótipo |
 | Habilidades, Conquistas, Perfil | Progressão única (XP, nível, árvore, conquistas) salva no navegador | pronto |
+| Configurações e Sincronizar | Engrenagem no canto superior direito (animações, tela de abertura); levar o progresso do celular para o computador por código ou link, juntando os dois, sem servidor | pronto |
 
 "Protótipo" quer dizer que as regras são reais e testadas, mas o escopo é simplificado (os limites estão em [docs/REGISTRO.md](docs/REGISTRO.md)). Nada é gravado fora do navegador (localStorage) e não há senhas nem dados pessoais.
 
@@ -56,7 +58,7 @@ Na versão publicada o jogo pode ser instalado no celular ("Adicionar à tela in
 
 ## Segurança e privacidade
 
-Nenhum dado do jogador sai do aparelho: não há cadastro, servidor de jogo, rastreadores nem recursos de outros sites. Detalhes em [SECURITY.md](SECURITY.md) e na página [privacidade.html](privacidade.html).
+Nenhum dado do jogador sai do aparelho por conta do jogo: não há cadastro, servidor de jogo, rastreadores nem recursos de outros sites. O código de sincronização só vai para onde o próprio jogador mandar. Login com conta ainda não existe (a estrutura está preparada em `js/conta/`). Detalhes em [SECURITY.md](SECURITY.md) e na página [privacidade.html](privacidade.html).
 
 ## Licença
 

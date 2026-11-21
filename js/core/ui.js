@@ -5,7 +5,8 @@ const ENTIDADES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": 
 /** Escapa texto para uso seguro dentro de HTML. */
 export const esc = s => String(s).replace(/[&<>"']/g, c => ENTIDADES[c]);
 
-export const reduzMovimento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Animações reduzidas: pela configuração do jogo (Configurações) ou pela preferência do sistema. */
+export const reduzMovimento = () => document.documentElement.dataset.movimento === 'reduzir' || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** Embaralha uma cópia da lista (Fisher-Yates). */
 export function embaralhar(lista, aleatorio = Math.random) {

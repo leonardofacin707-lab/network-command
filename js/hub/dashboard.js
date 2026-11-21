@@ -30,7 +30,7 @@ export default {
 
     raiz.innerHTML = `<section class="band"><div class="wrap">
       <h2 class="titulo-pagina">${nome ? `Olá, ${esc(nome)}` : 'Bem-vindo ao Network Command'}</h2>
-      <p class="sub">${nome ? 'Este é o seu painel de controle.' : 'Escolha um nome de exibição no <a href="#/perfil">perfil</a> para personalizar o painel.'} Tudo aqui vem do que você já respondeu neste dispositivo.</p>
+      <p class="sub">${nome ? 'Este é o seu painel de controle.' : 'Escolha um nome de exibição no <a href="#/perfil">perfil</a> para personalizar o painel.'} Tudo aqui vem do que você já respondeu neste dispositivo.${estado.tutorial?.concluido ? '' : ' Primeira vez? Comece pelo <a href="#/tutorial">tutorial</a>.'}</p>
       <div class="grade">
         <article class="painel">
           <h3>Progressão</h3>

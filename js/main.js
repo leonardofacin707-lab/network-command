@@ -1,7 +1,9 @@
 // Ponto de entrada: carrega dados e estado salvo, liga a persistência e abre o roteador.
 import { $, avisar } from './core/ui.js';
 import { store } from './core/store.js';
-import { carregar, salvar, normalizar } from './core/storage.js';
+import { normalizar } from './core/storage.js';
+import { provedorAtivo } from './conta/provedores.js';
+import { aplicarConfig } from './app/aparencia.js';
 import { carregarCatalogo, criarReferencia } from './quiz/catalog.js';
 import { iniciarHud } from './quiz/hud.js';
 import { criarRoteador } from './app/router.js';
@@ -19,6 +21,10 @@ import empresaModulo from './empresa/index.js';
 import { carregarEmpresa } from './empresa/catalogo.js';
 import datacenterModulo from './datacenter/index.js';
 import { carregarDatacenter } from './datacenter/catalogo.js';
+import inicio from './hub/inicio.js';
+import config from './hub/config.js';
+import sincronizar from './hub/sincronizar.js';
+import tutorial from './tutorial/index.js';
 
 async function iniciar() {
   const app = $('#app');
@@ -42,7 +48,9 @@ async function iniciar() {
     if (hot?.ready) hot.ready(dados => resolver(dados?.estado ?? null));
     else resolver(hot?.data?.estado ?? null);
   });
-  const inicial = recebido ? normalizar(recebido, referencia) : carregar(referencia);
+  const provedor = provedorAtivo();
+  const inicial = recebido ? normalizar(recebido, referencia) : provedor.carregar(referencia);
+  aplicarConfig(inicial.config);
 
   // Conquistas são concedidas por regra, em todo estado novo, e avisadas uma vez.
   store.definirPos(estado => concederNovas(estado, catalogo));
@@ -54,17 +62,17 @@ async function iniciar() {
     }
     conhecidas = new Set(Object.keys(estado.conquistas));
   });
-  store.ouvir(salvar);
+  store.ouvir(provedor.salvar);
   hot?.snapshot?.(() => ({ estado: store.obter() }));
   iniciarHud(store, catalogo);
 
   const rotas = {
-    dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
+    inicio, config, sincronizar, tutorial, dashboard, conhecimento: quiz, perfil, conquistas, habilidades,
     laboratorio, empresa: empresaModulo,
     datacenter: datacenterModulo, campus: criarModuloMissoes({ id: 'campus', titulo: 'Campus de Redes', intro: 'Cenários de rede de campus com VLANs, trunks e roteamento entre VLANs. Cada um traz defeitos de configuração para você achar e corrigir.' }), missoes: missoesModulo
   };
   criarRoteador({
-    raiz: app, rotas, padrao: 'dashboard',
+    raiz: app, rotas, padrao: inicial.config.inicio, // sem página no endereço: tela inicial ou dashboard, conforme Configurações
     ctx: { catalogo, referencia, store, missoes, empresa, datacenter },
     aoTrocar: id => shell.marcarAtual(id)
   }).iniciar();

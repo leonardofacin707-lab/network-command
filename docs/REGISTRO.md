@@ -274,3 +274,13 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - CodeQL apontou 3 alertas fora do código do jogo (escape incompleto num teste e corrida de arquivo em dois scripts de geração): corrigidos (escape completo; gravação com flag `wx` em vez de checar e depois gravar). SECURITY.md com link do relato privado e prazos (critério do Scorecard).
 - Alertas do Scorecard que não dependem de código: revisão por outra pessoa (projeto de um mantenedor só), "Maintained" (repositório com menos de 90 dias), fuzzing e selo CII Best Practices (exige cadastro do mantenedor em bestpractices.dev).
 - Modo offline: o service worker baixa a versão nova sem passar pelo cache HTTP (`cache: 'reload'`, `updateViaCache: 'none'`) e o jogo avisa "Há uma versão nova do jogo. Recarregue a página para usar." Teste e2e simula uma publicação nova.
+
+## Organização do código, tela inicial, Configurações, tutorial e sincronização
+
+- **Organização (sem mudar comportamento):** `js/sim/topologia.js` dividido em `js/sim/topologia/` (base, switch, dhcp, rotas, segurança, serviços, ipv6, ospf, wifi, normalizar), com `topologia.js` reexportando; `js/lab/editor.js` (624 linhas) dividido em `desenho.js`, `paineis.js` e `formulario.js` (editor com 361 linhas).
+- **Tela inicial** (`#/inicio`, nova página padrão): botão **Jogar** que abre os modos de jogo (tutorial, quiz, treino e desafio do dia, simulado, missões, campus, laboratório, empresa, data center), cada um com o progresso real. "Início" entrou no menu.
+- **Configurações** pela engrenagem no canto superior direito (fora do menu): animações (seguir o sistema ou reduzir sempre) e o que abre primeiro (tela inicial ou dashboard). Seção Conta explica que só existe o modo local.
+- **Conta preparada, sem login:** `js/conta/provedores.js` com o formato de provedor e só o `local`; `main.js` carrega e salva pelo provedor ativo. Nenhum botão de login de mentira.
+- **Tutorial guiado** (`#/tutorial`): 5 passos que se marcam sozinhos (dois cabos, dois IPs na mesma rede, ping confirmado pelo simulador), com o "por quê" de cada um. Progresso salvo; link na tela inicial e no dashboard.
+- **Sincronizar entre celular e computador** (`#/sincronizar`), sem servidor: código comprimido (ou link com o código depois do `#`), copiar, compartilhar (só se o navegador tiver), colar no outro aparelho, comparar e escolher **Juntar** (melhor de cada item, idempotente) ou **Substituir** (com confirmação). Política de privacidade atualizada.
+- **Testes:** `tests/unit/conta.test.mjs` (9), `tests/unit/tutorial.test.mjs` (4) e `tests/e2e/inicio.test.mjs` (5).

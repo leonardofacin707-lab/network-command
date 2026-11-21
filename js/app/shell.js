@@ -1,5 +1,5 @@
 // Casca da aplicação: menu lateral, botão de abrir/fechar no celular e título da página.
-import { MENU, SELOS } from './menu.js';
+import { MENU, SELOS, PAGINAS_EXTRAS } from './menu.js';
 import { esc } from '../core/ui.js';
 
 export function montarShell() {
@@ -28,9 +28,11 @@ export function montarShell() {
       lateral.querySelectorAll('a').forEach(a => {
         if (a.dataset.rota === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       });
-      const item = MENU.find(m => m.id === id);
-      document.title = `${item ? item.rotulo + ' · ' : ''}Network Command`;
-      document.getElementById('titulo-pagina').textContent = item ? item.rotulo : 'Network Command';
+      const engrenagem = document.getElementById('engrenagem');
+      if (id === 'config') engrenagem.setAttribute('aria-current', 'page'); else engrenagem.removeAttribute('aria-current');
+      const rotulo = MENU.find(m => m.id === id)?.rotulo ?? PAGINAS_EXTRAS[id];
+      document.title = `${rotulo ? rotulo + ' · ' : ''}Network Command`;
+      document.getElementById('titulo-pagina').textContent = rotulo ?? 'Network Command';
     }
   };
 }

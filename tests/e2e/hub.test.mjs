@@ -17,7 +17,7 @@ async function irPara(pagina, rota) {
   await pagina.locator('#app h2').first().waitFor();
 }
 
-const ROTAS_MENU = ['dashboard', 'conhecimento', 'laboratorio', 'empresa', 'datacenter', 'campus', 'missoes', 'habilidades', 'conquistas', 'perfil'];
+const ROTAS_MENU = ['inicio', 'dashboard', 'conhecimento', 'laboratorio', 'empresa', 'datacenter', 'campus', 'missoes', 'habilidades', 'conquistas', 'perfil'];
 
 async function abrir(rota = '', opcoes) {
   const s = await novaPagina(navegador, opcoes);
@@ -40,10 +40,10 @@ const hist = [['fundamentos-001', true, 0, 100], ['fundamentos-002', true, 1, 60
   .map(([q, ok, erros, pts], i) => ({ q, ok, erros, pts, em: new Date(Date.UTC(2026, 10, 17, 12, i)).toISOString() }));
 const ESTADO = { versao: 3, perfil: { nome: 'Leonardo', criadoEm: '2026-11-16T10:00:00.000Z' }, quiz: { melhor: { 1: { pts: 700, estrelas: 2 } }, historico: hist }, conquistas: {} };
 
-test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando (protótipos marcados no menu)', async () => {
+test('abre na tela inicial e o menu tem as 11 entradas, cada uma funcionando (protótipos marcados no menu)', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.menu a').count(), 10);
-  assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'dashboard');
+  assert.equal(await pagina.locator('.menu a').count(), 11);
+  assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'inicio');
   for (const rota of ROTAS_MENU) {
     await irPara(pagina, rota);
     assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), rota, rota);
@@ -54,9 +54,9 @@ test('abre no dashboard e o menu tem as 10 entradas, cada uma funcionando (prot�
   await contexto.close();
 });
 
-test('rota desconhecida cai no dashboard', async () => {
+test('rota desconhecida cai na tela inicial', async () => {
   const { pagina, contexto } = await abrir('nao-existe');
-  assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'dashboard');
+  assert.equal(await pagina.locator('.menu a[aria-current=page]').getAttribute('data-rota'), 'inicio');
   await contexto.close();
 });
 

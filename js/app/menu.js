@@ -1,5 +1,6 @@
 // Menu lateral. estado: 'pronto' (funciona), 'proto' (protótipo: funciona de forma simplificada) ou 'emdev' (ainda não existe).
 export const MENU = [
+  { id: 'inicio', rotulo: 'Início', estado: 'pronto', icone: '<path d="M3 11l9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5"/>' },
   { id: 'dashboard', rotulo: 'Dashboard', estado: 'pronto', icone: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
   { id: 'conhecimento', rotulo: 'Conhecimento', estado: 'pronto', icone: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 7h6"/>' },
   { id: 'laboratorio', rotulo: 'Laboratório', estado: 'proto', icone: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>' },
@@ -13,3 +14,6 @@ export const MENU = [
 ];
 
 export const SELOS = { emdev: 'em dev.', proto: 'protótipo' };
+
+/** Páginas fora do menu lateral (a engrenagem leva a Configurações; as outras são abertas por links). */
+export const PAGINAS_EXTRAS = { config: 'Configurações', sincronizar: 'Sincronizar progresso', tutorial: 'Tutorial' };

@@ -79,3 +79,12 @@ footer{padding:20px max(3vw,14px) 28px;color:var(--suave);font-size:14px;text-al
 a.btn,a.btn-sec{display:inline-flex;align-items:center;text-decoration:none}
 a.btn{color:#fff}
 a.btn-sec{color:var(--ink)}
+html[data-movimento=reduzir] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+/* engrenagem de Configurações, sempre no canto superior direito */
+.engrenagem{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--linha);border-radius:10px;background:var(--painel);color:var(--ink);flex:none}
+.engrenagem svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.engrenagem:hover{border-color:var(--ciano)}
+.engrenagem[aria-current=page]{border-color:var(--ciano);color:#fff}
+.engrenagem:focus-visible{outline:3px solid var(--sinal);outline-offset:2px}
+.topo .hud{margin-left:auto}
+@media(max-width:480px){.topo .titulo{flex:1;min-width:0}.engrenagem{order:2}.topo .hud{order:3;margin-left:0}}

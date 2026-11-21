@@ -17,3 +17,37 @@
 #avisos{pointer-events:none}
 .painel .resumo-pratica{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
 .privacidade{max-width:760px}.privacidade h2{margin-top:22px;font-size:20px}.privacidade li{margin-block:6px}
+/* tela inicial */
+.inicio-capa{text-align:center;padding:clamp(28px,6vw,56px) 20px}
+.inicio-marca{font:700 clamp(30px,7vw,52px) "Chakra Petch",sans-serif;letter-spacing:.04em;margin-bottom:8px}
+.inicio-marca span{color:var(--ciano)}
+.inicio-capa .sub{margin:0 auto 22px;max-width:60ch}
+.btn-jogar{font:700 22px "Chakra Petch",sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:16px 56px;min-width:min(100%,260px)}
+.btn-jogar[aria-expanded=true]{background:var(--mapa2)}
+.inicio-conta{margin:18px auto 0;max-width:62ch;color:var(--suave);font-size:14px}
+.inicio-modos{margin-top:18px}
+.inicio-modos h2{font-size:22px;margin-bottom:12px}
+.modos{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.modo{display:flex;flex-direction:column;gap:6px;height:100%;padding:16px;border:1px solid var(--linha);border-radius:12px;background:var(--painel);color:var(--ink);text-decoration:none}
+.modo b{font:700 17px "Chakra Petch",sans-serif}
+.modo span{color:var(--suave);font-size:14px}
+.modo small{margin-top:auto;color:var(--destaque);font-size:13px}
+.modo:hover{border-color:var(--ciano)}
+.modo.destaque{border-color:var(--ciano);box-shadow:inset 0 0 0 1px var(--ciano)}
+.modo:focus-visible{outline:3px solid var(--sinal);outline-offset:2px}
+/* configurações e sincronização */
+fieldset.painel{border:1px solid var(--linha);min-width:0}
+fieldset.painel legend{padding:0;margin-bottom:8px;float:left;width:100%}
+fieldset.painel legend h3{margin:0}
+.opcao{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;min-height:44px;cursor:pointer;clear:both}
+.opcao input{margin-top:4px;width:18px;height:18px;flex:none;accent-color:var(--ciano)}
+.opcao small{display:block;color:var(--suave);font-size:13px;font-weight:400}
+.sinc-codigo{width:100%;font:13px/1.4 ui-monospace,Consolas,monospace;resize:vertical;word-break:break-all}
+.tabela-sinc{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+.tabela-sinc caption{text-align:left;font-weight:700;margin-bottom:6px}
+.tabela-sinc th,.tabela-sinc td{border-bottom:1px solid var(--linha);padding:6px 8px;text-align:left}
+.tabela-sinc td{font-variant-numeric:tabular-nums}
+/* tutorial */
+.tutorial-passos .objetivos li.atual{color:var(--ink);font-weight:700}
+.tut-atual{border-top:1px solid var(--linha);padding-top:12px;margin-top:4px}
+.tut-atual h3{margin-bottom:6px}
