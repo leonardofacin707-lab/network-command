@@ -9,8 +9,8 @@ Projeto de portfólio de Leonardo Facin, baseado nos tópicos do curso *Conceito
 | Módulo | O que faz | Estado |
 |---|---|---|
 | Conhecimento | Quiz em 12 níveis mais 1 bônus (117 desafios marcados pelo módulo do curso), desafio do dia, treino por módulo, revisão espaçada e exercícios sem fim de sub-redes e IPv6 | pronto |
-| Laboratório | Editor visual de rede, IPv4, VLANs, rotas estáticas, DHCP, filtro por protocolo e porta, DNS, NAT, serviços TCP, captura de pacotes, animação do pacote, terminal (ping, tnc…) e console estilo Cisco IOS, sobre um motor de simulação próprio | protótipo |
-| Missões e Campus | 37 cenários de defeitos e de ataque e defesa (DHCP falso, gateway falso, DNS falso, Telnet), verificados pelo motor | protótipo |
+| Laboratório | Editor visual de rede, IPv4 e IPv6 (SLAAC, descoberta de vizinhos), VLANs, rotas estáticas, DHCP, filtro por protocolo e porta, DNS, NAT, serviços TCP, captura de pacotes, animação do pacote, terminal (ping, tnc…) e console estilo Cisco IOS, sobre um motor de simulação próprio | protótipo |
+| Missões e Campus | 42 cenários de defeitos e de ataque e defesa (DHCP falso, gateway falso, DNS falso, Telnet), verificados pelo motor | protótipo |
 | Empresa | Planejamento de sub-redes (VLSM), portas e orçamento | protótipo |
 | Data Center | Disponibilidade em série e paralelo, custo e portas | protótipo |
 | Habilidades, Conquistas, Perfil | Progressão única (XP, nível, árvore, conquistas) salva no navegador | pronto |

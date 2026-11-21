@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { montarMissoes } from '../../js/missoes/catalogo.js';
 import { verificarMissao, calcularXp, validarMissao, ipDoDispositivo } from '../../js/missoes/verificar.js';
 import { formatarIPv4 } from '../../js/sim/ipv4.js';
-import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos } from '../../js/sim/topologia.js';
+import { removerCabo, conectar, configurarInterface, configurarGateway, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, configurarServicos, configurarInterface6, configurarRoteamento6, adicionarRota6 } from '../../js/sim/topologia.js';
 
 const bruto = JSON.parse(readFileSync(new URL('../../data/missions.json', import.meta.url), 'utf8'));
 const missoes = montarMissoes(bruto);
@@ -102,7 +102,7 @@ const feito = (x, t) => verificarMissao(x, t).objetivos.map(o => o.ok);
 
 test('campus: 6 missões (2 de prática), separadas das missões comuns', () => {
   assert.deepEqual(missoes.filter(x => x.modulo === 'campus').map(x => x.id), ['setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo']);
-  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 31);
+  assert.equal(missoes.filter(x => x.modulo === 'missoes').length, 36);
   assert.equal(validarMissao({ ...bruto[0], modulo: 'qualquer' }).modulo, 'missoes', 'módulo desconhecido vira missões');
 });
 
@@ -487,4 +487,42 @@ test('objetivos novos são validados: porta, nome+para e dhcp-de', () => {
   base.objetivos = [{ id: 'a', de: 'pc1', para: 'pc4', porta: 443 }, { id: 'b', de: 'pc1', para: 'pc4', porta: 70000 }, { id: 'c', de: 'pc1', nome: 'banco.local', para: 'pc4' },
     { id: 'd', tipo: 'dhcp-de', pc: 'pc1', roteador: 'pc2' }, { id: 'e', tipo: 'qualquer', de: 'pc1', para: 'pc2' }];
   assert.deepEqual(validarMissao(base).objetivos, [{ id: 'a', de: 'pc1', para: 'pc4', porta: 443 }, { id: 'b', de: 'pc1', para: 'pc4' }, { id: 'c', de: 'pc1', nome: 'banco.local', para: 'pc4' }]);
+});
+
+// ---- IPv6 ----
+test('IPv6: primeiros passos — endereços no mesmo /64 resolvem; prefixos diferentes não', () => {
+  const x = m('ipv6-primeiros-passos'), t0 = x.topologia;
+  assert.match(verificarMissao(x, t0).objetivos[0].motivo, /não tem endereço IPv6 global/);
+  const com = (t, id, e) => ok(configurarInterface6(t, id, 'eth0', { ip6: e }));
+  const certo = com(com(com(t0, 'pc1', '2001:db8:1::10/64'), 'pc2', '2001:db8:1::20/64'), 'pc3', '2001:db8:1::30/64');
+  assert.equal(verificarMissao(x, certo).todosOk, true);
+  assert.equal(verificarMissao(x, com(certo, 'pc3', '2001:db8:9::30/64')).todosOk, false);
+});
+
+test('IPv6: roteador sem ipv6 unicast-routing; ligar resolve', () => {
+  const x = m('ipv6-roteador-nao-roteia');
+  assert.match(verificarMissao(x, x.topologia).objetivos[0].motivo, /ipv6 unicast-routing/);
+  assert.equal(verificarMissao(x, ok(configurarRoteamento6(x.topologia, 'r1', true))).todosOk, true);
+});
+
+test('IPv6: SLAAC só funciona quando o R1 tem prefixo /64 na interface dos clientes', () => {
+  const x = m('ipv6-slaac');
+  assert.match(verificarMissao(x, x.topologia).objetivos[0].motivo, /não tem endereço IPv6 global|origem não tem endereço IPv6/);
+  assert.equal(verificarMissao(x, ok(configurarInterface6(x.topologia, 'r1', 'gi0', { ip6: '2001:db8:1::1/64' }))).todosOk, true);
+  assert.equal(verificarMissao(x, ok(configurarInterface6(x.topologia, 'r1', 'gi0', { ip6: '2001:db8:1::1/56' }))).todosOk, false, '/56 não serve para SLAAC');
+});
+
+test('IPv6: prefixo digitado errado; corrigir o endereço do Cliente2 resolve', () => {
+  const x = m('ipv6-prefixo-errado');
+  const r0 = verificarMissao(x, x.topologia);
+  assert.deepEqual(r0.objetivos.map(o => o.ok), [true, false]);
+  assert.match(r0.objetivos[1].motivo, /gateway IPv6 da origem não está na rede/);
+  assert.equal(verificarMissao(x, ok(configurarInterface6(x.topologia, 'pc2', 'eth0', { ip6: '2001:db8:1::20/64' }))).todosOk, true);
+});
+
+test('IPv6: rotas estáticas nos dois roteadores (rota só de ida não basta)', () => {
+  const x = m('ipv6-rotas-estaticas'), t0 = x.topologia;
+  const ida = ok(adicionarRota6(t0, 'r1', { rede: '2001:db8:b::/64', via: '2001:db8:ff::2' }));
+  assert.equal(verificarMissao(x, ida).todosOk, false);
+  assert.equal(verificarMissao(x, ok(adicionarRota6(ida, 'r2', { rede: '::/0', via: '2001:db8:ff::1' }))).todosOk, true);
 });

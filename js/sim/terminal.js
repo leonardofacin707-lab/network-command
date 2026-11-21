@@ -1,19 +1,22 @@
 // Terminal simulado (estilo Prompt de Comando do Windows, em português). Puro: recebe texto, devolve linhas.
-// Comandos: ipconfig [/all|/renew], ping [-n N] destino, tracert destino, nslookup nome, tnc destino porta, arp -a, hostname, help, cls.
+// Comandos: ipconfig [/all|/renew], ping [-n N] [-6] destino (IPv4 ou IPv6), tracert destino, nslookup nome, tnc destino porta, arp -a, hostname, help, cls.
 // Simplificações assumidas: sem latência (sempre "tempo<1ms") e nomes de host resolvidos só entre os dispositivos do laboratório.
 import { lerIPv4, formatarIPv4 } from './ipv4.js';
 import { configDaInterface, conflitosDeIp, macDe, temLink, interfacesConfiguradas, NOMES_PORTAS } from './motor.js';
 import { dispositivo, rotuloDaPorta } from './topologia.js';
+import { lerIPv6, formatarIPv6 } from './ipv6.js';
+import { enderecosDaInterface, primeiroGlobal6, conflitos6 } from './motor6.js';
 
 const AJUDA = [
   'Comandos disponíveis:',
   '  ipconfig [/all]     mostra a configuração de IP desta máquina',
   '  ipconfig /renew     pede um endereço ao servidor DHCP (se o DHCP estiver ligado)',
-  '  ping [-n N] destino  testa a conexão com um IP ou nome de dispositivo',
+  '  ping [-n N] [-6] destino  testa a conexão com um IP (IPv4 ou IPv6) ou nome de dispositivo',
   '  tracert destino     mostra os roteadores no caminho até o destino',
   '  nslookup nome       consulta o servidor DNS configurado neste computador',
   '  tnc destino porta   testa uma conexão TCP com um serviço (ex.: tnc 192.168.1.60 80)',
-  '  arp -a              mostra os endereços MAC já descobertos',
+  '  arp -a              mostra os endereços MAC já descobertos (IPv4)',
+  '  netsh interface ipv6 show neighbors   vizinhos IPv6 descobertos (NDP)',
   '  hostname            mostra o nome desta máquina',
   '  cls                 limpa a tela',
   '  help                mostra esta lista'
@@ -22,10 +25,15 @@ const AJUDA = [
 const campo = (rotulo, valor) => `   ${rotulo} ${'. '.repeat(Math.max(0, Math.floor((38 - rotulo.length) / 2)))}: ${valor}`;
 
 /** Endereço literal; nome de dispositivo do laboratório (atalho); ou nome DNS consultado no servidor configurado no PC. */
-function resolverDestino(t, sim, d, texto) {
+function resolverDestino(t, sim, d, texto, so6 = false) {
+  const n6 = lerIPv6(texto);
+  if (n6 !== null) return { ip: n6, nome: null, v6: true };
   const n = lerIPv4(texto);
-  if (n !== null) return { ip: n, nome: null };
+  if (n !== null) return so6 ? null : { ip: n, nome: null };
   const disp = t.dispositivos.find(x => x.nome.toLowerCase() === texto.toLowerCase());
+  const g6 = disp ? primeiroGlobal6(disp) : null;
+  if (g6 !== null && (so6 || !interfacesConfiguradas(disp).length)) return { ip: g6, nome: disp.nome, v6: true };
+  if (so6) return null;
   const primeiro = disp && interfacesConfiguradas(disp)[0];
   if (primeiro) return { ip: primeiro.ip, nome: disp.nome };
   const r = sim.resolver(d.id, texto);
@@ -49,6 +57,12 @@ function nslookup(t, sim, d, args) {
   if (!r.ok) return [...cab, `*** O servidor ${dispositivo(t, r.servidor.d).nome} não encontrou ${nome}: Non-existent domain`, ''];
   return [...cab, `Nome:    ${nome}`, `Address:  ${formatarIPv4(r.ip)}`, ''];
 }
+
+export const MOTIVO_SLAAC = {
+  'sem-link': 'SLAAC: mídia desconectada.',
+  'sem-ra': 'SLAAC: nenhum roteador anunciou um prefixo IPv6 (Router Advertisement). O roteador tem IPv6 na interface e "ipv6 unicast-routing"?',
+  'prefixo-nao-64': 'SLAAC: o prefixo anunciado não é /64. A autoconfiguração só funciona com /64.'
+};
 
 export const MOTIVO_DHCP = {
   'sem-servidor': 'Nenhum servidor DHCP respondeu. O endereço não foi configurado.',
@@ -77,9 +91,14 @@ function ipconfig(t, sim, d, tudo) {
     if (tudo && conc?.ok) linhas.push(campo('Servidor DHCP', formatarIPv4(conc.servidor.ip)));
     if (d.dhcp && conc && !conc.ok) linhas.push(`   ${MOTIVO_DHCP[conc.motivo]}`, '');
     const cfg = configDaInterface(d, i.id);
+    const ends6 = enderecosDaInterface(d, i.id);
+    for (const e of ends6.filter(x => x.tipo === 'global')) linhas.push(campo(d.slaac ? 'Endereço IPv6 (SLAAC)' : 'Endereço IPv6', `${formatarIPv6(e.ip)}/${e.prefixo}`));
+    for (const e of ends6.filter(x => x.tipo === 'link-local')) linhas.push(campo('Endereço IPv6 de link local', `${formatarIPv6(e.ip)}%1`));
+    if (d.slaac && !ends6.some(x => x.tipo === 'global')) linhas.push(`   ${MOTIVO_SLAAC[sim.slaac?.get(d.id)?.motivo] ?? 'SLAAC: sem endereço.'}`);
+    if (ends6.some(x => x.tipo === 'global') && conflitos6(t).some(c => (c.a.d === d.id && c.a.p === i.id) || (c.b.d === d.id && c.b.p === i.id))) linhas.push('   Aviso: endereço IPv6 duplicado na rede (a detecção de duplicados o marcaria como inválido).');
     linhas.push(campo('Endereço IPv4', cfg ? i.ip : '(não configurado)'));
     linhas.push(campo('Máscara de Sub-rede', cfg ? i.mascara : '(não configurado)'));
-    linhas.push(campo('Gateway Padrão', d.gateway || ''));
+    linhas.push(campo('Gateway Padrão', [d.gateway6 ? `${d.gateway6}${d.gateway6.startsWith('fe80') ? '%1' : ''}` : '', d.gateway || ''].filter(Boolean).join('\n' + ' '.repeat(42)) || ''));
     if (tudo) linhas.push(campo('Servidores DNS', d.dns || ''));
     if (cfg && conflitosDeIp(t).some(c => (c.a.d === d.id && c.a.p === i.id) || (c.b.d === d.id && c.b.p === i.id))) {
       linhas.push('', '   Aviso: este endereço IPv4 está em conflito com outro dispositivo da rede.');
@@ -110,16 +129,18 @@ function ping(t, sim, d, args) {
     if (!Number.isInteger(v) || v < 1 || v > 10) return ['Valor incorreto para a opção -n (use de 1 a 10).'];
     quantidade = v; resto.splice(iN, 2);
   }
-  if (resto.length !== 1) return ['Uso: ping [-n N] destino'];
-  const alvo = resolverDestino(t, sim, d, resto[0]);
+  const i6 = resto.indexOf('-6');
+  if (i6 !== -1) resto.splice(i6, 1);
+  if (resto.length !== 1) return ['Uso: ping [-n N] [-6] destino'];
+  const alvo = resolverDestino(t, sim, d, resto[0], i6 !== -1);
   if (!alvo) return [`A solicitação de ping não pôde encontrar o host ${resto[0]}. Verifique o nome e tente novamente.`];
-  const ipTxt = formatarIPv4(alvo.ip);
+  const ipTxt = alvo.v6 ? formatarIPv6(alvo.ip) : formatarIPv4(alvo.ip);
   const linhas = [`Disparando contra ${alvo.nome ? `${alvo.nome} [${ipTxt}]` : ipTxt} com 32 bytes de dados:`];
   let recebidos = 0;
   for (let i = 0; i < quantidade; i++) {
-    const r = sim.ping(d.id, alvo.ip);
-    if (r.status === 'entregue') { recebidos++; linhas.push(`Resposta de ${ipTxt}: bytes=32 tempo<1ms TTL=${r.ttl}`); }
-    else linhas.push((MSG_TENTATIVA[r.status] ?? (() => 'Esgotado o tempo limite do pedido.'))(r));
+    const r = alvo.v6 ? sim.ping6(d.id, alvo.ip) : sim.ping(d.id, alvo.ip);
+    if (r.status === 'entregue') { recebidos++; linhas.push(alvo.v6 ? `Resposta de ${ipTxt}: tempo<1ms` : `Resposta de ${ipTxt}: bytes=32 tempo<1ms TTL=${r.ttl}`); }
+    else linhas.push(alvo.v6 ? msg6(r) : (MSG_TENTATIVA[r.status] ?? (() => 'Esgotado o tempo limite do pedido.'))(r));
   }
   const perdidos = quantidade - recebidos;
   linhas.push('', `Estatísticas do Ping para ${ipTxt}:`,
@@ -128,12 +149,27 @@ function ping(t, sim, d, args) {
   return linhas;
 }
 
+/** Mensagens do ping IPv6 (no Windows a resposta IPv6 não mostra TTL). */
+function msg6(r) {
+  const de = r.de !== undefined ? formatarIPv6(r.de) : '';
+  switch (r.status) {
+    case 'sem-ip': case 'sem-link': case 'gateway-fora': return 'PING: falha de transmissão. Falha geral.';
+    case 'sem-rota': case 'rede-inalcancavel': return `Resposta de ${de}: Rede de destino inacessível.`;
+    case 'arp-falhou': case 'host-inalcancavel': return `Resposta de ${de}: Host de destino inacessível (ninguém respondeu à Neighbor Solicitation).`;
+    case 'ttl-expirado': return `Resposta de ${de}: Hop limit expirado em trânsito.`;
+    case 'conflito-ip': return 'Esgotado o tempo limite do pedido. (endereço IPv6 duplicado na rede)';
+    default: return 'Esgotado o tempo limite do pedido.';
+  }
+}
+
 const salto = (n, ip, extra = '') => `${String(n).padStart(3)}    <1 ms    <1 ms    <1 ms  ${ip}${extra}`;
 
 function tracert(t, sim, d, args) {
-  if (args.length !== 1) return ['Uso: tracert destino'];
-  const alvo = resolverDestino(t, sim, d, args[0]);
-  if (!alvo) return [`Não foi possível resolver o nome do sistema de destino ${args[0]}.`];
+  const so6 = args.includes('-6'), resto = args.filter(a => a !== '-6');
+  if (resto.length !== 1) return ['Uso: tracert [-6] destino'];
+  const alvo = resolverDestino(t, sim, d, resto[0], so6);
+  if (!alvo) return [`Não foi possível resolver o nome do sistema de destino ${resto[0]}.`];
+  if (alvo.v6) return tracert6(sim, d, alvo);
   const ipTxt = formatarIPv4(alvo.ip);
   const r = sim.rastrear(d.id, alvo.ip);
   const linhas = [`Rastreando a rota para ${alvo.nome ? `${alvo.nome} [${ipTxt}]` : ipTxt}`, 'com no máximo 30 saltos:', ''];
@@ -149,6 +185,26 @@ function tracert(t, sim, d, args) {
     default: linhas.push(`${String(++n).padStart(3)}     *        *        *     Esgotado o tempo limite do pedido.`, '', 'Rastreamento concluído.');
   }
   return linhas;
+}
+
+function tracert6(sim, d, alvo) {
+  const ipTxt = formatarIPv6(alvo.ip);
+  const r = sim.rastrear6(d.id, alvo.ip);
+  const linhas = [`Rastreando a rota para ${alvo.nome ? `${alvo.nome} [${ipTxt}]` : ipTxt}`, 'com no máximo 30 saltos:', ''];
+  let n = 0;
+  for (const s of r.saltos) linhas.push(salto(++n, formatarIPv6(s.ip)));
+  if (r.status === 'entregue') { if (r.destino.d !== d.id) linhas.push(salto(++n, ipTxt)); }
+  else if (['sem-ip', 'sem-link', 'gateway-fora'].includes(r.status)) return [...linhas, 'Falha geral.'];
+  else if (r.de !== undefined && r.status !== 'sem-roteamento6' && r.status !== 'conflito-ip') linhas.push(`${String(++n).padStart(3)}  ${formatarIPv6(r.de)}  relata: ${r.status === 'arp-falhou' || r.status === 'host-inalcancavel' ? 'Host' : 'Rede'} de destino inacessível.`);
+  else linhas.push(`${String(++n).padStart(3)}     *        *        *     Esgotado o tempo limite do pedido.`);
+  return [...linhas, '', 'Rastreamento concluído.'];
+}
+
+function vizinhos6(sim, d) {
+  const lista = sim.vizinhos6(d.id);
+  if (!lista.length) return ['Nenhum vizinho IPv6 descoberto ainda. Faça um ping IPv6 primeiro.'];
+  return ['Interface: Ethernet0', '', 'Endereço de Internet                       Endereço Físico     Tipo',
+    ...lista.map(v => `${formatarIPv6(v.ip).padEnd(43)}${v.mac.padEnd(20)}Alcançável`)];
 }
 
 const FALHA_TCP = {
@@ -204,6 +260,7 @@ export function executar(sim, dispositivoId, linhaDigitada) {
     case 'nslookup': return { linhas: nslookup(t, sim, d, args), limpar: false };
     case 'tnc': case 'test-netconnection': return { linhas: tnc(t, sim, d, args.filter(a => a.toLowerCase() !== '-port')), limpar: false };
     case 'arp': return { linhas: arp(t, sim, d, args), limpar: false };
+    case 'netsh': return { linhas: args.map(a => a.toLowerCase()).join(' ') === 'interface ipv6 show neighbors' ? vizinhos6(sim, d) : ['Uso: netsh interface ipv6 show neighbors'], limpar: false };
     case 'hostname': return { linhas: [d.nome], limpar: false };
     case 'cls': return { linhas: [], limpar: true };
     case 'help': case 'ajuda': return { linhas: AJUDA, limpar: false };

@@ -2,11 +2,13 @@
 // aqui só há interface: desenha o estado recebido e devolve cada mudança por aoMudar(novaTopologia).
 import { esc } from '../core/ui.js';
 import { LARGURA, ALTURA, TIPOS, adicionarDispositivo, moverDispositivo, renomear, configurarInterface, configurarGateway, conectar,
-  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos } from '../sim/topologia.js';
+  removerCabo, removerDispositivo, dispositivo, vizinhos, rotuloDaPorta, topologiaVazia, configurarPortaSwitch, configDaPortaSwitch, vlansDoSwitch, adicionarRotaEstatica, removerRotaEstatica, configurarPoolDhcp, configurarDhcpPc, adicionarFiltro, removerFiltro, moverFiltro, configurarDnsPc, adicionarRegistroDns, removerRegistroDns, configurarNat, removerNat, configurarServicos, configurarInterface6, configurarGateway6, configurarSlaac, configurarRoteamento6, adicionarRota6, removerRota6 } from '../sim/topologia.js';
 import { criarSimulacao, NOMES_PORTAS, caminhoFisico } from '../sim/motor.js';
 import { reduzMovimento } from '../core/ui.js';
 import { formatarIPv4, lerMascara, prefixoDeMascara } from '../sim/ipv4.js';
-import { executar, MOTIVO_DHCP } from '../sim/terminal.js';
+import { executar, MOTIVO_DHCP, MOTIVO_SLAAC } from '../sim/terminal.js';
+import { formatarIPv6 } from '../sim/ipv6.js';
+import { enderecosDaInterface } from '../sim/motor6.js';
 import { executarIos, sessaoInicial, prompt as promptIos } from '../sim/cli-ios.js';
 import { diagnosticar } from '../sim/diagnostico.js';
 import { exemploLan, exemploDuasRedes } from './exemplos.js';
@@ -96,6 +98,7 @@ export function criarEditor(raiz, opcoes) {
   function desenharDispositivo(d) {
     const efetivo = dispositivo(sim.topologia, d.id) ?? d; // com as concessões DHCP aplicadas
     const ips = efetivo.interfaces.filter(i => i.ip).map(i => i.ip);
+    for (const i of efetivo.interfaces) if (i.ip6) ips.push(`${i.ip6}/${i.prefixo6}`);
     let vlanTxt = '';
     if (d.tipo === 'switch') {
       const vl = vlansDoSwitch(topo, d.id);
@@ -124,6 +127,36 @@ export function criarEditor(raiz, opcoes) {
   const PORTAS_COMUNS = [21, 22, 23, 25, 80, 443];
   const alvoFiltro = (rede, mascara) => (rede === '0.0.0.0' && mascara === '0.0.0.0' ? 'qualquer' : redePrefixo(rede, mascara));
   const poolDe = (d, porta) => (d.pools ?? []).find(q => q.porta === porta);
+  /** Painel IPv6: endereço global e prefixo por interface, link-local automático, gateway e SLAAC (PC) ou roteamento e rotas (roteador). */
+  function fieldsetIPv6(d) {
+    if (d.tipo === 'switch') return '';
+    const efetivo = dispositivo(sim.topologia, d.id) ?? d;
+    const ll = p => enderecosDaInterface(efetivo, p).find(e => e.tipo === 'link-local');
+    const campos = i => `<label for="cfg-ip6-${i.id}">Endereço IPv6 de ${esc(rotuloDaPorta(d, i.id))}</label><input id="cfg-ip6-${i.id}" class="campo" name="ip6-${i.id}" autocomplete="off" spellcheck="false" placeholder="ex.: 2001:db8:1::10 (vazio = sem IPv6 global)" value="${esc(i.ip6 ?? '')}">
+        <label for="cfg-p6-${i.id}">Prefixo</label><input id="cfg-p6-${i.id}" class="campo qtd" name="p6-${i.id}" inputmode="numeric" autocomplete="off" placeholder="64" value="${i.prefixo6 ?? ''}">
+        <p class="motivo">Link-local (automático): ${ll(i.id) ? esc(formatarIPv6(ll(i.id).ip)) : 'aparece quando a interface tiver IPv6'}</p>`;
+    if (d.tipo === 'pc') {
+      const a = sim.slaac?.get(d.id);
+      return `<fieldset class="iface" id="ipv6-cfg"><legend>IPv6</legend>
+        <label class="opcao"><input type="checkbox" id="cfg-slaac" name="slaac"${d.slaac ? ' checked' : ''}> Configurar sozinho com o prefixo do roteador (SLAAC)</label>
+        ${d.slaac ? `<p class="motivo" role="status">${a?.ok ? `SLAAC: ${esc(formatarIPv6(a.ip))}/64, gateway ${esc(formatarIPv6(a.gateway))} (link-local do roteador).` : esc(MOTIVO_SLAAC[a?.motivo] ?? '')}</p>` : ''}
+        <div data-fixo6${d.slaac ? ' hidden' : ''}>${d.interfaces.map(campos).join('')}
+        <label for="cfg-gw6">Gateway padrão IPv6</label><input id="cfg-gw6" class="campo" name="gw6" autocomplete="off" spellcheck="false" placeholder="ex.: 2001:db8:1::1 ou o fe80:: do roteador" value="${esc(d.gateway6 ?? '')}"></div>
+        ${d.slaac ? `<p class="motivo">Link-local (automático): ${esc(formatarIPv6(ll('eth0').ip))}</p>` : ''}
+      </fieldset>`;
+    }
+    return `<fieldset class="iface" id="ipv6-cfg"><legend>IPv6</legend>
+      <label class="opcao"><input type="checkbox" id="cfg-rot6" name="rot6"${d.ipv6Roteamento ? ' checked' : ''}> Rotear IPv6 (ipv6 unicast-routing)</label>
+      <p class="motivo">Sem isso o roteador não encaminha IPv6 nem anuncia o prefixo para o SLAAC, como no Cisco IOS.</p>
+      ${d.interfaces.map(campos).join('')}
+      <h4>Rotas estáticas IPv6</h4>
+      ${(d.rotas6 ?? []).length ? `<ol class="regras" aria-label="Rotas IPv6 de ${esc(d.nome)}">${d.rotas6.map((r, i) => `<li class="regra"><span class="regra-txt">${esc(r.rede)}/${r.prefixo} <b>via</b> ${esc(r.via)}</span>
+        <span class="acoes-regra"><button class="btn-sec" type="button" data-remover-rota6="${i}" aria-label="Remover a rota IPv6 para ${esc(r.rede)}/${r.prefixo}">Remover</button></span></li>`).join('')}</ol>` : '<p>Nenhuma rota IPv6 estática.</p>'}
+      <label for="cfg-r6-rede">Nova rota IPv6: rede/prefixo</label><input id="cfg-r6-rede" class="campo" name="r6-rede" autocomplete="off" spellcheck="false" placeholder="ex.: 2001:db8:3::/64 (::/0 = rota padrão)">
+      <label for="cfg-r6-via">Próximo salto</label><input id="cfg-r6-via" class="campo" name="r6-via" autocomplete="off" spellcheck="false" placeholder="ex.: 2001:db8:2::2">
+    </fieldset>`;
+  }
+
   function infoConcessao(d) {
     const c = sim.concessoes.get(d.id);
     if (!c) return '';
@@ -152,6 +185,7 @@ export function criarEditor(raiz, opcoes) {
         <label for="cfg-pool-fim-${i.id}">Pool DHCP: último endereço</label><input id="cfg-pool-fim-${i.id}" class="campo" name="pool-fim-${i.id}" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.200" value="${esc(poolDe(d, i.id)?.fim ?? '')}">` : ''}
       </fieldset>`).join('')}
       ${d.tipo === 'pc' ? `<fieldset class="iface" data-fixo${d.dhcp ? ' disabled' : ''}><legend>Gateway</legend><label for="cfg-gw">Gateway padrão</label><input id="cfg-gw" class="campo" name="gw" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.1" value="${esc(d.gateway)}"></fieldset>` : ''}
+      ${fieldsetIPv6(d)}
       ${d.tipo === 'pc' ? `<fieldset class="iface" id="dns-pc"><legend>DNS</legend>
         <label for="cfg-dns">Servidor DNS (IP)</label><input id="cfg-dns" class="campo" name="dns" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.1.50" value="${esc(d.dns ?? '')}">
         <p class="motivo">O DHCP simplificado não entrega o servidor DNS: informe-o aqui, mesmo com DHCP ligado.</p>
@@ -414,6 +448,8 @@ export function criarEditor(raiz, opcoes) {
       aplicar(removerFiltro(topo, sel, Number(b.dataset.removerFiltro)), 'Regra removida.');
     } else if (b.dataset.moverFiltro !== undefined) {
       aplicar(moverFiltro(topo, sel, Number(b.dataset.moverFiltro), Number(b.dataset.delta)), 'Regra movida.');
+    } else if (b.dataset.removerRota6 !== undefined) {
+      aplicar(removerRota6(topo, sel, Number(b.dataset.removerRota6)), 'Rota IPv6 removida.');
     } else if (b.dataset.removerRota !== undefined) {
       aplicar(removerRotaEstatica(topo, sel, Number(b.dataset.removerRota)), 'Rota removida.');
     } else if (b.dataset.removerCabo) {
@@ -426,6 +462,7 @@ export function criarEditor(raiz, opcoes) {
   }, { signal });
 
   raiz.addEventListener('change', e => {
+    if (e.target.id === 'cfg-slaac') { const bloco = raiz.querySelector('[data-fixo6]'); if (bloco) bloco.hidden = e.target.checked; return; }
     if (e.target.id === 'captura-ligada') { capturaLigada = e.target.checked; $('#captura').innerHTML = tabelaCaptura(); return; }
     if (e.target.id !== 'cfg-dhcp') return;
     for (const fs of raiz.querySelectorAll('#form-cfg fieldset[data-fixo]')) fs.disabled = e.target.checked;
@@ -472,6 +509,19 @@ export function criarEditor(raiz, opcoes) {
           // trunk não usa VLAN; ao voltar para access sem informar VLAN, usa a que estava (ou 1)
           const vlan = f.get(`vlan-${p.id}`) || (atual.modo === 'access' ? atual.vlan : 1);
           passos.push(t => configurarPortaSwitch(t, sel, p.id, { modo, vlan }));
+        }
+      }
+      if (alvoCfg.tipo !== 'switch') {
+        const auto = alvoCfg.tipo === 'pc' && f.get('slaac') === 'on';
+        if (alvoCfg.tipo === 'pc') passos.push(t => configurarSlaac(t, sel, auto));
+        if (alvoCfg.tipo === 'roteador') passos.push(t => configurarRoteamento6(t, sel, f.get('rot6') === 'on'));
+        if (!auto) {
+          for (const i of alvoCfg.interfaces) passos.push(t => configurarInterface6(t, sel, i.id, { ip6: f.get(`ip6-${i.id}`), prefixo6: f.get(`p6-${i.id}`) }));
+          if (alvoCfg.tipo === 'pc') passos.push(t => configurarGateway6(t, sel, f.get('gw6')));
+        }
+        const r6 = String(f.get('r6-rede') ?? '').trim(), v6 = String(f.get('r6-via') ?? '').trim();
+        if (alvoCfg.tipo === 'roteador' && (r6 || v6)) {
+          passos.push(r6.includes('/') && v6 ? (t => adicionarRota6(t, sel, { rede: r6, via: v6 })) : () => ({ erro: 'Para acrescentar uma rota IPv6, preencha rede/prefixo (ex.: 2001:db8:3::/64) e o próximo salto.' }));
         }
       }
       for (const passo of passos) { r = passo(r.topologia); if (r.erro) break; }

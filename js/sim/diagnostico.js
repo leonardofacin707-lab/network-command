@@ -3,6 +3,8 @@
 import { vizinhos } from './topologia.js';
 import { lerIPv4, mesmaRede, formatarIPv4 } from './ipv4.js';
 import { configDaInterface, conflitosDeIp } from './motor.js';
+import { conflitos6, enderecosDaInterface } from './motor6.js';
+import { formatarIPv6 } from './ipv6.js';
 
 /** Lista de { dispositivo, texto } com problemas óbvios de configuração. */
 export function diagnosticar(t) {
@@ -14,13 +16,20 @@ export function diagnosticar(t) {
       const cfg = configDaInterface(d, i.id);
       if (!ligada && d.tipo === 'pc') avisos.push({ dispositivo: d.id, texto: `${d.nome} está sem cabo de rede.` });
       if (ligada && !cfg && d.dhcp) avisos.push({ dispositivo: d.id, texto: `${d.nome} usa DHCP, mas não recebeu endereço (use ipconfig /renew no terminal para ver o motivo).` });
-      else if (ligada && !cfg) avisos.push({ dispositivo: d.id, texto: `${d.nome} está ligado, mas a interface ${i.id === 'eth0' ? 'Ethernet0' : i.id} não tem IP configurado.` });
+      else if (ligada && !cfg && !d.interfaces.find(x => x.id === i.id)?.ip6) avisos.push({ dispositivo: d.id, texto: `${d.nome} está ligado, mas a interface ${i.id === 'eth0' ? 'Ethernet0' : i.id} não tem IP configurado.` });
     }
     if (d.tipo === 'pc') {
       const cfg = configDaInterface(d, 'eth0');
       const gw = lerIPv4(d.gateway);
       if (cfg && gw !== null && !mesmaRede(cfg.ip, gw, cfg.mascara)) avisos.push({ dispositivo: d.id, texto: `O gateway de ${d.nome} (${formatarIPv4(gw)}) está fora da sub-rede dele.` });
     }
+  }
+  for (const d of t.dispositivos) {
+    if (d.tipo === 'roteador' && !d.ipv6Roteamento && d.interfaces.filter(i => i.ip6).length >= 2) avisos.push({ dispositivo: d.id, texto: `${d.nome} tem IPv6 em mais de uma interface, mas não está roteando IPv6 (ipv6 unicast-routing desligado).` });
+  }
+  for (const c of conflitos6(t)) {
+    const nome = id => t.dispositivos.find(x => x.id === id).nome;
+    avisos.push({ dispositivo: c.a.d, texto: `Endereço IPv6 duplicado: ${nome(c.a.d)} e ${nome(c.b.d)} usam ${formatarIPv6(c.ip)}.` });
   }
   for (const c of conflitosDeIp(t)) {
     const nome = id => t.dispositivos.find(x => x.id === id).nome;

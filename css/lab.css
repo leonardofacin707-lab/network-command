@@ -87,3 +87,4 @@
 .pacote-anim{fill:var(--destaque);stroke:#0a0f1a;stroke-width:2;pointer-events:none;filter:drop-shadow(0 0 4px var(--destaque))}
 .pacote-anim.proto-tcp{fill:var(--ok)}
 .pacote-anim.proto-dns,.pacote-anim.proto-udp{fill:#c4b5fd}
+.iface .opcao{display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600;margin:4px 0}.iface .opcao input{width:18px;height:18px;flex:none}

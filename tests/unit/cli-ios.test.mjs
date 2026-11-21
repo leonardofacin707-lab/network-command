@@ -79,3 +79,24 @@ test('validações: running-config só no privilegiado, interface inexistente, h
   assert.equal(lerInterface(dispositivo(base(), 'sw1'), 'g0/1'), null);
   assert.match(executarIos(base(), criarSimulacao(base()), 'pc1', 'en').linhas[0], /não tem console IOS/);
 });
+
+test('IPv6 pelo console: ipv6 address, ipv6 unicast-routing, ipv6 route, show ipv6 e ping', async () => {
+  const { configurarInterface6, configurarGateway6 } = await import('../../js/sim/topologia.js');
+  let t = base();
+  t = ok(configurarInterface6(t, 'pc1', 'eth0', { ip6: '2001:db8:1::10/64' })); t = ok(configurarGateway6(t, 'pc1', '2001:db8:1::1'));
+  t = ok(configurarInterface6(t, 'pc2', 'eth0', { ip6: '2001:db8:2::10/64' })); t = ok(configurarGateway6(t, 'pc2', '2001:db8:2::1'));
+  let r = console_(t, 'r1', ['en', 'conf t', 'int g0/0', 'ipv6 address 2001:db8:1::1/64', 'int g0/1', 'ipv6 add 2001:db8:2::1/64', 'ipv6 address 2001:db8:2::1', 'end', 'ping 2001:db8:2::10']);
+  assert.match(r.saida, /Use o formato ENDEREÇO\/PREFIXO/);
+  assert.match(r.saida, /Success rate is 100 percent/, 'o próprio roteador alcança as duas redes');
+  assert.equal(criarSimulacao(r.t).ping6('pc1', 0x20010db8000200000000000000000010n).status, 'sem-roteamento6');
+  r = console_(r.t, 'r1', ['en', 'conf t', 'ipv6 unicast-routing', 'ipv6 route 2001:db8:9::/64 2001:db8:2::99', 'end', 'show ipv6 route', 'show ipv6 int br', 'sh run']);
+  assert.equal(criarSimulacao(r.t).ping6('pc1', 0x20010db8000200000000000000000010n).status, 'entregue');
+  assert.match(r.saida, /C   2001:DB8:1::\/64 \[0\/0\]\n     via GigabitEthernet0\/0, directly connected/);
+  assert.match(r.saida, /S   2001:DB8:9::\/64 \[1\/0\]\n     via 2001:DB8:2::99/);
+  assert.match(r.saida, /GigabitEthernet0\/0\s+\[up\/up\]\n    FE80::[0-9A-F:]+\n    2001:DB8:1::1/);
+  assert.match(r.saida, /ipv6 unicast-routing[\s\S]*ipv6 address 2001:db8:1::1\/64[\s\S]*ipv6 route 2001:db8:9::\/64 2001:db8:2::99/);
+  r = console_(r.t, 'r1', ['en', 'conf t', 'no ipv6 unicast-routing', 'no ipv6 route 2001:db8:9::/64 2001:db8:2::99', 'int g0/0', 'no ipv6 address']);
+  assert.equal(dispositivo(r.t, 'r1').ipv6Roteamento, undefined);
+  assert.equal(dispositivo(r.t, 'r1').rotas6, undefined);
+  assert.equal(dispositivo(r.t, 'r1').interfaces[0].ip6, undefined);
+});

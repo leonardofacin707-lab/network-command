@@ -24,10 +24,10 @@ async function configurar(pagina, disp, id, campos) {
   assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
 }
 
-test('lista: 31 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
+test('lista: 36 missões, todas não iniciadas, com acesso por teclado e nome acessível', async () => {
   const { pagina, erros, contexto } = await abrir();
-  assert.equal(await pagina.locator('.missao').count(), 31);
-  assert.match(await pagina.locator('#app').innerText(), /0 de 31 concluídas/);
+  assert.equal(await pagina.locator('.missao').count(), 36);
+  assert.match(await pagina.locator('#app').innerText(), /0 de 36 concluídas/);
   assert.match(await pagina.locator('.missao a').first().innerText(), /Sua primeira rede local\s+Fácil · 100 XP\s+Não iniciada/);
   assert.match(await pagina.locator('.missao a').nth(2).innerText(), /O cabo esquecido\s+Fácil · 100 XP\s+Não iniciada/);
   assert.equal(await pagina.locator('.missao a[aria-label]').count(), 0, 'o nome acessível vem do próprio texto visível');
@@ -157,7 +157,7 @@ test('missão inexistente mostra aviso; progresso aparece na lista; XP soma ao p
   await s.pagina.goto(`${servidor.url}/index.html#/missoes`);
   await s.pagina.locator('.missao').first().waitFor();
   assert.match(await s.pagina.locator('.missao', { hasText: 'O cabo esquecido' }).innerText(), /Concluída · \+100 XP/);
-  assert.match(await s.pagina.locator('#app').innerText(), /1 de 31 concluídas/);
+  assert.match(await s.pagina.locator('#app').innerText(), /1 de 36 concluídas/);
   await s.pagina.goto(`${servidor.url}/index.html#/perfil`);
   await s.pagina.locator('#app h2').first().waitFor();
   assert.match(await s.pagina.locator('#app').innerText(), /100\s*XP|XP.*100/);
@@ -477,6 +477,34 @@ test('segurança pela interface: captura mostra as duas respostas ARP do gateway
   await pagina.locator('#m-verificar').click();
   assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+260 XP/);
   assert.equal((await salvo()).missoes['seg-feche-telnet'].topologia.dispositivos.find(d => d.id === 'r1').filtros[0].porta, 23);
+  assert.deepEqual(erros, []);
+  await contexto.close();
+});
+
+test('IPv6 pela interface: SLAAC sem anúncio, IPv6 no roteador, clientes se configuram sozinhos e ping IPv6 conclui (220 XP)', async () => {
+  const { pagina, erros, disp, salvo, contexto } = await abrir('missoes/ipv6-slaac');
+  await disp('pc1').click();
+  assert.equal(await pagina.locator('#cfg-slaac').isChecked(), true);
+  assert.match(await pagina.locator('#ipv6-cfg').innerText(), /nenhum roteador anunciou um prefixo IPv6/);
+  await pagina.fill('#term-entrada', 'ipconfig');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Endereço IPv6 de link local[ .]*: fe80::/);
+  await disp('r1').click();
+  assert.equal(await pagina.locator('#cfg-rot6').isChecked(), true);
+  await pagina.fill('#cfg-ip6-gi0', '2001:db8:1::'); await pagina.fill('#cfg-p6-gi0', '64');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /próprio prefixo/);
+  await pagina.fill('#cfg-ip6-gi0', '2001:db8:1::1');
+  await pagina.locator('#form-cfg button[type=submit]').click();
+  assert.match(await pagina.locator('#lab-estado').innerText(), /Configuração aplicada/);
+  await disp('pc1').click();
+  assert.match(await pagina.locator('#ipv6-cfg').innerText(), /SLAAC: 2001:db8:1::[0-9a-f:]+\/64, gateway fe80::/);
+  await pagina.fill('#term-entrada', 'ping -n 1 2001:db8:2::10');
+  await pagina.press('#term-entrada', 'Enter');
+  assert.match(await pagina.locator('#term-saida').innerText(), /Resposta de 2001:db8:2::10: tempo<1ms/);
+  await pagina.locator('#m-verificar').click();
+  assert.match(await pagina.locator('#m-msg').innerText(), /Missão concluída! \+220 XP/);
+  assert.equal((await salvo()).missoes['ipv6-slaac'].topologia.dispositivos.find(d => d.id === 'r1').interfaces[0].ip6, '2001:db8:1::1');
   assert.deepEqual(erros, []);
   await contexto.close();
 });

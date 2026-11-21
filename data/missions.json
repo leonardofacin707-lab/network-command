@@ -4523,6 +4523,805 @@
     }
   },
   {
+    "id": "ipv6-primeiros-passos",
+    "modulo": "missoes",
+    "titulo": "Primeiros passos no IPv6",
+    "dificuldade": 1,
+    "xp": 160,
+    "habilidades": [
+      "ip.pratica"
+    ],
+    "cenario": "Três computadores no mesmo switch precisam conversar por IPv6. Cada um já tem um endereço link-local (fe80::) automático, mas a empresa quer endereços globais na rede 2001:db8:1::/64.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc1",
+        "para": "pc3",
+        "ipv6": true
+      },
+      {
+        "id": "o3",
+        "de": "pc2",
+        "para": "pc3",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "Selecione cada PC e preencha o endereço IPv6 e o prefixo no quadro IPv6. Todos precisam estar no mesmo prefixo /64.",
+      "Por exemplo: PC1 2001:db8:1::10, PC2 2001:db8:1::20 e PC3 2001:db8:1::30, todos com prefixo 64. Na mesma rede não é preciso gateway.",
+      "Teste no terminal com ping 2001:db8:1::20. Rode ipconfig para ver também o endereço link-local, criado a partir do MAC (EUI-64)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 140,
+          "y": 120,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 140,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 420,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "PC3",
+          "x": 700,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": ""
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "pc3",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa3"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ipv6-roteador-nao-roteia",
+    "modulo": "missoes",
+    "titulo": "O roteador que esqueceu o IPv6",
+    "dificuldade": 2,
+    "xp": 180,
+    "habilidades": [
+      "ip.diagnostico",
+      "roteamento.diagnostico"
+    ],
+    "cenario": "Os clientes da rede 2001:db8:1::/64 não alcançam o Servidor (2001:db8:2::10). Os endereços e os gateways estão certos, e do próprio R1 o ping para o servidor funciona.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "O ping do Cliente1 até 2001:db8:1::1 (o R1) funciona? E até o servidor? O pacote chega ao R1 e some ali.",
+      "No Cisco IOS, um roteador só encaminha IPv6 com o comando global \"ipv6 unicast-routing\". Abra o console do R1 e rode show ipv6 interface brief.",
+      "No R1: marque \"Rotear IPv6\" no painel, ou no console: en, conf t, ipv6 unicast-routing."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:1::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:1::1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:1::20",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:1::1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 270,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 470,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:1::1",
+              "prefixo6": 64
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::1",
+              "prefixo6": 64
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 740,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:2::1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ipv6-slaac",
+    "modulo": "missoes",
+    "titulo": "Endereço sozinho com SLAAC",
+    "dificuldade": 2,
+    "xp": 220,
+    "habilidades": [
+      "ip.pratica",
+      "servicos.pratica"
+    ],
+    "cenario": "Os clientes estão configurados para SLAAC: montam o próprio endereço com o prefixo que o roteador anuncia. Mas o ipconfig mostra só o link-local. O R1 já roteia IPv6 e a interface do lado do servidor está pronta.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "Rode ipconfig no Cliente1: ele diz que nenhum roteador anunciou um prefixo. Olhe a interface Gi0/0 do R1, a que liga ao switch dos clientes.",
+      "O R1 só anuncia o prefixo (Router Advertisement) numa interface que tem endereço IPv6 global, e o SLAAC só funciona com prefixo /64.",
+      "Dê ao R1, na Gi0/0, o endereço 2001:db8:1::1 com prefixo 64 (ou no console: interface g0/0, ipv6 address 2001:db8:1::1/64). Os clientes se configuram sozinhos."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "slaac": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": ""
+            }
+          ],
+          "gateway": "",
+          "slaac": true
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 270,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 470,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": ""
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::1",
+              "prefixo6": 64
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ipv6Roteamento": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 740,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:2::1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ipv6-prefixo-errado",
+    "modulo": "missoes",
+    "titulo": "Um dígito a mais no prefixo",
+    "dificuldade": 2,
+    "xp": 170,
+    "habilidades": [
+      "ip.diagnostico"
+    ],
+    "cenario": "O Cliente1 alcança o Servidor (2001:db8:2::10) por IPv6, mas o Cliente2, configurado à mão ontem, não. O gateway dele é 2001:db8:1::1, igual ao do Cliente1.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc3",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc3",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "Compare o ipconfig dos dois clientes. O ping do Cliente2 diz \"falha geral\": o gateway está fora da rede dele.",
+      "O endereço do Cliente2 é 2001:db8:11::20. Com /64, a rede dele é 2001:db8:11::/64, não 2001:db8:1::/64.",
+      "Corrija o endereço do Cliente2 para 2001:db8:1::20, prefixo 64."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "Cliente1",
+          "x": 90,
+          "y": 130,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:1::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:1::1"
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "Cliente2",
+          "x": 90,
+          "y": 340,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:11::20",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:1::1"
+        },
+        {
+          "id": "sw1",
+          "tipo": "switch",
+          "nome": "SW1",
+          "x": 270,
+          "y": 230,
+          "interfaces": [],
+          "portas": {}
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 470,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:1::1",
+              "prefixo6": 64
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::1",
+              "prefixo6": 64
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ipv6Roteamento": true
+        },
+        {
+          "id": "pc3",
+          "tipo": "pc",
+          "nome": "Servidor",
+          "x": 740,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:2::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:2::1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa1"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "pc2",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "sw1",
+            "p": "fa2"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "sw1",
+            "p": "fa3"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c4",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc3",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ipv6-rotas-estaticas",
+    "modulo": "missoes",
+    "titulo": "Rotas IPv6 entre dois roteadores",
+    "dificuldade": 3,
+    "xp": 260,
+    "habilidades": [
+      "roteamento.pratica",
+      "ip.pratica"
+    ],
+    "cenario": "PC1 (2001:db8:a::10) e PC2 (2001:db8:b::10) ficam em redes ligadas por R1 e R2 pelo enlace 2001:db8:ff::/64. Os dois roteadores já roteiam IPv6, mas cada um só conhece as redes ligadas a ele.",
+    "objetivos": [
+      {
+        "id": "o1",
+        "de": "pc1",
+        "para": "pc2",
+        "ipv6": true
+      },
+      {
+        "id": "o2",
+        "de": "pc2",
+        "para": "pc1",
+        "ipv6": true
+      }
+    ],
+    "dicas": [
+      "Rode show ipv6 route no console do R1: falta a rede 2001:db8:b::/64. No R2 falta a 2001:db8:a::/64.",
+      "Uma rota IPv6 aponta para o endereço do roteador vizinho no enlace: do R1, o próximo salto é 2001:db8:ff::2; do R2, é 2001:db8:ff::1.",
+      "R1: ipv6 route 2001:db8:b::/64 2001:db8:ff::2. R2: ipv6 route 2001:db8:a::/64 2001:db8:ff::1 (ou uma rota padrão ::/0)."
+    ],
+    "topologia": {
+      "dispositivos": [
+        {
+          "id": "pc1",
+          "tipo": "pc",
+          "nome": "PC1",
+          "x": 90,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:a::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:a::1"
+        },
+        {
+          "id": "r1",
+          "tipo": "roteador",
+          "nome": "R1",
+          "x": 300,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:a::1",
+              "prefixo6": 64
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:ff::1",
+              "prefixo6": 64
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ipv6Roteamento": true
+        },
+        {
+          "id": "r2",
+          "tipo": "roteador",
+          "nome": "R2",
+          "x": 560,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "gi0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:ff::2",
+              "prefixo6": 64
+            },
+            {
+              "id": "gi1",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:b::1",
+              "prefixo6": 64
+            }
+          ],
+          "rotas": [],
+          "pools": [],
+          "filtros": [],
+          "nat": null,
+          "ipv6Roteamento": true
+        },
+        {
+          "id": "pc2",
+          "tipo": "pc",
+          "nome": "PC2",
+          "x": 780,
+          "y": 230,
+          "interfaces": [
+            {
+              "id": "eth0",
+              "ip": "",
+              "mascara": "",
+              "ip6": "2001:db8:b::10",
+              "prefixo6": 64
+            }
+          ],
+          "gateway": "",
+          "gateway6": "2001:db8:b::1"
+        }
+      ],
+      "cabos": [
+        {
+          "id": "c1",
+          "a": {
+            "d": "pc1",
+            "p": "eth0"
+          },
+          "b": {
+            "d": "r1",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c2",
+          "a": {
+            "d": "r1",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "r2",
+            "p": "gi0"
+          }
+        },
+        {
+          "id": "c3",
+          "a": {
+            "d": "r2",
+            "p": "gi1"
+          },
+          "b": {
+            "d": "pc2",
+            "p": "eth0"
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "filial-fora-do-ar",
     "modulo": "missoes",
     "titulo": "Filial fora do ar: três defeitos",

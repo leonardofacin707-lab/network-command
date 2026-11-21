@@ -8,6 +8,7 @@
 // (router-on-a-stick), STP, roteamento dinâmico, firewall com estado, retransmissão e janelas do TCP.
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4, prefixoDeMascara } from './ipv4.js';
 import { vizinhos, dispositivo, configDaPortaSwitch } from './topologia.js';
+import { anunciosSlaac, aplicarSlaac, enviarPacote6 } from './motor6.js';
 
 export const TTL_INICIAL = { pc: 128, roteador: 255, switch: 255 };
 const MAX_SALTOS = 16;
@@ -325,13 +326,14 @@ function aplicarConcessoes(t, concessoes) {
   return { ...t, dispositivos: t.dispositivos.map(d => {
     const c = concessoes.get(d.id);
     if (!c) return d;
-    const iface = c.ok ? { id: 'eth0', ip: formatarIPv4(c.ip), mascara: formatarIPv4(c.mascara) } : { id: 'eth0', ip: '', mascara: '' };
-    return { ...d, interfaces: d.interfaces.map(i => (i.id === 'eth0' ? iface : i)), gateway: c.ok ? formatarIPv4(c.gateway) : '' };
+    const v4 = c.ok ? { ip: formatarIPv4(c.ip), mascara: formatarIPv4(c.mascara) } : { ip: '', mascara: '' };
+    return { ...d, interfaces: d.interfaces.map(i => (i.id === 'eth0' ? { ...i, ...v4 } : i)), gateway: c.ok ? formatarIPv4(c.gateway) : '' };
   }) };
 }
 
 export function criarSimulacao(original) {
-  const concessoes = concessoesDhcp(original), t = aplicarConcessoes(original, concessoes);
+  const concessoes = concessoesDhcp(original), comDhcp = aplicarConcessoes(original, concessoes);
+  const slaac = anunciosSlaac(comDhcp), t = aplicarSlaac(comDhcp, slaac);
   const arp = new Map(); // dispositivoId -> Map(ipNum -> mac)
   const aprenderUm = (d, ip, mac) => { if (!arp.has(d)) arp.set(d, new Map()); arp.get(d).set(ip, mac); };
   const aprender = lista => { for (const a of lista ?? []) if (a.mac) aprenderUm(a.d, a.ip, a.mac); };
@@ -364,8 +366,26 @@ export function criarSimulacao(original) {
     return { status: aceito === false ? 'recusada' : 'entregue', ttl, de: ipDest, saltos: ida.saltos, caminho: ida.caminho, destino: ida.destino, traducoes: ida.traducoes, ida, volta };
   }
 
+  // IPv6: o mesmo esquema de ida e volta, com descoberta de vizinhos no lugar do ARP (sem NAT nem filtros em IPv6)
+  const chave6 = ip => `v6:${ip}`;
+  const ctx6 = { registrar: ctx.registrar, conhece: (d, ip) => arp.get(d)?.has(chave6(ip)) ?? false, aprender: (d, ip, mac) => aprenderUm(d, chave6(ip), mac) };
+  const aprender6 = lista => { for (const a of lista ?? []) if (a.mac) aprenderUm(a.d, chave6(a.ip), a.mac); };
+  const enviar6 = (de, ip, l4, origem = null) => enviarPacote6(t, de, ip, l4, gravando ? ctx6 : null, origem);
+  function ping6(origemId, dest) {
+    const ida = enviar6(origemId, dest, { tipo: 'echo-request' });
+    aprender6(ida.aprendizado);
+    if (ida.status !== 'entregue') return { ...ida, volta: null };
+    const volta = enviar6(ida.destino.d, ida.origem, { tipo: 'echo-reply' }, dest);
+    aprender6(volta.aprendizado);
+    if (volta.status !== 'entregue') return { status: 'timeout', saltos: ida.saltos, caminho: ida.caminho, ida, volta };
+    return { status: 'entregue', ttl: volta.ttl, de: dest, saltos: ida.saltos, caminho: ida.caminho, destino: ida.destino, ida, volta };
+  }
+
   const sim = {
-    topologia: t, concessoes,
+    topologia: t, concessoes, slaac,
+    ping6,
+    rastrear6: (origemId, dest) => { const r = enviar6(origemId, dest, { tipo: 'echo-request' }); aprender6(r.aprendizado); return r; },
+    vizinhos6: id => [...(arp.get(id) ?? [])].filter(([k]) => typeof k === 'string' && k.startsWith('v6:')).map(([k, mac]) => ({ ip: BigInt(k.slice(3)), mac })),
     ping: (origemId, ipDest) => transacao(origemId, ipDest, ICMP_PEDIDO),
     /**
      * Conexão TCP (simplificada: o SYN vai, volta SYN-ACK se a porta está aberta ou RST se está fechada). Serviços abertos
@@ -400,7 +420,7 @@ export function criarSimulacao(original) {
       return achado ? { ok: true, ip: lerIPv4(achado.ip), servidor } : { ok: false, motivo: 'nome-inexistente', servidor };
     },
     rastrear: (origemId, ipDest) => { const r = enviar(origemId, ipDest, ICMP_PEDIDO); aprender(r.aprendizado); return r; },
-    tabelaArp: id => [...(arp.get(id) ?? [])].map(([ip, mac]) => ({ ip, mac })).sort((a, b) => a.ip - b.ip),
+    tabelaArp: id => [...(arp.get(id) ?? [])].filter(([ip]) => typeof ip === 'number').map(([ip, mac]) => ({ ip, mac })).sort((a, b) => a.ip - b.ip),
     /** Executa fn gravando os pacotes (estilo Wireshark): devolve { resultado, pacotes }. Limite de 200 pacotes. */
     capturar(fn) {
       const anterior = gravando;

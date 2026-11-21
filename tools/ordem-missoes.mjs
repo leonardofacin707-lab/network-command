@@ -4,7 +4,7 @@ export const ORDEM_MISSOES = [
   'rota-so-de-ida', 'rota-padrao', 'rotas-estaticas',
   'dhcp-sem-servidor', 'dhcp-pool-curto', 'dhcp-duas-redes',
   'filtro-convidado', 'filtro-ordem', 'filtro-resposta',
-  'dns-ping-no-nome', 'dns-registro-errado', 'dns-da-empresa', 'nat-sem-volta', 'nat-lados-trocados', 'nat-saida-da-empresa', 'seg-dhcp-falso', 'seg-gateway-falso', 'seg-dns-falso', 'seg-bloqueio-demais', 'seg-feche-telnet',
+  'dns-ping-no-nome', 'dns-registro-errado', 'dns-da-empresa', 'nat-sem-volta', 'nat-lados-trocados', 'nat-saida-da-empresa', 'seg-dhcp-falso', 'seg-gateway-falso', 'seg-dns-falso', 'seg-bloqueio-demais', 'seg-feche-telnet', 'ipv6-primeiros-passos', 'ipv6-roteador-nao-roteia', 'ipv6-slaac', 'ipv6-prefixo-errado', 'ipv6-rotas-estaticas',
   'filial-fora-do-ar', 'dois-sites-quatro-defeitos', 'chefao-cinco-camadas',
   'setores-separados', 'porta-na-vlan-errada', 'trunk-esquecido', 'vlans-sem-gateway', 'dois-andares-mesmas-vlans', 'campus-completo'
 ];

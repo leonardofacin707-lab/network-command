@@ -216,5 +216,16 @@ Atualizado a cada etapa. Convenção: ✅ pronto e testado · 🧪 protótipo (f
 - **Exercícios sem fim** (aba Exercícios; `js/quiz/exercicios.js`): endereço de rede, broadcast, faixa de hosts, hosts úteis, máscara, divisão em sub-redes, abreviar e expandir IPv6 (forma canônica da RFC 5952). Cada um com dica e resolução passo a passo. Teste unitário confere 300 exercícios de cada tipo contra o motor de IPv4. Não vale XP.
 - **Animação do pacote:** os pacotes IP do último comando percorrem os cabos no desenho (`caminhoFisico` acha o trecho físico pelos switches). Desligada quando o sistema pede "reduzir movimento".
 - **Console estilo Cisco IOS** (`js/sim/cli-ios.js`) para roteadores e switches: modos `>`, `#`, `(config)#`, `(config-if)#`, abreviações, `hostname`, `interface`, `ip address`, `no ip address`, `ip route`/`no ip route`, `switchport mode`/`access vlan`, `show ip interface brief`, `show ip route` (C, L, S e S*), `show running-config`, `show vlan brief`, `ping`, `do`. 🧪 Não simula: senhas, `shutdown`, roteamento dinâmico, NVRAM.
-- **⏳ IPv6 no simulador não foi feito:** exigiria endereços duplos, NDP no lugar do ARP e rotas IPv6 em todo o motor. Por enquanto o IPv6 está no quiz e nos exercícios.
+- IPv6 no simulador: feito depois (ver a seção seguinte).
 - **Testes:** 259 unitários, 99 e2e (1 ignorado). Varredura de 71 rotas e axe sem problemas (inclusive com o console aberto).
+
+## IPv6 no simulador
+
+- **Endereços** (`js/sim/ipv6.js`): leitura e forma canônica (RFC 5952), prefixo, tipos (global, link-local, ULA, multicast), EUI-64 e solicited-node.
+- **Modelo:** cada interface pode ter `ip6`/`prefixo6` (global; o link-local é automático: fe80:: + EUI-64 do MAC, em todo PC e nas interfaces de roteador com IPv6). PC: `gateway6` (global ou link-local) e `slaac`. Roteador: `ipv6Roteamento` (ipv6 unicast-routing) e `rotas6`. Configurar o IPv4 não apaga o IPv6 (e vice-versa).
+- **Motor** (`js/sim/motor6.js`): descoberta de vizinhos (Neighbor Solicitation para o multicast solicited-node e Neighbor Advertisement) no lugar do ARP, com cache separado; encaminhamento por rotas conectadas e estáticas com prefixo mais longo; hop limit (PC 128, roteador 64); roteador sem `ipv6 unicast-routing` descarta (`sem-roteamento6`) e não anuncia prefixo; SLAAC com Router Advertisement de prefixo /64 e gateway = link-local do roteador; endereço duplicado (`conflitos6`). Captura mostra NS, NA e ICMPv6.
+- **Terminal:** `ipconfig` com IPv6 e link-local, `ping` e `tracert` com IPv6 (`-6` para nome de dispositivo), `netsh interface ipv6 show neighbors`. **Console IOS:** `ipv6 unicast-routing`, `ipv6 address X/N`, `ipv6 route P/N via`, `show ipv6 interface brief`, `show ipv6 route`, ping IPv6.
+- **Painel:** quadro IPv6 no PC (SLAAC, endereço, prefixo, gateway, link-local) e no roteador (rotear IPv6, endereços, rotas IPv6). Avisos de duplicado e de roteador sem roteamento IPv6.
+- **Missões (5, `tools/gerar-ipv6.mjs`):** primeiros passos, roteador sem ipv6 unicast-routing, SLAAC, prefixo digitado errado e rotas IPv6 entre dois roteadores. Objetivo novo `{ de, para, ipv6: true }`.
+- **🧪 Não simulado:** DHCPv6, DNS AAAA, filtros e NAT em IPv6, identificadores aleatórios de privacidade, MTU/fragmentação, mensagens ICMPv6 de erro além das usadas no ping/tracert.
+- **Testes:** `tests/unit/ipv6.test.mjs` (10), 5 testes de missão, console IOS e 1 e2e (SLAAC pela interface). Total: 275 unitários, 100 e2e (1 ignorado). Varredura de 76 rotas e axe sem problemas.

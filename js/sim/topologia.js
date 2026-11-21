@@ -1,5 +1,6 @@
 // Modelo da topologia do laboratório: dispositivos, interfaces e cabos. Funções puras e imutáveis, sem DOM.
 // Cada operação devolve { topologia, ... } ou { erro } com uma mensagem em português.
+import { lerIPv6, formatarIPv6, lerPrefixo6, rede6, mesmaRede6, ehLinkLocal, ehMulticast } from './ipv6.js';
 import { lerIPv4, lerMascara, validarEnderecoDeHost, formatarIPv4, enderecoDeRede, mesmaRede } from './ipv4.js';
 
 export const LARGURA = 900;
@@ -75,14 +76,99 @@ export function configurarInterface(t, id, portaId, { ip, mascara }) {
   const interf = d?.interfaces.find(i => i.id === portaId);
   if (!interf) return { erro: 'Interface não encontrada.' };
   const ipTxt = String(ip ?? '').trim(), mTxt = String(mascara ?? '').trim();
-  if (!ipTxt && !mTxt) return { topologia: trocar(t, id, x => ({ ...x, interfaces: x.interfaces.map(i => (i.id === portaId ? { id: i.id, ip: '', mascara: '' } : i)) })) };
+  if (!ipTxt && !mTxt) return { topologia: trocar(t, id, x => ({ ...x, interfaces: x.interfaces.map(i => (i.id === portaId ? { ...i, ip: '', mascara: '' } : i)) })) };
   const ipN = lerIPv4(ipTxt), mN = lerMascara(mTxt);
   if (!ipTxt) return { erro: 'Informe o endereço IP (ou limpe também a máscara).' };
   if (!mTxt) return { erro: 'Informe a máscara de sub-rede (ou limpe também o IP).' };
   const erro = validarEnderecoDeHost(ipN, mN);
   if (erro) return { erro };
-  const novo = { id: portaId, ip: formatarIPv4(ipN), mascara: formatarIPv4(mN) };
-  return { topologia: trocar(t, id, x => ({ ...x, interfaces: x.interfaces.map(i => (i.id === portaId ? novo : i)) })) };
+  return { topologia: trocar(t, id, x => ({ ...x, interfaces: x.interfaces.map(i => (i.id === portaId ? { ...i, ip: formatarIPv4(ipN), mascara: formatarIPv4(mN) } : i)) })) };
+}
+
+// ---------- IPv6 ----------
+/** Lê endereço e prefixo IPv6 de uma interface. Os dois vazios = sem IPv6. Devolve { ip, prefixo } ou { erro }. */
+function lerEndereco6(ip6, prefixo6) {
+  const a = String(ip6 ?? '').trim(), p = String(prefixo6 ?? '').trim();
+  if (!a && !p) return { ip: null };
+  // aceita "2001:db8::1/64" num campo só
+  const [ipTxt, preTxt] = a.includes('/') ? a.split('/') : [a, p];
+  if (!ipTxt) return { erro: 'Informe o endereço IPv6 (ou limpe também o prefixo).' };
+  const ip = lerIPv6(ipTxt);
+  if (ip === null) return { erro: 'Endereço IPv6 inválido. Use 8 grupos hexadecimais separados por ":" (pode abreviar com ::), ex.: 2001:db8:1::10.' };
+  const prefixo = lerPrefixo6(preTxt || '');
+  if (prefixo === null || prefixo < 1 || prefixo > 128) return { erro: 'Prefixo IPv6 inválido. Use um número de 1 a 128 (nas LANs, quase sempre /64).' };
+  if (ehLinkLocal(ip)) return { erro: 'Endereços link-local (fe80::) são criados sozinhos nesta simulação. Configure um endereço global, ex.: 2001:db8:1::10.' };
+  if (ehMulticast(ip)) return { erro: 'Endereço multicast (ff00::/8) não pode ser de uma interface.' };
+  if (ip <= 1n) return { erro: ':: e ::1 são reservados (não especificado e loopback).' };
+  if (prefixo < 128 && rede6(ip, prefixo) === ip) return { erro: `Esse é o próprio prefixo da rede (identificador de interface zerado). Use um endereço dentro dele, ex.: ${formatarIPv6(ip + 1n)}.` };
+  return { ip, prefixo };
+}
+
+/** Configura (ou limpa) o endereço IPv6 global de uma interface. Aceita "2001:db8::1" + "64" ou "2001:db8::1/64". */
+export function configurarInterface6(t, id, portaId, { ip6, prefixo6 }) {
+  const d = dispositivo(t, id);
+  const interf = d?.interfaces.find(i => i.id === portaId);
+  if (!interf) return { erro: 'Interface não encontrada.' };
+  const v = lerEndereco6(ip6, prefixo6);
+  if (v.erro) return v;
+  return { topologia: trocar(t, id, x => ({ ...x, interfaces: x.interfaces.map(i => {
+    if (i.id !== portaId) return i;
+    const { ip6: _a, prefixo6: _b, ...resto } = i;
+    return v.ip === null ? resto : { ...resto, ip6: formatarIPv6(v.ip), prefixo6: v.prefixo };
+  }) })) };
+}
+
+export function configurarGateway6(t, id, gateway6) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores têm gateway padrão.' };
+  const txt = String(gateway6 ?? '').trim();
+  if (!txt) return { topologia: trocar(t, id, x => { const { gateway6: _, ...r } = x; return r; }) };
+  const n = lerIPv6(txt);
+  if (n === null || ehMulticast(n) || n <= 1n) return { erro: 'Gateway IPv6 inválido. Use o endereço do roteador (global ou link-local fe80::).' };
+  return { topologia: trocar(t, id, x => ({ ...x, gateway6: formatarIPv6(n) })) };
+}
+
+/** SLAAC: o computador monta o próprio endereço IPv6 com o prefixo anunciado pelo roteador (Router Advertisement). */
+export function configurarSlaac(t, id, ativo) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'pc') return { erro: 'Só computadores usam SLAAC nesta simulação.' };
+  return { topologia: trocar(t, id, x => { const { slaac, ...r } = x; return ativo ? { ...r, slaac: true } : r; }) };
+}
+
+/** ipv6 unicast-routing: sem ele o roteador não encaminha IPv6 nem anuncia prefixos (como no Cisco IOS). */
+export function configurarRoteamento6(t, id, ativo) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores roteiam IPv6.' };
+  return { topologia: trocar(t, id, x => { const { ipv6Roteamento, ...r } = x; return ativo ? { ...r, ipv6Roteamento: true } : r; }) };
+}
+
+function lerRota6({ rede, prefixo, via }) {
+  const r = lerIPv6(String(rede ?? '').split('/')[0]), p = lerPrefixo6(String(rede ?? '').includes('/') ? String(rede).split('/')[1] : prefixo), v = lerIPv6(via);
+  if (r === null) return { erro: 'Rede IPv6 de destino inválida (ex.: 2001:db8:2:: ou ::/0 para a rota padrão).' };
+  if (p === null) return { erro: 'Prefixo inválido (0 a 128; /0 = rota padrão).' };
+  if (v === null || ehMulticast(v) || v <= 1n) return { erro: 'Próximo salto IPv6 inválido.' };
+  if (rede6(r, p) !== r) return { erro: `Com /${p} a rede seria ${formatarIPv6(rede6(r, p))}.` };
+  return { rota: { rede: formatarIPv6(r), prefixo: p, via: formatarIPv6(v) } };
+}
+
+/** Rota estática IPv6 (ipv6 route rede/prefixo próximo-salto). O próximo salto deve ser um endereço global de uma rede ligada. */
+export function adicionarRota6(t, id, campos) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador') return { erro: 'Só roteadores têm rotas IPv6.' };
+  const v = lerRota6(campos); if (v.erro) return v;
+  if ((d.rotas6 ?? []).length >= MAX_ROTAS) return { erro: `Limite de ${MAX_ROTAS} rotas IPv6.` };
+  if ((d.rotas6 ?? []).some(x => x.rede === v.rota.rede && x.prefixo === v.rota.prefixo)) return { erro: 'Já existe uma rota IPv6 para essa rede.' };
+  const via = lerIPv6(v.rota.via);
+  if (!d.interfaces.some(i => i.ip6 && mesmaRede6(lerIPv6(i.ip6), via, i.prefixo6))) {
+    return { erro: 'O próximo salto IPv6 precisa estar numa rede ligada a este roteador (configure antes o IPv6 da interface).' };
+  }
+  return { topologia: trocar(t, id, x => ({ ...x, rotas6: [...(x.rotas6 ?? []), v.rota] })) };
+}
+
+export function removerRota6(t, id, indice) {
+  const d = dispositivo(t, id);
+  if (!d || d.tipo !== 'roteador' || !Number.isInteger(indice) || indice < 0 || indice >= (d.rotas6 ?? []).length) return { erro: 'Rota IPv6 não encontrada.' };
+  return { topologia: trocar(t, id, x => { const r = x.rotas6.filter((_, i) => i !== indice); const { rotas6: _, ...resto } = x; return r.length ? { ...resto, rotas6: r } : resto; }) };
 }
 
 export const VLAN_MIN = 1, VLAN_MAX = 4094;
@@ -367,12 +453,25 @@ export function normalizarTopologia(bruto) {
       interfaces: def.portas.filter(p => p.ip).map(p => {
         const orig = Array.isArray(b.interfaces) ? b.interfaces.find(i => i && i.id === p.id) : null;
         const ipN = lerIPv4(orig?.ip), mN = lerMascara(orig?.mascara);
-        return ipN !== null && mN !== null && !validarEnderecoDeHost(ipN, mN)
+        const v4 = ipN !== null && mN !== null && !validarEnderecoDeHost(ipN, mN)
           ? { id: p.id, ip: formatarIPv4(ipN), mascara: formatarIPv4(mN) } : { id: p.id, ip: '', mascara: '' };
+        const v6 = lerEndereco6(orig?.ip6, orig?.prefixo6);
+        return v6.erro || !v6.ip ? v4 : { ...v4, ip6: formatarIPv6(v6.ip), prefixo6: v6.prefixo };
       })
     };
     if (b.tipo === 'pc') { const g = lerIPv4(b.gateway); d.gateway = g === null ? '' : formatarIPv4(g); }
     if (b.tipo === 'pc' && b.dhcp === true) d.dhcp = true;
+    if (b.tipo === 'pc' && b.slaac === true) d.slaac = true;
+    if (b.tipo === 'pc') { const g6 = lerIPv6(b.gateway6); if (g6 !== null && !ehMulticast(g6) && g6 > 1n) d.gateway6 = formatarIPv6(g6); }
+    if (b.tipo === 'roteador') {
+      if (b.ipv6Roteamento === true) d.ipv6Roteamento = true;
+      const rotas6 = [];
+      for (const r of Array.isArray(b.rotas6) ? b.rotas6 : []) {
+        const v = r && typeof r === 'object' ? lerRota6(r) : { erro: 'x' };
+        if (!v.erro && rotas6.length < MAX_ROTAS && !rotas6.some(x => x.rede === v.rota.rede && x.prefixo === v.rota.prefixo)) rotas6.push(v.rota);
+      }
+      if (rotas6.length) d.rotas6 = rotas6;
+    }
     if (b.tipo === 'pc') {
       const dnsN = lerIPv4(b.dns);
       if (dnsN !== null) d.dns = formatarIPv4(dnsN);

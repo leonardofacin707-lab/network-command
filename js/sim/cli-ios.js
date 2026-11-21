@@ -7,6 +7,9 @@ import { lerIPv4, lerMascara, formatarIPv4, prefixoDeMascara, enderecoDeRede } f
 import { TIPOS, dispositivo, renomear, configurarInterface, adicionarRotaEstatica, removerRotaEstatica, configurarPortaSwitch,
   configDaPortaSwitch } from './topologia.js';
 import { configDaInterface, temLink } from './motor.js';
+import { configurarInterface6, configurarRoteamento6, adicionarRota6, removerRota6 } from './topologia.js';
+import { lerIPv6, formatarIPv6, lerPrefixo6 } from './ipv6.js';
+import { enderecosDaInterface } from './motor6.js';
 
 export const sessaoInicial = () => ({ modo: 'usuario', interface: null });
 
@@ -35,11 +38,11 @@ const INCOMPLETO = ['% Incomplete command.'];
 
 const AJUDA = {
   usuario: ['enable                 entra no modo privilegiado', 'ping ip                testa a conexão', 'show ip interface brief', 'show ip route', 'exit'],
-  priv: ['configure terminal     entra no modo de configuração', 'show ip interface brief', 'show ip route', 'show running-config', 'show vlan brief (switch)',
+  priv: ['configure terminal     entra no modo de configuração', 'show ip interface brief', 'show ip route', 'show ipv6 interface brief', 'show ipv6 route', 'show running-config', 'show vlan brief (switch)',
     'ping ip', 'copy running-config startup-config', 'disable                volta ao modo usuário', 'exit'],
   config: ['hostname NOME', 'interface NOME          ex.: interface g0/0 (roteador) ou interface f0/1 (switch)', 'ip route REDE MÁSCARA PRÓXIMO-SALTO',
-    'no ip route REDE MÁSCARA PRÓXIMO-SALTO', 'end / exit'],
-  if: ['ip address IP MÁSCARA  (roteador)', 'no ip address          (roteador)', 'switchport mode access|trunk (switch)', 'switchport access vlan N (switch)',
+    'no ip route REDE MÁSCARA PRÓXIMO-SALTO', 'ipv6 unicast-routing   liga o roteamento IPv6', 'ipv6 route PREFIXO/N PRÓXIMO-SALTO', 'no ipv6 route PREFIXO/N PRÓXIMO-SALTO', 'end / exit'],
+  if: ['ip address IP MÁSCARA  (roteador)', 'no ip address          (roteador)', 'ipv6 address ENDEREÇO/N (roteador)', 'no ipv6 address        (roteador)', 'switchport mode access|trunk (switch)', 'switchport access vlan N (switch)',
     'no shutdown', 'end / exit']
 };
 
@@ -87,6 +90,19 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
       return res([], { modo: 'if', interface: p });
     }
     const nao = w[0].toLowerCase() === 'no', v = nao ? w.slice(1) : w;
+    if (casa(v[0], 'ipv6', 4) && casa(v[1], 'unicast-routing', 2)) {
+      if (d.tipo !== 'roteador') return res(INVALIDO);
+      return mudar(configurarRoteamento6(t, id, !nao));
+    }
+    if (casa(v[0], 'ipv6', 4) && casa(v[1], 'route', 2)) {
+      if (d.tipo !== 'roteador') return res(INVALIDO);
+      if (v.length < 4 || !v[2].includes('/')) return res(INCOMPLETO);
+      const [rede, prefixo] = v[2].split('/'), via = v[3];
+      if (!nao) return mudar(adicionarRota6(t, id, { rede, prefixo, via }));
+      const rN = lerIPv6(rede), pN = lerPrefixo6(prefixo), vN = lerIPv6(via);
+      const i = (d.rotas6 ?? []).findIndex(r => lerIPv6(r.rede) === rN && r.prefixo === pN && lerIPv6(r.via) === vN);
+      return i === -1 ? res(['% Rota IPv6 não encontrada.']) : mudar(removerRota6(t, id, i));
+    }
     if (casa(v[0], 'ip', 2) && casa(v[1], 'route', 2)) {
       if (d.tipo !== 'roteador') return res(INVALIDO);
       if (v.length < 5) return res(INCOMPLETO);
@@ -103,6 +119,14 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
   const p = sessao.interface, nao = w[0].toLowerCase() === 'no', v = nao ? w.slice(1) : w;
   if (casa(v[0], 'shutdown', 2)) return res(nao ? [`%LINK-5-CHANGED: Interface ${nomeLongo(d, p)}, changed state to ${temLink(t, id, p) ? 'up' : 'down (sem cabo)'}`]
     : ['% O simulador não desliga interfaces: tire o cabo no desenho para simular uma interface sem link.']);
+  if (casa(v[0], 'ipv6', 4) && (casa(v[1], 'address', 2) || casa(v[1], 'enable', 2))) {
+    if (d.tipo !== 'roteador') return res(['% Nesta simulação o switch não tem IP (só as portas de camada 2).']);
+    if (casa(v[1], 'enable', 2)) return res(['% Nesta simulação o link-local da interface aparece sozinho quando ela recebe um endereço IPv6 global (ipv6 address).']);
+    if (nao) return mudar(configurarInterface6(t, id, p, { ip6: '', prefixo6: '' }));
+    if (!v[2]) return res(INCOMPLETO);
+    if (!v[2].includes('/')) return res(['% Use o formato ENDEREÇO/PREFIXO, ex.: ipv6 address 2001:db8:1::1/64']);
+    return mudar(configurarInterface6(t, id, p, { ip6: v[2] }));
+  }
   if (casa(v[0], 'ip', 2) && casa(v[1], 'address', 2)) {
     if (d.tipo !== 'roteador') return res(['% Nesta simulação o switch não tem IP (só as portas de camada 2).']);
     if (nao) return mudar(configurarInterface(t, id, p, { ip: '', mascara: '' }));
@@ -127,16 +151,18 @@ export function executarIos(t, sim, id, linhaDigitada, sessao = sessaoInicial())
 
 function pingIos(t, sim, d, alvo) {
   if (!alvo) return INCOMPLETO;
-  const ip = lerIPv4(alvo);
-  if (ip === null) return ['% Endereço inválido (o console aceita só IP).'];
-  const sucessos = Array.from({ length: 5 }, () => sim.ping(d.id, ip).status === 'entregue');
+  const ip6 = lerIPv6(alvo), ip = ip6 === null ? lerIPv4(alvo) : null;
+  if (ip === null && ip6 === null) return ['% Endereço inválido (o console aceita só IP, IPv4 ou IPv6).'];
+  const sucessos = Array.from({ length: 5 }, () => (ip6 !== null ? sim.ping6(d.id, ip6) : sim.ping(d.id, ip)).status === 'entregue');
   const n = sucessos.filter(Boolean).length;
-  return ['Type escape sequence to abort.', `Sending 5, 100-byte ICMP Echos to ${formatarIPv4(ip)}, timeout is 2 seconds:`, sucessos.map(x => (x ? '!' : '.')).join(''),
+  return ['Type escape sequence to abort.', `Sending 5, 100-byte ICMP Echos to ${ip6 !== null ? formatarIPv6(ip6) : formatarIPv4(ip)}, timeout is 2 seconds:`, sucessos.map(x => (x ? '!' : '.')).join(''),
     `Success rate is ${n * 20} percent (${n}/5)${n ? ', round-trip min/avg/max = 1/1/1 ms' : ''}`];
 }
 
 function show(t, d, args, modo) {
   const a = args.map(x => x.toLowerCase());
+  if (casa(a[0], 'ipv6', 4) && casa(a[1], 'interface', 3) && casa(a[2], 'brief', 2)) return ipv6IntBrief(t, d);
+  if (casa(a[0], 'ipv6', 4) && casa(a[1], 'route', 2)) return ipv6Route(t, d);
   if (casa(a[0], 'ip', 2) && casa(a[1], 'interface', 3) && casa(a[2], 'brief', 2)) return ipIntBrief(t, d);
   if (casa(a[0], 'ip', 2) && casa(a[1], 'route', 2)) return ipRoute(t, d);
   if (casa(a[0], 'running-config', 3)) return modo === 'priv' ? runningConfig(t, d) : ['% Comando disponível só no modo privilegiado (use enable).'];
@@ -151,6 +177,34 @@ function ipIntBrief(t, d) {
     linhas.push(`${nomeLongo(d, p.id).padEnd(23)}${(cfg ? formatarIPv4(cfg.ip) : 'unassigned').padEnd(16)}${cfg ? 'YES manual' : 'YES unset '} ${up.padEnd(22)}${up}`);
   }
   return linhas;
+}
+
+function ipv6IntBrief(t, d) {
+  if (d.tipo !== 'roteador') return ['% O switch desta simulação não tem IPv6 (só camada 2).'];
+  const l = [];
+  for (const p of TIPOS.roteador.portas) {
+    const ends = enderecosDaInterface(d, p.id), up = temLink(t, d.id, p.id) ? 'up' : 'down';
+    l.push(`${nomeLongo(d, p.id).padEnd(23)}[${up}/${up}]`);
+    if (!ends.length) l.push('    unassigned');
+    for (const e of [...ends].sort((x) => (x.tipo === 'link-local' ? -1 : 1))) l.push(`    ${formatarIPv6(e.ip).toUpperCase()}`);
+  }
+  if (!d.ipv6Roteamento) l.push('', '(ipv6 unicast-routing desligado: este roteador não encaminha IPv6 nem anuncia prefixos)');
+  return l;
+}
+
+function ipv6Route(t, d) {
+  if (d.tipo !== 'roteador') return ['% O switch desta simulação não roteia (só camada 2).'];
+  const l = ['IPv6 Routing Table - default', 'Codes: C - Connected, L - Local, S - Static', ''];
+  if (!d.ipv6Roteamento) l.push('(ipv6 unicast-routing desligado: as rotas existem, mas o roteador não encaminha pacotes IPv6)', '');
+  for (const i of d.interfaces) {
+    const g = enderecosDaInterface(d, i.id).find(e => e.tipo === 'global');
+    if (!g || !temLink(t, d.id, i.id)) continue;
+    const prefixo = g.ip & (((1n << 128n) - 1n) << BigInt(128 - g.prefixo)) & ((1n << 128n) - 1n);
+    l.push(`C   ${formatarIPv6(prefixo).toUpperCase()}/${g.prefixo} [0/0]`, `     via ${nomeLongo(d, i.id)}, directly connected`,
+      `L   ${formatarIPv6(g.ip).toUpperCase()}/128 [0/0]`, `     via ${nomeLongo(d, i.id)}, receive`);
+  }
+  for (const r of d.rotas6 ?? []) l.push(`S   ${r.rede.toUpperCase()}/${r.prefixo} [1/0]`, `     via ${r.via.toUpperCase()}`);
+  return l;
 }
 
 function ipRoute(t, d) {
@@ -175,6 +229,7 @@ function runningConfig(t, d) {
     if (d.tipo === 'roteador') {
       const i = d.interfaces.find(x => x.id === p.id), cfg = configDaInterface(d, p.id);
       l.push(cfg ? ` ip address ${i.ip} ${formatarIPv4(cfg.mascara)}` : ' no ip address');
+      if (i.ip6) l.push(` ipv6 address ${i.ip6}/${i.prefixo6}`);
       if (d.nat?.dentro === p.id) l.push(' ip nat inside');
       if (d.nat?.fora === p.id) l.push(' ip nat outside');
     } else {
@@ -184,6 +239,8 @@ function runningConfig(t, d) {
     l.push('!');
   }
   for (const r of d.rotas ?? []) l.push(`ip route ${r.rede} ${r.mascara} ${r.via}`);
+  if (d.ipv6Roteamento) l.splice(4, 0, 'ipv6 unicast-routing', '!');
+  for (const r of d.rotas6 ?? []) l.push(`ipv6 route ${r.rede}/${r.prefixo} ${r.via}`);
   if ((d.filtros ?? []).length || (d.pools ?? []).length) l.push('! (filtros e pools DHCP: configure pelo painel do roteador)');
   l.push('!', 'end');
   return l;

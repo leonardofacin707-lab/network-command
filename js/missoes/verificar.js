@@ -2,6 +2,7 @@
 import { criarSimulacao, configDaInterface, NOMES_PORTAS } from '../sim/motor.js';
 import { dispositivo, normalizarTopologia } from '../sim/topologia.js';
 import { lerIPv4, lerMascara, mesmaRede, formatarIPv4 } from '../sim/ipv4.js';
+import { primeiroGlobal6 } from '../sim/motor6.js';
 
 export const PENALIDADE_DICA = 0.2;  // cada dica usada tira 20% do XP...
 export const XP_MINIMO = 0.4;        // ...até um mínimo de 40%
@@ -33,7 +34,14 @@ const MOTIVO = {
   bloqueado: 'um roteador bloqueou o tráfego (filtro de pacotes ou NAT com os lados trocados)',
   descartado: 'o pacote foi descartado',
   timeout: 'o pacote chegou, mas a resposta não voltou',
-  recusada: 'a porta está fechada no destino (nenhum serviço escutando)'
+  recusada: 'a porta está fechada no destino (nenhum serviço escutando)',
+  'sem-roteamento6': 'um roteador recebeu o pacote, mas não está roteando IPv6 (falta ipv6 unicast-routing)'
+};
+
+const MOTIVO6 = {
+  'sem-ip': 'a origem não tem endereço IPv6 global', 'sem-rota': 'a origem não tem gateway IPv6 para chegar a outra rede',
+  'gateway-fora': 'o gateway IPv6 da origem não está na rede (prefixo) dela', 'arp-falhou': 'ninguém respondeu à descoberta de vizinhos (Neighbor Solicitation)',
+  'conflito-ip': 'há endereço IPv6 duplicado no caminho', 'host-inalcancavel': 'o roteador não encontrou o destino na rede dele (descoberta de vizinhos sem resposta)'
 };
 
 /** Primeiro IP configurado de um dispositivo, como número (alvo dos objetivos, que apontam para dispositivos, não para IPs). */
@@ -72,6 +80,15 @@ export function verificarMissao(missao, topologia) {
     const isolar = o.esperado === 'falha';
     const porNome = typeof o.nome === 'string'; // objetivo "de alcança o nome X": resolve pelo DNS e depois faz o ping
     const porta = Number.isInteger(o.porta) ? o.porta : null; // objetivo de serviço: conexão TCP nessa porta
+    if (o.ipv6) {
+      const texto = `${nome(o.de)} ${isolar ? 'não alcança' : 'alcança'} ${nome(o.para)} por IPv6`;
+      if (!dispositivo(topologia, o.de) || !dispositivo(topologia, o.para)) return { id: o.id, texto, ok: false, motivo: 'dispositivo ausente na topologia' };
+      const ip6 = primeiroGlobal6(dispositivo(sim.topologia, o.para));
+      if (ip6 === null) return { id: o.id, texto, ok: isolar, motivo: isolar ? '' : `${nome(o.para)} não tem endereço IPv6 global` };
+      const r6 = sim.ping6(o.de, ip6), chegou = r6.status === 'entregue';
+      if (isolar) return { id: o.id, texto, ok: !chegou, motivo: chegou ? 'ainda se comunicam, mas deveriam estar isolados' : '' };
+      return { id: o.id, texto, ok: chegou, motivo: chegou ? '' : MOTIVO6[r6.status] ?? MOTIVO[r6.status] ?? 'sem resposta' };
+    }
     const alvoTxt = porNome ? `${o.nome} (pelo nome${o.para ? `, que deve levar a ${nome(o.para)}` : ''})` : nome(o.para);
     const texto = porta !== null
       ? `${nome(o.de)} ${isolar ? 'não conecta' : 'conecta'} em ${nome(o.para)} na porta ${porta}${NOMES_PORTAS[porta] ? ` (${NOMES_PORTAS[porta]})` : ''}`
@@ -116,6 +133,7 @@ export function validarMissao(m) {
     if (o.tipo === 'dhcp-de') return { id: o.id, tipo: 'dhcp-de', pc: o.pc, roteador: o.roteador };
     let base;
     if (nomeValido(o.nome)) base = { id: o.id, de: o.de, nome: o.nome, ...(dispositivo(topologia, o.para) ? { para: o.para } : {}) };
+    else if (o.ipv6 === true) base = { id: o.id, de: o.de, para: o.para, ipv6: true };
     else base = { id: o.id, de: o.de, para: o.para, ...(Number.isInteger(o.porta) && o.porta >= 1 && o.porta <= 65535 ? { porta: o.porta } : {}) };
     return o.esperado === 'falha' ? { ...base, esperado: 'falha' } : base;
   });
