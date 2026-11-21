@@ -11,10 +11,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   testar:
     runs-on: ubuntu-latest
@@ -45,6 +41,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: testar
     runs-on: ubuntu-latest
+    # só a publicação entra na fila; os testes de pull requests rodam em paralelo sem serem cancelados
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
