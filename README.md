@@ -1,5 +1,9 @@
 # Network Command
 
+[![Testar e publicar](https://github.com/leonardofacin707-lab/network-command/actions/workflows/publicar.yml/badge.svg)](https://github.com/leonardofacin707-lab/network-command/actions/workflows/publicar.yml) [![CodeQL](https://github.com/leonardofacin707-lab/network-command/actions/workflows/codeql.yml/badge.svg)](https://github.com/leonardofacin707-lab/network-command/actions/workflows/codeql.yml) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/leonardofacin707-lab/network-command/badge)](https://scorecard.dev/viewer/?uri=github.com/leonardofacin707-lab/network-command)
+
+**Jogar agora:** https://leonardofacin707-lab.github.io/network-command/ (funciona no celular e sem internet depois da primeira visita)
+
 Plataforma gamificada para aprender redes de computadores, feita em **JavaScript puro** (HTML, CSS e ES modules; sem frameworks e sem dependências em produção).
 Projeto de portfólio de Leonardo Facin, baseado nos tópicos do curso *Conceitos Básicos de Redes* (Cisco Networking Academy).
 É um projeto independente de estudo: **não é afiliado à Cisco e não emite certificado oficial**.

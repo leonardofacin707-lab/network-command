@@ -10,6 +10,10 @@
 
 ## Manutenção
 
+- Ações do GitHub fixadas pelo hash do commit, com permissões mínimas e sem guardar credenciais no checkout.
+- CodeQL (consultas de segurança estendidas) a cada mudança e toda semana; OpenSSF Scorecard semanal, com selo no README.
+- Branch `main` protegida contra envio forçado e exclusão; varredura de segredos do GitHub com bloqueio no envio.
+
 - Cada envio ao GitHub roda os testes, `npm audit` e a varredura de segredos (gitleaks). A publicação só acontece se tudo passar.
 - O Dependabot avisa sobre atualizações.
 - O formato do progresso salvo tem número de versão: mudanças de formato precisam de conversão, para não apagar o progresso de ninguém.
